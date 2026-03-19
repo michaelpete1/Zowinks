@@ -44,18 +44,15 @@ export default function Cart() {
                 </button>
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-3xl font-bold text-slate-900">{items.length}</p>
-                <p className="mt-1 text-sm text-slate-600">Items in cart</p>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-3xl font-bold text-slate-900">Free</p>
-                <p className="mt-1 text-sm text-slate-600">Shipping eligible</p>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-3xl font-bold text-slate-900">24h</p>
-                <p className="mt-1 text-sm text-slate-600">Quote support</p>
+            <div className="border-t border-slate-200 pt-4">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-800">
+                  {items.length} items in cart
+                </span>
+                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
+                <span>Free shipping on eligible orders</span>
+                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
+                <span>Support within 24 hours</span>
               </div>
             </div>
           </div>
@@ -215,5 +212,8 @@ export default function Cart() {
     </div>
   );
 }
+
+
+
 
 

@@ -1,130 +1,102 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "../hooks/useCart";
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const pathname = usePathname();
   const router = useRouter();
+  const isHome = pathname === "/";
   const cartCount = useCart((state) =>
-    state.items.reduce((total, item) => total + item.qty, 0),
+    state.items.reduce((sum, item) => sum + item.qty, 0),
   );
 
-  const navLinks = [
+  const links = [
     { href: "/", label: "Home" },
-    { href: "/about", label: "About" },
-    { href: "/laptops", label: "Laptops" },
-    { href: "/accessories", label: "Accessories" },
+    { href: "/about", label: "About Us" },
+    { href: "/laptops", label: "Products" },
+    { href: "/services", label: "Services" },
     { href: "/contact", label: "Contact" },
   ];
 
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const term = query.trim();
     if (!term) return;
-    setIsOpen(false);
+    setOpen(false);
     router.push(`/search?q=${encodeURIComponent(term)}`);
   };
 
+  const shellClassName = isHome
+    ? "sticky top-0 z-50 border-b border-white/10 bg-[linear-gradient(180deg,rgba(7,19,41,0.96),rgba(12,34,72,0.92))] text-white shadow-[0_14px_40px_rgba(2,6,23,0.35)] backdrop-blur-xl"
+    : "sticky top-0 z-50 border-b border-slate-200 bg-white/95 text-slate-900 shadow-sm backdrop-blur-xl";
+
+  const navLinkClassName = isHome
+    ? "text-sm font-semibold tracking-[0.01em] text-white/85 transition hover:text-white"
+    : "text-sm font-semibold tracking-[0.01em] text-slate-600 transition hover:text-slate-900";
+
   return (
-    <header className="sticky top-0 z-50 border-b border-white/40 bg-white/90 shadow-sm backdrop-blur-xl">
-      <nav className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 md:px-8 lg:px-12">
-        <Link href="/" className="flex flex-shrink-0 items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl ring-2 ring-white/20">
+    <header className={shellClassName}>
+      <nav className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-4 md:px-8">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="grid h-20 w-20 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-black/5">
             <Image
-              src="/zowinkss-removebg-preview.png"
+              src="/zowinks-removebg-preview.png"
               alt="Zowkins logo"
-              width={48}
-              height={48}
-              className="h-12 w-12 object-contain drop-shadow-lg"
+              width={80}
+              height={80}
+              className="h-16 w-16 object-contain scale-125"
             />
           </div>
           <div className="hidden lg:block">
-            <p className="font-display text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            <p className={`font-display text-lg font-semibold leading-none ${isHome ? "text-white" : "text-slate-900"}`}>
               Zowkins
             </p>
-            <p className="text-xs font-medium uppercase tracking-wider text-emerald-600">
+            <p className={`text-xs font-medium uppercase tracking-[0.22em] ${isHome ? "text-cyan-100/80" : "text-emerald-700"}`}>
               Enterprise LTD
             </p>
           </div>
         </Link>
 
-        <div className="hidden items-center gap-6 lg:flex">
-          {navLinks.slice(0, 4).map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-base font-medium text-slate-700 transition hover:text-slate-900"
-            >
+        <div className="hidden items-center justify-center gap-6 lg:flex">
+          {links.map((link) => (
+            <Link key={link.href} href={link.href} className={navLinkClassName}>
               {link.label}
             </Link>
           ))}
         </div>
 
-        <form
-          onSubmit={handleSearch}
-          className="hidden flex-1 items-center lg:flex xl:w-1/2"
-        >
-          <div className="relative ml-8 w-full max-w-xl">
-            <svg
-              className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              className="w-full rounded-2xl border border-white/50 bg-white/80 py-3 pl-12 pr-16 text-sm shadow-xl outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white"
-              placeholder="Search products, brands, or accessories..."
-              aria-label="Search products"
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-slate-800"
-              aria-label="Submit search"
-            >
-              Search
-            </button>
-          </div>
-        </form>
-
         <div className="hidden items-center gap-3 lg:flex">
           <Link
-            href="/signin"
-            className="rounded-2xl border border-white/40 bg-white/70 px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-lg transition hover:bg-white"
+            href="/signup"
+            className={
+              isHome
+                ? "rounded-full border border-white/12 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                : "rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-900"
+            }
           >
-            Sign In
+            Sign Up
           </Link>
-          <button
-            type="button"
-            className="rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-2xl transition hover:from-emerald-600 hover:to-emerald-700"
+          <Link
+            href="/contact"
+            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg transition hover:bg-amber-200"
           >
-            Request Quote
-          </button>
+            Contact Us
+          </Link>
           <Link
             href="/cart"
-            className="relative ml-2 grid h-12 w-12 place-items-center rounded-3xl border border-white/40 bg-white/80 shadow-xl transition hover:shadow-2xl"
+            className={`relative grid h-10 w-10 place-items-center rounded-full border transition ${
+              isHome ? "border-white/12 bg-white/10 text-white hover:bg-white/15" : "border-slate-200 bg-white text-slate-700 hover:border-slate-900"
+            }`}
             aria-label="Open cart"
             title="Open cart"
           >
-            <svg
-              className="h-5 w-5 text-slate-700"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -132,7 +104,7 @@ export default function Navbar() {
                 d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
               />
             </svg>
-            <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-xs font-bold text-white shadow-lg">
+            <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-950 shadow-lg">
               {cartCount}
             </span>
           </Link>
@@ -140,157 +112,106 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="ml-auto grid h-12 w-12 place-items-center rounded-3xl border border-white/40 bg-white/80 shadow-xl transition hover:shadow-2xl lg:hidden"
-          onClick={() => setIsOpen((open) => !open)}
+          className={`ml-auto grid h-10 w-10 place-items-center rounded-full border lg:hidden ${
+            isHome ? "border-white/12 bg-white/10 text-white" : "border-slate-200 bg-white text-slate-700"
+          }`}
+          onClick={() => setOpen((value) => !value)}
           aria-label="Toggle menu"
           title="Toggle menu"
         >
-          <svg
-            className="h-6 w-6 text-slate-700"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="M4 6h16" />
+            <path d="M4 12h16" />
+            <path d="M4 18h16" />
           </svg>
         </button>
       </nav>
 
-      {isOpen ? (
-        <div className="border-t border-white/30 bg-white/95 shadow-2xl lg:hidden">
-          <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
-            <div className="mb-6 flex items-center justify-between">
+      {open ? (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/75 lg:hidden" onClick={() => setOpen(false)} />
+          <div className={`fixed inset-y-0 right-0 z-50 w-[92vw] max-w-sm shadow-2xl lg:hidden ${isHome ? "bg-[#071529] text-white" : "bg-white text-slate-900"}`}>
+            <div className={`flex items-center justify-between border-b p-6 ${isHome ? "border-white/10 bg-[#071529]" : "border-slate-200 bg-white"}`}>
               <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl">
+                <div className="grid h-20 w-20 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-black/5">
                   <Image
-                    src="/zowinkss-removebg-preview.png"
-                    alt="Zowkins"
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 object-contain"
+                    src="/zowinks-removebg-preview.png"
+                    alt="Zowkins logo"
+                    width={80}
+                    height={80}
+                    className="h-16 w-16 object-contain scale-125"
                   />
                 </div>
                 <div>
-                  <p className="font-display text-xl font-bold text-slate-900">
+                  <p className={`font-display text-lg font-semibold leading-none ${isHome ? "text-white" : "text-slate-900"}`}>
                     Zowkins
                   </p>
-                  <p className="text-xs font-medium uppercase tracking-wider text-emerald-600">
+                  <p className={`text-xs font-medium uppercase tracking-[0.22em] ${isHome ? "text-cyan-100/80" : "text-emerald-700"}`}>
                     Enterprise LTD
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
-                className="grid h-10 w-10 place-items-center rounded-lg border hover:bg-slate-50"
+                onClick={() => setOpen(false)}
+                className={`grid h-10 w-10 place-items-center rounded-lg border ${isHome ? "border-white/10 hover:bg-white/10" : "border-slate-200 hover:bg-slate-50"}`}
                 aria-label="Close menu"
                 title="Close menu"
               >
-                <svg
-                  className="h-5 w-5 text-slate-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <form onSubmit={handleSearch} className="mb-6">
-              <div className="flex items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
-                <svg
-                  className="mr-4 h-5 w-5 text-slate-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  className="flex-1 bg-transparent text-base placeholder:text-slate-500 focus:outline-none"
-                  placeholder="Search products..."
-                  aria-label="Search products"
-                />
-                <button
-                  type="submit"
-                  className="ml-3 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
-                >
-                  Go
-                </button>
+            <div className={`space-y-6 p-6 ${isHome ? "bg-[#071529]" : "bg-white"}`}>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {links.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`rounded-xl px-4 py-3 text-center font-medium transition ${isHome ? "text-white hover:bg-white/10" : "text-slate-900 hover:bg-slate-50"}`}
+                    onClick={() => setOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
-            </form>
 
-            <div className="mb-6 grid grid-cols-2 gap-4">
-              {navLinks.map((link) => (
+              <div className={`space-y-3 border-t pt-4 ${isHome ? "border-white/10" : "border-slate-200"}`}>
                 <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-2xl border border-slate-200 bg-white px-6 py-4 text-center text-lg font-semibold text-slate-900 transition hover:border-slate-900 hover:bg-slate-50"
-                  onClick={() => setIsOpen(false)}
+                  href="/contact"
+                  className={`block rounded-full px-4 py-3 text-center text-sm font-semibold transition ${isHome ? "bg-white text-slate-950 hover:bg-amber-200" : "bg-slate-900 text-white hover:bg-slate-800"}`}
+                  onClick={() => setOpen(false)}
                 >
-                  {link.label}
+                  Contact Us
                 </Link>
-              ))}
-            </div>
-
-            <div className="space-y-3 border-t border-slate-200 pt-4">
-              <Link
-                href="/signin"
-                className="block w-full rounded-2xl border border-slate-200 bg-white/70 px-6 py-4 text-center text-lg font-semibold backdrop-blur transition hover:bg-white hover:shadow-xl"
-                onClick={() => setIsOpen(false)}
-              >
-                Sign In
-              </Link>
-              <button className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-4 text-lg font-bold text-white shadow-2xl transition hover:from-emerald-600 hover:to-emerald-700">
-                Request Quote
-              </button>
-              <Link
-                href="/cart"
-                className="relative mx-auto grid h-14 w-14 place-items-center rounded-3xl border border-white/40 bg-white/80 shadow-xl transition hover:shadow-2xl"
-                aria-label="Open cart"
-                title="Open cart"
-                onClick={() => setIsOpen(false)}
-              >
-                <svg
-                  className="h-6 w-6 text-slate-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <Link
+                  href="/cart"
+                  className={`relative mx-auto grid h-12 w-12 place-items-center rounded-full border transition ${isHome ? "border-white/12 bg-white/10 text-white hover:bg-white/15" : "border-slate-200 bg-white text-slate-700"}`}
+                  onClick={() => setOpen(false)}
+                  aria-label="Open cart"
+                  title="Open cart"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.8}
-                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                  />
-                </svg>
-                <span className="absolute -right-1 -top-1 grid h-7 w-7 place-items-center rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-sm font-bold text-white shadow-lg">
-                  {cartCount}
-                </span>
-              </Link>
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.8}
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                    />
+                  </svg>
+                  <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-950 shadow-lg">
+                    {cartCount}
+                  </span>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       ) : null}
     </header>
   );
 }
+
 
