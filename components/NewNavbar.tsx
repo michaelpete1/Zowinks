@@ -36,7 +36,7 @@ export default function Navbar() {
         <Link href="/" className="flex flex-shrink-0 items-center gap-3">
           <div className="grid h-12 w-12 place-items-center rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl ring-2 ring-white/20">
             <Image
-              src="/zowinks-removebg-preview.png"
+              src="/zowinkss-removebg-preview.png"
               alt="Zowkins logo"
               width={48}
               height={48}
@@ -168,7 +168,7 @@ export default function Navbar() {
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl">
                   <Image
-                    src="/zowinks-removebg-preview.png"
+                    src="/zowinkss-removebg-preview.png"
                     alt="Zowkins"
                     width={48}
                     height={48}
@@ -293,3 +293,4 @@ export default function Navbar() {
     </header>
   );
 }
+

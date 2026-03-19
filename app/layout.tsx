@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   title: "Zowkins - Enterprise IT Procurement",
   description:
     "Premium laptops, desktops, networking gear and accessories for businesses in UAE.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({
