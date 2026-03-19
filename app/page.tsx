@@ -1,30 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../components/NewNavbar";
-
-const categories = [
-  {
-    title: "Laptops",
-    desc: "Portable powerhouses for modern teams",
-    img: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    title: "Desktop PCs",
-    desc: "Workstations built for reliability",
-    img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    title: "Networking",
-    desc: "Secure, scalable connectivity gear",
-    img: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    title: "Accessories",
-    desc: "Docking, audio, and peripherals",
-    img: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=800&auto=format&fit=crop",
-  },
-];
-
+import Carousel from "../components/Carousel";
+import AddToCartButton from "../components/AddToCartButton";
 const valueProps = [
   {
     title: "Trusted Supplier",
@@ -44,19 +22,22 @@ const featured = [
   {
     title: "HP ProBook Series",
     label: "Business Performance",
-    price: "From $849",
+    price: "$849",
+    spec: "Business Performance",
     img: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=900&auto=format&fit=crop",
   },
   {
     title: "HP EliteBook",
     label: "Premium Laptops",
-    price: "From $1199",
+    price: "$1,199",
+    spec: "Premium Laptops",
     img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=900&auto=format&fit=crop",
   },
   {
     title: "Networking Equipment",
     label: "Advanced Connectivity",
-    price: "From $229",
+    price: "$229",
+    spec: "Advanced Connectivity",
     img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=900&auto=format&fit=crop",
   },
 ];
@@ -153,48 +134,47 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-14">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              Our Products
-            </p>
-            <h2 className="font-display text-3xl font-semibold">
-              High-impact categories
-            </h2>
-          </div>
-          <button className="rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">
-            View all products
-          </button>
-        </div>
-        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {categories.map((item) => (
-            <div
-              key={item.title}
-              className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.12)] transition hover:-translate-y-1 hover:shadow-xl"
-            >
-              <div className="h-40 overflow-hidden">
-                <img
-                  src={item.img}
-                  alt={item.title}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                />
-              </div>
-              <div className="space-y-3 p-5">
-                <h3 className="font-display text-lg font-semibold">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-slate-500">{item.desc}</p>
-                <Link
-                  href="/products"
-                  className="text-sm font-semibold text-emerald-700"
-                >
-                  View more
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+      <section className="mx-auto max-w-6xl px-4 py-14 space-y-20">
+        <Carousel
+          title="Featured Laptops"
+          slides={[
+            {
+              img: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&auto=format&fit=crop&q=80",
+              title: "HP",
+              href: "/laptops/hp",
+            },
+            {
+              img: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800&auto=format&fit=crop&q=80",
+              title: "Lenovo",
+              href: "/laptops/lenovo",
+            },
+            {
+              img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80",
+              title: "Dell",
+              href: "/laptops/dell",
+            },
+          ]}
+        />
+        <Carousel
+          title="Featured Desktops"
+          slides={[
+            {
+              img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80",
+              title: "HP",
+              href: "/desktops/hp",
+            },
+            {
+              img: "https://images.unsplash.com/photo-1581232321812-9d00e8451d1d?w=800&auto=format&fit=crop&q=80",
+              title: "Lenovo",
+              href: "/desktops/lenovo",
+            },
+            {
+              img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&auto=format&fit=crop&q=80",
+              title: "Dell",
+              href: "/desktops/dell",
+            },
+          ]}
+        />
       </section>
 
       <section className="bg-white">
@@ -270,9 +250,9 @@ export default function Home() {
                   <span className="text-sm font-semibold text-slate-900">
                     {item.price}
                   </span>
-                  <button className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] transition group-hover:border-slate-900">
+                  <AddToCartButton item={{ id: item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"), title: item.title, price: item.price, spec: item.spec, image: item.img }} className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] transition group-hover:border-slate-900">
                     Add to cart
-                  </button>
+                  </AddToCartButton>
                 </div>
               </div>
             </div>
@@ -379,14 +359,59 @@ export default function Home() {
       </section>
 
       <footer className="bg-slate-950 text-slate-400">
-        <div className="mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-6 text-xs">
-          <span>(c) 2026 Zowkins Enterprises LTD</span>
-          <div className="flex items-center gap-4">
-            <button className="hover:text-white">Privacy Policy</button>
-            <button className="hover:text-white">Terms & Conditions</button>
+        <div className="mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-12 text-xs">
+          <span className="lg:basis-1/4">
+            (c) 2026 Zowkins Enterprises LTD. Dubai, UAE
+          </span>
+          <nav className="lg:basis-1/2 flex flex-wrap justify-center items-center gap-6 text-sm lg:gap-8">
+            <Link href="/" className="hover:text-white transition-colors">
+              Home
+            </Link>
+            <Link
+              href="/laptops"
+              className="hover:text-white transition-colors"
+            >
+              Laptops
+            </Link>
+            <Link
+              href="/desktops"
+              className="hover:text-white transition-colors"
+            >
+              Desktops
+            </Link>
+            <Link
+              href="/accessories"
+              className="hover:text-white transition-colors"
+            >
+              Accessories
+            </Link>
+            <Link href="/about" className="hover:text-white transition-colors">
+              About
+            </Link>
+            <Link
+              href="/contact"
+              className="hover:text-white transition-colors"
+            >
+              Contact
+            </Link>
+            <Link href="/cart" className="hover:text-white transition-colors">
+              Cart
+            </Link>
+          </nav>
+          <div className="lg:basis-1/4 flex items-center justify-end gap-4">
+            <Link
+              href="/privacy"
+              className="hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-white transition-colors">
+              Terms
+            </Link>
           </div>
         </div>
       </footer>
     </div>
   );
 }
+
