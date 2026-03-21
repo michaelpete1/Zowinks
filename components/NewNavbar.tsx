@@ -42,15 +42,15 @@ export default function Navbar() {
 
   return (
     <header className={shellClassName}>
-      <nav className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-4 md:px-8">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="grid h-20 w-20 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-black/5">
+      <nav className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-2.5 md:px-8 md:py-3">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-md ring-1 ring-black/5">
             <Image
               src="/zowinks-removebg-preview.png"
               alt="Zowkins logo"
-              width={80}
-              height={80}
-              className="h-16 w-16 object-contain scale-125"
+              width={56}
+              height={56}
+              className="h-8 w-8 object-contain"
             />
           </div>
           <div className="hidden lg:block">
@@ -112,7 +112,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className={`ml-auto grid h-10 w-10 place-items-center rounded-full border lg:hidden ${
+          className={`ml-auto grid h-8 w-8 place-items-center rounded-full border lg:hidden ${
             isHome ? "border-white/12 bg-white/10 text-white" : "border-slate-200 bg-white text-slate-700"
           }`}
           onClick={() => setOpen((value) => !value)}
@@ -131,15 +131,15 @@ export default function Navbar() {
         <>
           <div className="fixed inset-0 z-40 bg-black/75 lg:hidden" onClick={() => setOpen(false)} />
           <div className={`fixed inset-y-0 right-0 z-50 w-[92vw] max-w-sm shadow-2xl lg:hidden ${isHome ? "bg-[#071529] text-white" : "bg-white text-slate-900"}`}>
-            <div className={`flex items-center justify-between border-b p-6 ${isHome ? "border-white/10 bg-[#071529]" : "border-slate-200 bg-white"}`}>
+            <div className={`flex items-center justify-between border-b px-4 py-2.5 ${isHome ? "border-white/10 bg-[#071529]" : "border-slate-200 bg-white"}`}>
               <div className="flex items-center gap-3">
-                <div className="grid h-20 w-20 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-black/5">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-md ring-1 ring-black/5">
                   <Image
                     src="/zowinks-removebg-preview.png"
                     alt="Zowkins logo"
-                    width={80}
-                    height={80}
-                    className="h-16 w-16 object-contain scale-125"
+                    width={56}
+                    height={56}
+                    className="h-8 w-8 object-contain"
                   />
                 </div>
                 <div>
@@ -154,7 +154,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className={`grid h-10 w-10 place-items-center rounded-lg border ${isHome ? "border-white/10 hover:bg-white/10" : "border-slate-200 hover:bg-slate-50"}`}
+                className={`grid h-8 w-8 place-items-center rounded-lg border ${isHome ? "border-white/10 hover:bg-white/10" : "border-slate-200 hover:bg-slate-50"}`}
                 aria-label="Close menu"
                 title="Close menu"
               >
@@ -164,7 +164,7 @@ export default function Navbar() {
               </button>
             </div>
 
-            <div className={`space-y-6 p-6 ${isHome ? "bg-[#071529]" : "bg-white"}`}>
+            <div className={`space-y-4 px-4 py-3.5 ${isHome ? "bg-[#071529]" : "bg-white"}`}>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {links.map((link) => (
                   <Link
@@ -178,6 +178,13 @@ export default function Navbar() {
                 ))}
               </div>
 
+              <Link
+                href="/signup"
+                className={`block rounded-full px-4 py-3 text-center text-sm font-semibold transition ${isHome ? "border border-white/10 bg-white/5 text-white hover:bg-white/10" : "border border-slate-200 bg-white text-slate-900 hover:border-slate-900"}`}
+                onClick={() => setOpen(false)}
+              >
+                Sign Up
+              </Link>
               <div className={`space-y-3 border-t pt-4 ${isHome ? "border-white/10" : "border-slate-200"}`}>
                 <Link
                   href="/contact"
@@ -213,5 +220,7 @@ export default function Navbar() {
     </header>
   );
 }
+
+
 
 
