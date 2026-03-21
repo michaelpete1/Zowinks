@@ -6,6 +6,7 @@ import { AdminBadge, AdminIcon, AdminShell } from "../../../components/AdminShel
 
 type Product = {
   id: string;
+  brand: string;
   name: string;
   category: string;
   price: string;
@@ -14,11 +15,25 @@ type Product = {
   image?: string;
 };
 
+const brandOptionsByCategory: Record<string, string[]> = {
+  Laptops: ["HP", "Dell", "Lenovo", "MacBook"],
+  Desktops: ["HP", "Dell", "Lenovo", "Zowkins"],
+  Accessories: ["Zowkins", "Logitech", "Lenovo", "Dell"],
+  Networking: ["Zowkins", "TP-Link", "Cisco", "D-Link"],
+};
+
+const defaultBrandByCategory: Record<string, string> = {
+  Laptops: "HP",
+  Desktops: "HP",
+  Accessories: "Zowkins",
+  Networking: "Zowkins",
+};
+
 const initialProducts: Product[] = [
-  { id: "PRD-1042", name: "HP EliteBook 840 G11", category: "Laptops", price: "$1,249", stock: 14, visibility: "Visible", image: "/hp.jpg" },
-  { id: "PRD-1041", name: "Dell Latitude 7650", category: "Laptops", price: "$1,398", stock: 9, visibility: "Visible", image: "/dell.jpg" },
-  { id: "PRD-1040", name: "Lenovo ThinkPad T14", category: "Laptops", price: "$1,098", stock: 7, visibility: "Visible", image: "/desktop 2.jpg" },
-  { id: "PRD-1039", name: "USB-C Dock Pro", category: "Accessories", price: "$249", stock: 22, visibility: "Hidden", image: "/keyboard.jpg" },
+  { id: "PRD-1042", brand: "HP", name: "EliteBook 840 G11", category: "Laptops", price: "$1,249", stock: 14, visibility: "Visible", image: "/hp.jpg" },
+  { id: "PRD-1041", brand: "Dell", name: "Latitude 7650", category: "Laptops", price: "$1,398", stock: 9, visibility: "Visible", image: "/dell.jpg" },
+  { id: "PRD-1040", brand: "Lenovo", name: "ThinkPad T14", category: "Laptops", price: "$1,098", stock: 7, visibility: "Visible", image: "/desktop 2.jpg" },
+  { id: "PRD-1039", brand: "Zowkins", name: "USB-C Dock Pro", category: "Accessories", price: "$249", stock: 22, visibility: "Hidden", image: "/keyboard.jpg" },
 ];
 
 function ProductModal({
@@ -33,12 +48,15 @@ function ProductModal({
   open: boolean;
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  form: { name: string; category: string; price: string; stock: string; visibility: Product["visibility"]; image: string };
-  setForm: Dispatch<SetStateAction<{ name: string; category: string; price: string; stock: string; visibility: Product["visibility"]; image: string }>>;
+  form: { brand: string; name: string; category: string; price: string; stock: string; visibility: Product["visibility"]; image: string };
+  setForm: Dispatch<SetStateAction<{ brand: string; name: string; category: string; price: string; stock: string; visibility: Product["visibility"]; image: string }>>;
   editing: Product | null;
   onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
   if (!open) return null;
+
+  const isLaptop = form.category === "Laptops";
+  const currentBrandOptions = brandOptionsByCategory[form.category] ?? ["Zowkins"];
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 px-4 py-6 backdrop-blur-sm">
@@ -59,22 +77,69 @@ function ProductModal({
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 <span>Image URL</span>
-                <input value={form.image} onChange={(event) => setForm((current) => ({ ...current, image: event.target.value }))} placeholder="/hp.jpg or https://..." className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78]" />
+                <input
+                  value={form.image}
+                  onChange={(event) => setForm((current) => ({ ...current, image: event.target.value }))}
+                  placeholder="/hp.jpg or https://..."
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78]"
+                />
               </label>
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 <span>Upload file</span>
-                <input type="file" accept="image/*" onChange={onUpload} className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:border-[#0a2a78]" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={onUpload}
+                  className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:border-[#0a2a78]"
+                />
               </label>
             </div>
           </div>
 
-          <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Product name" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white" />
-          <select value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white">
-            <option>Laptops</option>
-            <option>Desktops</option>
-            <option>Accessories</option>
-            <option>Networking</option>
-          </select>
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            <span>Product type</span>
+            <select
+              value={form.category}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  category: event.target.value,
+                  brand: defaultBrandByCategory[event.target.value] ?? current.brand,
+                  name: event.target.value === "Laptops" && !editing ? "" : current.name,
+                }))
+              }
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+            >
+              <option>Laptops</option>
+              <option>Desktops</option>
+              <option>Accessories</option>
+              <option>Networking</option>
+            </select>
+          </label>
+
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            <span>{isLaptop ? "Laptop brand" : "Brand"}</span>
+            <select
+              value={form.brand}
+              onChange={(event) => setForm((current) => ({ ...current, brand: event.target.value }))}
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+            >
+              {currentBrandOptions.map((brand) => (
+                <option key={brand}>{brand}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="grid gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+            <span>{isLaptop ? "Laptop model" : "Product name"}</span>
+            <input
+              value={form.name}
+              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+              placeholder={isLaptop ? "EliteBook 840 G11" : "Product name"}
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+            />
+          </label>
+
           <input value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} placeholder="Price, e.g. $1,250" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white" />
           <input value={form.stock} onChange={(event) => setForm((current) => ({ ...current, stock: event.target.value }))} placeholder="Stock count" type="number" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white" />
           <select value={form.visibility} onChange={(event) => setForm((current) => ({ ...current, visibility: event.target.value as Product["visibility"] }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white">
@@ -96,18 +161,18 @@ export default function ProductsPage() {
   const [query, setQuery] = useState("");
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState({ name: "", category: "Laptops", price: "", stock: "", visibility: "Visible" as Product["visibility"], image: "" });
+  const [productForm, setProductForm] = useState({ brand: "HP", name: "", category: "Laptops", price: "", stock: "", visibility: "Visible" as Product["visibility"], image: "" });
 
   const visibleCount = useMemo(() => products.filter((product) => product.visibility === "Visible").length, [products]);
 
   const filteredProducts = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return products;
-    return products.filter((product) => [product.id, product.name, product.category, product.price, product.visibility].some((value) => value.toLowerCase().includes(needle)));
+    return products.filter((product) => [product.id, product.brand, product.name, product.category, product.price, product.visibility].some((value) => value.toLowerCase().includes(needle)));
   }, [products, query]);
 
   const resetForm = () => {
-    setProductForm({ name: "", category: "Laptops", price: "", stock: "", visibility: "Visible", image: "" });
+    setProductForm({ brand: "HP", name: "", category: "Laptops", price: "", stock: "", visibility: "Visible", image: "" });
     setEditingProduct(null);
   };
 
@@ -118,7 +183,15 @@ export default function ProductsPage() {
 
   const openEditProduct = (product: Product) => {
     setEditingProduct(product);
-    setProductForm({ name: product.name, category: product.category, price: product.price, stock: String(product.stock), visibility: product.visibility, image: product.image ?? "" });
+    setProductForm({
+      brand: product.brand,
+      name: product.name,
+      category: product.category,
+      price: product.price,
+      stock: String(product.stock),
+      visibility: product.visibility,
+      image: product.image ?? "",
+    });
     setProductModalOpen(true);
   };
 
@@ -130,6 +203,7 @@ export default function ProductsPage() {
   const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
@@ -141,10 +215,11 @@ export default function ProductsPage() {
 
   const submitProduct = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!productForm.name.trim() || !productForm.price.trim() || !productForm.stock.trim()) return;
+    if (!productForm.brand.trim() || !productForm.name.trim() || !productForm.price.trim() || !productForm.stock.trim()) return;
 
     const nextProduct: Product = {
       id: editingProduct?.id ?? `PRD-${Math.floor(1000 + Math.random() * 9000)}`,
+      brand: productForm.brand.trim(),
       name: productForm.name.trim(),
       category: productForm.category,
       price: productForm.price.trim(),
@@ -180,12 +255,13 @@ export default function ProductsPage() {
         </div>
 
         <div className="mt-6 hidden overflow-hidden rounded-[1.5rem] border border-slate-100 md:block">
-          <div className="grid grid-cols-[0.75fr_1.3fr_0.9fr_0.8fr_0.7fr_0.8fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-            <span>Image</span><span>Product</span><span>Category</span><span>Price</span><span>Stock</span><span>Actions</span>
+          <div className="grid grid-cols-[0.7fr_0.8fr_1.1fr_0.9fr_0.8fr_0.7fr_0.8fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+            <span>Image</span><span>Brand</span><span>Product</span><span>Category</span><span>Price</span><span>Stock</span><span>Actions</span>
           </div>
           {filteredProducts.map((product) => (
-            <div key={product.id} className="grid grid-cols-[0.75fr_1.3fr_0.9fr_0.8fr_0.7fr_0.8fr] gap-3 border-t border-slate-100 px-4 py-4 text-sm">
+            <div key={product.id} className="grid grid-cols-[0.7fr_0.8fr_1.1fr_0.9fr_0.8fr_0.7fr_0.8fr] gap-3 border-t border-slate-100 px-4 py-4 text-sm">
               <div className="h-14 w-14 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200"><Image src={product.image || "/desktop.jpg"} alt={product.name} width={56} height={56} className="h-full w-full object-cover" /></div>
+              <div><p className="font-semibold text-slate-900">{product.brand}</p><p className="mt-1 text-xs text-slate-500">Brand</p></div>
               <div><p className="font-semibold text-slate-900">{product.name}</p><div className="mt-1"><AdminBadge label={product.visibility} /></div></div>
               <span className="text-slate-600">{product.category}</span>
               <span className="font-semibold text-slate-900">{product.price}</span>
@@ -203,14 +279,15 @@ export default function ProductsPage() {
             <article key={product.id} className="rounded-[1.4rem] border border-slate-100 bg-white p-4 shadow-sm">
               <div className="mb-4 overflow-hidden rounded-[1.2rem] bg-slate-100"><Image src={product.image || "/desktop.jpg"} alt={product.name} width={640} height={360} className="h-40 w-full object-cover" /></div>
               <div className="flex items-start justify-between gap-4">
-                <div><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{product.id}</p><h3 className="mt-2 text-base font-bold text-slate-900">{product.name}</h3></div>
+                <div><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{product.id}</p><h3 className="mt-2 text-base font-bold text-slate-900">{product.brand} {product.name}</h3></div>
                 <AdminBadge label={product.visibility} />
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-600">
+                <div><p className="text-xs uppercase tracking-[0.2em] text-slate-400">Brand</p><p className="mt-1 font-semibold text-slate-900">{product.brand}</p></div>
                 <div><p className="text-xs uppercase tracking-[0.2em] text-slate-400">Category</p><p className="mt-1 font-semibold text-slate-900">{product.category}</p></div>
                 <div><p className="text-xs uppercase tracking-[0.2em] text-slate-400">Price</p><p className="mt-1 font-semibold text-slate-900">{product.price}</p></div>
                 <div><p className="text-xs uppercase tracking-[0.2em] text-slate-400">Stock</p><p className="mt-1 font-semibold text-slate-900">{product.stock}</p></div>
-                <div>
+                <div className="col-span-2">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Actions</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button type="button" onClick={() => openEditProduct(product)} className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200">Edit</button>

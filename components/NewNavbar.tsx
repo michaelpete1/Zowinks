@@ -12,9 +12,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === "/";
-  const cartCount = useCart((state) =>
-    state.items.reduce((sum, item) => sum + item.qty, 0),
-  );
+  const cartCount = useCart((state) => state.items.reduce((sum, item) => sum + item.qty, 0));
 
   const links = [
     { href: "/", label: "Home" },
@@ -40,27 +38,22 @@ export default function Navbar() {
     ? "text-sm font-semibold tracking-[0.01em] text-white/85 transition hover:text-white"
     : "text-sm font-semibold tracking-[0.01em] text-slate-600 transition hover:text-slate-900";
 
+  const logoBadgeClassName = isHome
+    ? "inline-flex items-center rounded-2xl bg-[linear-gradient(180deg,#071529_0%,#0b1d3b_100%)] px-3 py-2 shadow-[0_10px_24px_rgba(2,6,23,0.28)] ring-1 ring-white/10"
+    : "inline-flex items-center rounded-2xl bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] px-3 py-2 shadow-[0_10px_24px_rgba(2,6,23,0.18)] ring-1 ring-slate-200/80";
+
   return (
     <header className={shellClassName}>
       <nav className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-2.5 md:px-8 md:py-3">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-md ring-1 ring-black/5">
-            <Image
-              src="/zowinks-removebg-preview.png"
-              alt="Zowkins logo"
-              width={56}
-              height={56}
-              className="h-8 w-8 object-contain"
-            />
-          </div>
-          <div className="hidden lg:block">
-            <p className={`font-display text-lg font-semibold leading-none ${isHome ? "text-white" : "text-slate-900"}`}>
-              Zowkins
-            </p>
-            <p className={`text-xs font-medium uppercase tracking-[0.22em] ${isHome ? "text-cyan-100/80" : "text-emerald-700"}`}>
-              Enterprise LTD
-            </p>
-          </div>
+        <Link href="/" className={logoBadgeClassName} aria-label="Zowkins home">
+          <Image
+            src="/zowinks-removebg-preview.png"
+            alt="Zowkins logo"
+            width={132}
+            height={72}
+            className="h-11 w-auto drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]"
+            priority={isHome}
+          />
         </Link>
 
         <div className="hidden items-center justify-center gap-6 lg:flex">
@@ -97,12 +90,7 @@ export default function Navbar() {
             title="Open cart"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.8}
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
             <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-950 shadow-lg">
               {cartCount}
@@ -112,9 +100,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className={`ml-auto grid h-8 w-8 place-items-center rounded-full border lg:hidden ${
-            isHome ? "border-white/12 bg-white/10 text-white" : "border-slate-200 bg-white text-slate-700"
-          }`}
+          className={`ml-auto grid h-8 w-8 place-items-center rounded-full border lg:hidden ${isHome ? "border-white/12 bg-white/10 text-white" : "border-slate-200 bg-white text-slate-700"}`}
           onClick={() => setOpen((value) => !value)}
           aria-label="Toggle menu"
           title="Toggle menu"
@@ -132,25 +118,15 @@ export default function Navbar() {
           <div className="fixed inset-0 z-40 bg-black/75 lg:hidden" onClick={() => setOpen(false)} />
           <div className={`fixed inset-y-0 right-0 z-50 w-[92vw] max-w-sm shadow-2xl lg:hidden ${isHome ? "bg-[#071529] text-white" : "bg-white text-slate-900"}`}>
             <div className={`flex items-center justify-between border-b px-4 py-2.5 ${isHome ? "border-white/10 bg-[#071529]" : "border-slate-200 bg-white"}`}>
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-md ring-1 ring-black/5">
-                  <Image
-                    src="/zowinks-removebg-preview.png"
-                    alt="Zowkins logo"
-                    width={56}
-                    height={56}
-                    className="h-8 w-8 object-contain"
-                  />
-                </div>
-                <div>
-                  <p className={`font-display text-lg font-semibold leading-none ${isHome ? "text-white" : "text-slate-900"}`}>
-                    Zowkins
-                  </p>
-                  <p className={`text-xs font-medium uppercase tracking-[0.22em] ${isHome ? "text-cyan-100/80" : "text-emerald-700"}`}>
-                    Enterprise LTD
-                  </p>
-                </div>
-              </div>
+              <Link href="/" className={logoBadgeClassName} onClick={() => setOpen(false)} aria-label="Zowkins home">
+                <Image
+                  src="/zowinks-removebg-preview.png"
+                  alt="Zowkins logo"
+                  width={132}
+                  height={72}
+                  className="h-11 w-auto drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]"
+                />
+              </Link>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -165,6 +141,18 @@ export default function Navbar() {
             </div>
 
             <div className={`space-y-4 px-4 py-3.5 ${isHome ? "bg-[#071529]" : "bg-white"}`}>
+              <form onSubmit={submitSearch} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2">
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search products"
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-white/50"
+                />
+                <button type="submit" className="rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-950">
+                  Go
+                </button>
+              </form>
+
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {links.map((link) => (
                   <Link
@@ -201,12 +189,7 @@ export default function Navbar() {
                   title="Open cart"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.8}
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                   <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-950 shadow-lg">
                     {cartCount}
@@ -220,7 +203,3 @@ export default function Navbar() {
     </header>
   );
 }
-
-
-
-

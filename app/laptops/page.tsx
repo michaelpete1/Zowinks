@@ -28,6 +28,17 @@ const brands = [
     description: "ThinkPad systems built for durability, mobility, and work continuity.",
     badge: "Hybrid work",
     tone: "from-amber-50 via-white to-slate-50",
+    image: "/desktop 2.jpg",
+    imageAlt: "Lenovo laptop",
+  },
+  {
+    name: "MacBook",
+    href: "/laptops/macbook",
+    description: "MacBook Air and Pro options for creative and executive teams.",
+    badge: "Premium choice",
+    tone: "from-slate-100 via-white to-slate-50",
+    image: "/mb.jpg",
+    imageAlt: "MacBook laptop",
   },
 ];
 
@@ -55,15 +66,15 @@ export default function Laptops() {
                 <Link href="/laptops/dell" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
                   View Dell
                 </Link>
-                <Link href="/laptops/lenovo" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
-                  View Lenovo
+                <Link href="/laptops/macbook" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
+                  View MacBook
                 </Link>
               </div>
             </div>
 
             <InfoStrip
               items={[
-                { label: "Brands", value: "3 collections" },
+                { label: "Brands", value: "4 collections" },
                 { label: "Response", value: "Quotes within 24h" },
                 { label: "Use case", value: "Business procurement" },
               ]}
@@ -79,7 +90,7 @@ export default function Laptops() {
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
             {brands.map((brand) => (
               <Link
                 key={brand.name}
@@ -87,25 +98,13 @@ export default function Laptops() {
                 className="group overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(15,23,42,0.12)]"
               >
                 <div className={`relative h-44 overflow-hidden bg-gradient-to-br ${brand.tone}`}>
-                  {brand.image ? (
-                    <>
-                      <Image
-                        src={brand.image}
-                        alt={brand.imageAlt ?? "Laptop"}
-                        fill
-                        className="object-cover transition duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,20,39,0.06)_0%,rgba(9,20,39,0.35)_100%)]" />
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <svg viewBox="0 0 24 24" className="h-16 w-16 text-slate-700/70" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M4 6h16v10H4z" />
-                        <path d="M8 20h8" />
-                        <path d="M12 16v4" />
-                      </svg>
-                    </div>
-                  )}
+                  <Image
+                    src={brand.image}
+                    alt={brand.imageAlt ?? "Laptop"}
+                    fill
+                    className="object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,20,39,0.06)_0%,rgba(9,20,39,0.35)_100%)]" />
                   <div className="absolute left-4 top-4 inline-flex rounded-full bg-slate-950/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-white backdrop-blur">
                     {brand.badge}
                   </div>
@@ -126,4 +125,3 @@ export default function Laptops() {
     </div>
   );
 }
-

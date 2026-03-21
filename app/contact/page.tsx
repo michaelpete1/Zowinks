@@ -46,10 +46,18 @@ export default function Contact() {
     company: "",
     message: "",
   });
+  const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    alert("Message sent! We will get back to you within 24 hours.");
+    if (status === "sending") return;
+
+    setStatus("sending");
+    window.setTimeout(() => {
+      setFormData({ name: "", email: "", company: "", message: "" });
+      setStatus("sent");
+      window.setTimeout(() => setStatus("idle"), 3500);
+    }, 900);
   };
 
   return (
@@ -124,6 +132,24 @@ export default function Contact() {
                   We will review your request and get back to you with product options and next steps.
                 </p>
 
+                {status === "sent" && (
+                  <div className="mt-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 shadow-[0_12px_30px_rgba(16,185,129,0.12)] animate-[fadeIn_0.4s_ease-out]">
+                    <div className="flex items-start gap-3">
+                      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-emerald-600 text-white">
+                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-display text-lg font-bold text-emerald-950">Message sent</p>
+                        <p className="mt-1 text-sm leading-6 text-emerald-900/80">
+                          Thanks. We received your message and will reply within 24 hours.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="mt-8 grid gap-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <input
@@ -155,8 +181,12 @@ export default function Contact() {
                     onChange={(event) => setFormData({ ...formData, message: event.target.value })}
                   />
 
-                  <button className="rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
-                    Send message
+                  <button
+                    type="submit"
+                    disabled={status === "sending"}
+                    className="rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {status === "sending" ? "Sending..." : "Send message"}
                   </button>
                 </form>
               </div>

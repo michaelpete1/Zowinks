@@ -1,5 +1,6 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
+import Footer from "../components/Footer";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -35,6 +36,7 @@ export default function RootLayout({
         className={`${manrope.variable} ${spaceGrotesk.variable} antialiased font-manrope bg-slate-50 text-slate-900`}
       >
         {children}
+        <Footer />
       </body>
     </html>
   );

@@ -1,16 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import { useCart, type CartItem } from "../../hooks/useCart";
+
+type CheckoutState = "idle" | "processing" | "success";
 
 export default function Cart() {
   const items = useCart((state): CartItem[] => state.items);
   const updateQty = useCart((state) => state.updateQty);
   const removeItem = useCart((state) => state.removeItem);
   const clearCart = useCart((state) => state.clearCart);
-  const getTotal = useCart((state) => state.getTotal);
-
   const subtotal: number = items.reduce((sum, item) => sum + item.price * item.qty, 0);
   const shipping: number = 0;
   const tax: number = subtotal * 0.05;
@@ -19,6 +20,26 @@ export default function Cart() {
     style: "currency",
     currency: "USD",
   });
+
+  const [checkoutState, setCheckoutState] = useState<CheckoutState>("idle");
+  const [paymentRef, setPaymentRef] = useState("");
+
+  const startCheckout = () => {
+    if (!items.length || checkoutState !== "idle") return;
+
+    const reference = `ZWK-${Math.floor(100000 + Math.random() * 900000)}`;
+    setPaymentRef(reference);
+    setCheckoutState("processing");
+
+    window.setTimeout(() => {
+      clearCart();
+      setCheckoutState("success");
+      window.setTimeout(() => {
+        setCheckoutState("idle");
+        setPaymentRef("");
+      }, 3600);
+    }, 1400);
+  };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.08),_transparent_30%),linear-gradient(180deg,_#f8fafc,_#eef2ff)] text-slate-900">
@@ -189,8 +210,13 @@ export default function Cart() {
                 </div>
 
                 <div className="space-y-3">
-                  <button type="button" className="w-full rounded-full bg-emerald-600 px-6 py-4 text-base font-bold text-white shadow-lg transition hover:bg-emerald-700">
-                    Proceed to checkout
+                  <button
+                    type="button"
+                    onClick={startCheckout}
+                    disabled={checkoutState !== "idle"}
+                    className="w-full rounded-full bg-emerald-600 px-6 py-4 text-base font-bold text-white shadow-lg transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {checkoutState === "processing" ? "Processing payment..." : "Pay online"}
                   </button>
                   <Link href="/laptops" className="block w-full rounded-full border border-slate-200 bg-white px-6 py-4 text-center text-base font-semibold text-slate-900 transition hover:border-slate-900">
                     Continue shopping
@@ -209,11 +235,41 @@ export default function Cart() {
           </div>
         )}
       </main>
+
+      {checkoutState !== "idle" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[2rem] bg-white p-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.22)] animate-[fadeIn_0.35s_ease-out] md:p-8">
+            <div className={`mx-auto grid h-16 w-16 place-items-center rounded-full ${checkoutState === "processing" ? "bg-cyan-50 text-cyan-700" : "bg-emerald-50 text-emerald-700"}`}>
+              {checkoutState === "processing" ? (
+                <svg className="h-8 w-8 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="9" strokeOpacity="0.25" />
+                  <path d="M21 12a9 9 0 0 0-9-9" strokeLinecap="round" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </div>
+
+            <p className="mt-5 text-xs uppercase tracking-[0.35em] text-slate-500">Online payment</p>
+            <h2 className="mt-3 font-display text-3xl font-bold text-slate-900">
+              {checkoutState === "processing" ? "Processing secure payment" : "Payment successful"}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              {checkoutState === "processing"
+                ? "We are connecting to the payment gateway and confirming your order."
+                : `Payment received. Confirmation ${paymentRef}. A receipt can be sent to your email.`}
+            </p>
+
+            {checkoutState === "success" && (
+              <div className="mt-5 rounded-[1.25rem] bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+                Your cart has been cleared and the order is ready for processing.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-
-
-
-

@@ -1,4 +1,4 @@
-﻿export type CatalogItem = {
+export type CatalogItem = {
   id: string;
   title: string;
   category: "Laptop" | "Desktop" | "Accessory";
@@ -49,6 +49,26 @@ export const catalog: CatalogItem[] = [
     href: "/laptops/lenovo",
     image: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=900&auto=format&fit=crop",
     description: "Durable ThinkPad built for hybrid teams.",
+  },
+  {
+    id: "macbook-air-m3",
+    title: "MacBook Air M3",
+    category: "Laptop",
+    brand: "Apple",
+    price: "$1,599",
+    href: "/laptops/macbook",
+    image: "/mb.jpg",
+    description: "Lightweight MacBook for mobile productivity and executive work.",
+  },
+  {
+    id: "macbook-pro-14-m3-pro",
+    title: "MacBook Pro 14 M3 Pro",
+    category: "Laptop",
+    brand: "Apple",
+    price: "$2,499",
+    href: "/laptops/macbook",
+    image: "/mb.jpg",
+    description: "Premium MacBook for demanding creative teams.",
   },
   {
     id: "hp-prodesk-400",
