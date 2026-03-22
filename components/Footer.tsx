@@ -14,7 +14,8 @@ export default function Footer() {
   }
 
   return (
-    <footer className="border-t border-white/10 bg-[linear-gradient(180deg,#071529_0%,#0b1d3b_100%)] text-slate-300">
+    <footer className="border-t border-sky-100 bg-[linear-gradient(180deg,#0b1d3b_0%,#08162c_100%)] text-slate-200">
+      <div className="h-px w-full bg-[linear-gradient(90deg,transparent,rgba(191,219,254,0.65),transparent)]" />
       <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
         <div className="grid gap-8 md:grid-cols-[auto_1fr_auto] md:items-center">
           <div className="flex items-center gap-4">
@@ -23,12 +24,12 @@ export default function Footer() {
               alt="Zowkins"
               width={180}
               height={120}
-              className="h-16 w-auto drop-shadow-[0_8px_18px_rgba(0,0,0,0.45)]"
+              className="h-14 w-auto drop-shadow-[0_8px_18px_rgba(0,0,0,0.35)]"
               priority
             />
           </div>
 
-          <nav className="flex flex-wrap items-center gap-5 text-sm md:justify-center">
+          <nav className="flex flex-wrap items-center gap-5 text-sm text-slate-300 md:justify-center">
             <Link href="/" className="transition-colors hover:text-white">Home</Link>
             <Link href="/laptops" className="transition-colors hover:text-white">Laptops</Link>
             <Link href="/desktops" className="transition-colors hover:text-white">Desktops</Link>
@@ -38,7 +39,7 @@ export default function Footer() {
             <Link href="/cart" className="transition-colors hover:text-white">Cart</Link>
           </nav>
 
-          <div className="flex flex-col items-start gap-2 text-xs md:items-end">
+          <div className="flex flex-col items-start gap-2 text-xs text-slate-400 md:items-end">
             <Link href="/privacy" className="transition-colors hover:text-white">Privacy</Link>
             <Link href="/terms" className="transition-colors hover:text-white">Terms</Link>
           </div>

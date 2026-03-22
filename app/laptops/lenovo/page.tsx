@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../../components/NewNavbar";
 import InfoStrip from "../../../components/InfoStrip";
@@ -70,10 +71,13 @@ export default function Lenovo() {
           <div className="grid gap-6 lg:grid-cols-3">
             {products.map((product) => (
               <article key={product.id} className="rounded-[2rem] border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
-                <div className="flex h-52 items-center justify-center bg-[linear-gradient(180deg,#fff7ed_0%,#ffedd5_100%)]">
-                  <svg className="h-12 w-12 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
+                <div className="relative h-52 overflow-hidden bg-[linear-gradient(180deg,#fff7ed_0%,#ffedd5_100%)]">
+                  <Image
+                    src="/lenovo.jpg"
+                    alt={product.title}
+                    fill
+                    className="object-cover object-center"
+                  />
                 </div>
                 <div className="space-y-4 p-6">
                   <div>
@@ -83,7 +87,7 @@ export default function Lenovo() {
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-emerald-700">{product.price}</span>
                     <AddToCartButton
-                      item={{ id: product.id, title: product.title, price: product.price, spec: product.spec }}
+                      item={{ id: product.id, title: product.title, price: product.price, spec: product.spec, image: "/lenovo.jpg" }}
                       className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
                       Add to cart
@@ -98,5 +102,3 @@ export default function Lenovo() {
     </div>
   );
 }
-
-
