@@ -162,7 +162,7 @@ export default function ServicesPage() {
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/10 text-xs font-bold text-white">
                     {index + 1}
                   </div>
-                  <p className="pt-1 text-sm leading-6 text-slate-700 md:text-base">
+                  <p className="pt-1 text-sm leading-6 text-slate-300 md:text-base">
                     {step}
                   </p>
                 </div>

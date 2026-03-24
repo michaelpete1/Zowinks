@@ -147,19 +147,19 @@ export default function About() {
           ))}
         </section>
 
-        <section className="mt-12 grid gap-6 rounded-[2rem] bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] ring-1 ring-slate-100 lg:grid-cols-[1fr_0.95fr] lg:p-10">
+        <section className="mt-12 grid gap-6 rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] lg:grid-cols-[1fr_0.95fr] lg:p-10">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">What we do</p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-slate-900 md:text-4xl">Support procurement from inquiry to delivery.</h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+            <p className="text-xs uppercase tracking-[0.35em] text-white/55">What we do</p>
+            <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">Support procurement from inquiry to delivery.</h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
               Whether you need a single laptop or a larger business rollout, we keep the process organized,
               practical, and easy to approve internally.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/contact" className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+              <Link href="/contact" className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]">
                 Contact us
               </Link>
-              <Link href="/laptops" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
+              <Link href="/laptops" className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10">
                 Browse laptops
               </Link>
             </div>
@@ -167,7 +167,7 @@ export default function About() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {capabilities.map((item) => (
-              <div key={item} className="rounded-[1.4rem] bg-slate-50 px-4 py-4 text-sm font-medium text-slate-700 ring-1 ring-slate-100">
+              <div key={item} className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-sm font-medium text-white">
                 {item}
               </div>
             ))}

@@ -187,17 +187,17 @@ export default function Cart() {
                 </button>
               </div>
             </div>
-            <div className="border-t border-slate-200 pt-4">
-              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-800">
+            <div className="border-t border-white/10 pt-4">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+                <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 font-medium text-white">
                   {items.length} selected item{items.length === 1 ? "" : "s"}
                 </span>
-                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
+                <span className="hidden h-1 w-1 rounded-full bg-white/25 sm:inline-block" />
                 <span>Pay now or pay on delivery</span>
-                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
+                <span className="hidden h-1 w-1 rounded-full bg-white/25 sm:inline-block" />
                 <span>Email order details after checkout</span>
               </div>
-              <p className="text-xs uppercase tracking-[0.28em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.28em] text-slate-400">
                 Session {sessionId || "loading..."}
               </p>
             </div>
@@ -229,29 +229,29 @@ export default function Cart() {
             <section className="space-y-5">
               {stage === "form" && (
                 <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-8">
-                  <div className="mb-6 border-b border-slate-200 pb-5">
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/55">Checkout details</p>
-                  <h2 className="mt-2 font-display text-2xl font-semibold text-white">Tell us where to deliver or where to pick up</h2>
-                  </div>
+                <div className="mb-6 border-b border-white/10 pb-5">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/55">Checkout details</p>
+                <h2 className="mt-2 font-display text-2xl font-semibold text-white">Tell us where to deliver or where to pick up</h2>
+                </div>
 
                   <form className="space-y-5" onSubmit={handleSubmit}>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="mb-2 block text-sm font-semibold text-slate-900">Full name</label>
+                        <label className="mb-2 block text-sm font-semibold text-white">Full name</label>
                         <input
                           value={formData.name}
                           onChange={(event) => setFormData({ ...formData, name: event.target.value })}
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#5ab214] focus:bg-white"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
                           placeholder="Your full name"
                         />
                       </div>
                       <div>
-                        <label className="mb-2 block text-sm font-semibold text-slate-900">Email</label>
+                        <label className="mb-2 block text-sm font-semibold text-white">Email</label>
                         <input
                           type="email"
                           value={formData.email}
                           onChange={(event) => setFormData({ ...formData, email: event.target.value })}
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#5ab214] focus:bg-white"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
                           placeholder="you@example.com"
                         />
                       </div>
@@ -259,20 +259,20 @@ export default function Cart() {
 
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="mb-2 block text-sm font-semibold text-slate-900">Phone</label>
+                        <label className="mb-2 block text-sm font-semibold text-white">Phone</label>
                         <input
                           value={formData.phone}
                           onChange={(event) => setFormData({ ...formData, phone: event.target.value })}
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#5ab214] focus:bg-white"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
                           placeholder="+234..."
                         />
                       </div>
                       <div>
-                        <label className="mb-2 block text-sm font-semibold text-slate-900">City</label>
+                        <label className="mb-2 block text-sm font-semibold text-white">City</label>
                         <input
                           value={formData.city}
                           onChange={(event) => setFormData({ ...formData, city: event.target.value })}
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#5ab214] focus:bg-white"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
                           placeholder="City"
                         />
                       </div>
@@ -280,50 +280,50 @@ export default function Cart() {
 
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="mb-2 block text-sm font-semibold text-slate-900">State</label>
+                        <label className="mb-2 block text-sm font-semibold text-white">State</label>
                         <input
                           value={formData.state}
                           onChange={(event) => setFormData({ ...formData, state: event.target.value })}
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#5ab214] focus:bg-white"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
                           placeholder="State"
                         />
                       </div>
                       <div>
-                        <label className="mb-2 block text-sm font-semibold text-slate-900">Pick-up point</label>
+                        <label className="mb-2 block text-sm font-semibold text-white">Pick-up point</label>
                         <input
                           value={formData.pickupPoint}
                           onChange={(event) => setFormData({ ...formData, pickupPoint: event.target.value })}
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#5ab214] focus:bg-white"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
                           placeholder="Store, office, or pickup location"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-slate-900">Delivery address</label>
+                      <label className="mb-2 block text-sm font-semibold text-white">Delivery address</label>
                       <textarea
                         rows={4}
                         value={formData.deliveryAddress}
                         onChange={(event) => setFormData({ ...formData, deliveryAddress: event.target.value })}
-                        className="w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#5ab214] focus:bg-white"
+                        className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
                         placeholder="House number, street, landmark, and any delivery notes"
                       />
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-slate-900">Order note</label>
+                      <label className="mb-2 block text-sm font-semibold text-white">Order note</label>
                       <textarea
                         rows={3}
                         value={formData.note}
                         onChange={(event) => setFormData({ ...formData, note: event.target.value })}
-                        className="w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#5ab214] focus:bg-white"
+                        className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
                         placeholder="Any extra instructions for the order"
                       />
                     </div>
 
-                    <div className="grid gap-3 rounded-[1.5rem] bg-slate-50 p-4">
-                      <p className="text-sm font-semibold text-slate-900">Payment method</p>
-                      <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                    <div className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                      <p className="text-sm font-semibold text-white">Payment method</p>
+                      <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-[#0a1020] px-4 py-3">
                         <input
                           type="radio"
                           name="paymentMethod"
@@ -333,11 +333,11 @@ export default function Cart() {
                           className="mt-1"
                         />
                         <span>
-                          <span className="block text-sm font-semibold text-slate-900">Pay now</span>
-                          <span className="block text-sm text-slate-600">See the payment gateway with account details after you submit.</span>
+                          <span className="block text-sm font-semibold text-white">Pay now</span>
+                          <span className="block text-sm text-slate-300">See the payment gateway with account details after you submit.</span>
                         </span>
                       </label>
-                      <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                      <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-[#0a1020] px-4 py-3">
                         <input
                           type="radio"
                           name="paymentMethod"
@@ -347,13 +347,13 @@ export default function Cart() {
                           className="mt-1"
                         />
                         <span>
-                          <span className="block text-sm font-semibold text-slate-900">Pay on delivery</span>
-                          <span className="block text-sm text-slate-600">Your order will be marked as processing and sent by email.</span>
+                          <span className="block text-sm font-semibold text-white">Pay on delivery</span>
+                          <span className="block text-sm text-slate-300">Your order will be marked as processing and sent by email.</span>
                         </span>
                       </label>
                     </div>
 
-                    {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+                    {error ? <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
 
                     <button
                       type="submit"
@@ -374,11 +374,11 @@ export default function Cart() {
                   </p>
 
                   <div className="mt-6 grid gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-                    <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
+                    <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3">
                       <span className="text-sm font-semibold text-slate-300">Account name</span>
                       <span className="text-sm font-bold text-white">{PAYMENT_DETAILS.accountName}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
+                    <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3">
                       <span className="text-sm font-semibold text-slate-300">Bank name</span>
                       <span className="text-sm font-bold text-white">{PAYMENT_DETAILS.bankName}</span>
                     </div>
@@ -500,25 +500,25 @@ export default function Cart() {
                   ))}
                 </div>
 
-                <div className="mt-6 space-y-4 text-sm">
-                  <div className="flex justify-between text-slate-600">
-                    <span>Subtotal</span>
-                    <span>{currency(summarySubtotal)}</span>
+                  <div className="mt-6 space-y-4 text-sm">
+                    <div className="flex justify-between text-slate-300">
+                      <span>Subtotal</span>
+                      <span>{currency(summarySubtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-300">
+                      <span>Shipping</span>
+                      <span>{shipping === 0 ? "Free" : currency(shipping)}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-300">
+                      <span>Tax (5%)</span>
+                      <span>{currency(summaryTax)}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-slate-600">
-                    <span>Shipping</span>
-                    <span>{shipping === 0 ? "Free" : currency(shipping)}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-600">
-                    <span>Tax (5%)</span>
-                    <span>{currency(summaryTax)}</span>
-                  </div>
-                </div>
 
-                <div className="my-6 border-t border-slate-200 pt-6">
+                <div className="my-6 border-t border-white/10 pt-6">
                   <div className="flex items-end justify-between">
-                    <span className="text-lg font-semibold text-slate-900">Total</span>
-                    <span className="text-3xl font-bold text-slate-900">{currency(summaryTotal)}</span>
+                    <span className="text-lg font-semibold text-white">Total</span>
+                    <span className="text-3xl font-bold text-white">{currency(summaryTotal)}</span>
                   </div>
                 </div>
 
