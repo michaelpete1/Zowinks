@@ -14,9 +14,10 @@ interface CarouselProps {
   }>;
   title?: string;
   variant?: "photo" | "logo";
+  titleClassName?: string;
 }
 
-export default function Carousel({ slides, title, variant = "photo" }: CarouselProps) {
+export default function Carousel({ slides, title, variant = "photo", titleClassName = "text-slate-900" }: CarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: true,
@@ -43,7 +44,7 @@ export default function Carousel({ slides, title, variant = "photo" }: CarouselP
   return (
     <div className="relative">
       {title ? (
-        <h2 className="mb-8 text-center font-display text-2xl font-bold text-slate-900 lg:text-left">
+        <h2 className={`mb-8 text-center font-display text-2xl font-bold lg:text-left ${titleClassName}`}>
           {title}
         </h2>
       ) : null}

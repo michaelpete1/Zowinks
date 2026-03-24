@@ -169,6 +169,7 @@ export default function Home() {
             <Carousel
               title="Our Products"
               variant="photo"
+              titleClassName="text-white"
               slides={categories.map((card) => ({
                 img: card.img,
                 title: card.title,
