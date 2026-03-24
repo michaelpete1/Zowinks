@@ -1,26 +1,32 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../../../components/NewNavbar";
 import AddToCartButton from "../../../components/AddToCartButton";
+
+export const metadata: Metadata = {
+  title: "HP Desktops",
+  description: "Explore HP ProDesk and EliteDesk systems for office deployments.",
+};
 
 const desktops = [
   {
     id: "hp-elitedesk-800",
     title: "HP EliteDesk 800",
     spec: "Compact business desktop with Intel Core i5 and 16GB RAM.",
-    price: "$999",
+    price: "₦999",
   },
   {
     id: "hp-prodesk-600",
     title: "HP ProDesk 600",
     spec: "Reliable office desktop with 512GB SSD and expandable memory.",
-    price: "$1,149",
+    price: "₦1,149",
   },
   {
     id: "hp-z2-mini",
     title: "HP Z2 Mini",
     spec: "Small form factor workstation for creative and technical teams.",
-    price: "$1,799",
+    price: "₦1,799",
   },
 ];
 
@@ -45,7 +51,7 @@ export default function HPDesktop() {
                 View HP laptops
               </Link>
               <Link href="/cart" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
-                View cart
+                Open order form
               </Link>
             </div>
           </div>
@@ -91,7 +97,7 @@ export default function HPDesktop() {
                       item={{ id: desktop.id, title: desktop.title, price: desktop.price, spec: desktop.spec }}
                       className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
-                      Add to cart
+                      Order Now
                     </AddToCartButton>
                   </div>
                 </div>

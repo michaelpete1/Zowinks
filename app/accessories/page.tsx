@@ -1,26 +1,44 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
 import AddToCartButton from "../../components/AddToCartButton";
+
+export const metadata: Metadata = {
+  title: "Accessories",
+  description: "Browse docks, keyboards, mice, printers, and other business accessories.",
+};
 
 const products = [
   {
     id: "docking-stations",
     title: "Docking Stations",
     spec: "Thunderbolt hubs with dual display support and power delivery.",
-    price: "$199",
+    price: "₦199",
   },
   {
     id: "monitors",
     title: "Monitors",
     spec: "4K IPS displays with USB-C connectivity and ergonomic stands.",
-    price: "$349",
+    price: "₦349",
   },
   {
     id: "keyboards-mice",
     title: "Keyboards and Mice",
     spec: "Reliable input devices for office and hybrid work setups.",
-    price: "$89",
+    price: "₦89",
+  },
+  {
+    id: "canon-pixma-g3430",
+    title: "Canon PIXMA G3430",
+    spec: "Ink tank printer with wireless printing for home and office use.",
+    price: "₦189",
+  },
+  {
+    id: "canon-imageclass-mf3010",
+    title: "Canon imageCLASS MF3010",
+    spec: "Compact mono laser printer for fast document workflows.",
+    price: "₦219",
   },
 ];
 
@@ -43,10 +61,13 @@ export default function Accessories() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link href="/cart" className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
-                  View cart
+                  Open order form
                 </Link>
                 <Link href="/contact" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
                   Contact us
+                </Link>
+                <Link href="/laptops/asus" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
+                  View Asus laptops
                 </Link>
               </div>
             </div>
@@ -64,7 +85,7 @@ export default function Accessories() {
         <section className="mt-14">
           <div className="mb-8">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Popular items</p>
-            <h2 className="mt-2 font-display text-3xl font-semibold text-slate-900">Reliable add-ons for your setup.</h2>
+            <h2 className="mt-2 font-display text-3xl font-semibold text-slate-900">Reliable add-ons and Canon devices for your setup.</h2>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -86,7 +107,7 @@ export default function Accessories() {
                       item={{ id: product.id, title: product.title, price: product.price, spec: product.spec }}
                       className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
-                      Add to cart
+                      Order Now
                     </AddToCartButton>
                   </div>
                 </div>

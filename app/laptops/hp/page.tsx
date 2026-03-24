@@ -1,26 +1,32 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../../../components/NewNavbar";
 import AddToCartButton from "../../../components/AddToCartButton";
+
+export const metadata: Metadata = {
+  title: "HP Laptops",
+  description: "Browse HP business laptops, from ProBook to EliteBook and ZBook models.",
+};
 
 const laptops = [
   {
     id: "hp-probook-440-g11",
     title: "HP ProBook 440 G11",
     spec: "Intel Core Ultra 5, 16GB RAM, 512GB SSD",
-    price: "$1,249",
+    price: "₦1,249",
   },
   {
     id: "hp-elitebook-845-g11",
     title: "HP EliteBook 845 G11",
     spec: "AMD Ryzen 7 PRO, 32GB RAM, 1TB SSD",
-    price: "$1,799",
+    price: "₦1,799",
   },
   {
     id: "hp-zbook-firefly",
     title: "HP ZBook Firefly",
     spec: "Intel Core Ultra 7, 64GB RAM, 2TB SSD",
-    price: "$2,999",
+    price: "₦2,999",
   },
 ];
 
@@ -42,7 +48,7 @@ export default function HP() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/cart" className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
-                View cart
+                Open order form
               </Link>
               <Link href="/laptops" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
                 Back to brands
@@ -92,7 +98,7 @@ export default function HP() {
                       item={{ id: laptop.id, title: laptop.title, price: laptop.price, spec: laptop.spec }}
                       className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
-                      Add to cart
+                      Order Now
                     </AddToCartButton>
                   </div>
                 </div>

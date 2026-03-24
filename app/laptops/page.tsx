@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
+
+export const metadata: Metadata = {
+  title: "Laptops",
+  description: "Compare HP, Dell, Lenovo, Asus, and Apple laptops for business and creative work.",
+};
 
 const brands = [
   {
@@ -32,13 +38,22 @@ const brands = [
     imageAlt: "Lenovo laptop",
   },
   {
-    name: "MacBook",
-    href: "/laptops/macbook",
-    description: "MacBook Air and Pro options for creative and executive teams.",
+    name: "Asus",
+    href: "/laptops/asus",
+    description: "ZenBook and ExpertBook options for teams that want modern design and performance.",
+    badge: "Creator ready",
+    tone: "from-sky-50 via-white to-slate-50",
+    image: "/asus.jpg",
+    imageAlt: "Asus laptop",
+  },
+  {
+    name: "Apple",
+    href: "/laptops/apple",
+    description: "Apple Air and Pro options for creative and executive teams.",
     badge: "Premium choice",
     tone: "from-slate-100 via-white to-slate-50",
     image: "/mb.jpg",
-    imageAlt: "MacBook laptop",
+    imageAlt: "Apple laptop",
   },
 ];
 
@@ -66,15 +81,18 @@ export default function Laptops() {
                 <Link href="/laptops/dell" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
                   View Dell
                 </Link>
-                <Link href="/laptops/macbook" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
-                  View MacBook
+                <Link href="/laptops/asus" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
+                  View Asus
+                </Link>
+                <Link href="/laptops/apple" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
+                  View Apple
                 </Link>
               </div>
             </div>
 
             <InfoStrip
               items={[
-                { label: "Brands", value: "4 collections" },
+                { label: "Brands", value: "5 collections" },
                 { label: "Response", value: "Quotes within 24h" },
                 { label: "Use case", value: "Business procurement" },
               ]}
@@ -90,7 +108,7 @@ export default function Laptops() {
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-5">
             {brands.map((brand) => (
               <Link
                 key={brand.name}

@@ -6,14 +6,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAdminSession } from "../hooks/useAdminSession";
 
-type IconName = "grid" | "layers" | "orders" | "contacts" | "settings" | "menu" | "logout" | "shield" | "mail" | "user" | "search" | "truck" | "team" | "plus" | "trash" | "edit";
+type IconName = "grid" | "layers" | "orders" | "contacts" | "settings" | "menu" | "logout" | "shield" | "mail" | "user" | "search" | "truck" | "team" | "plus" | "trash" | "edit" | "tag";
 
 const navItems = [
   { label: "Dashboard", icon: "grid", href: "/admin" },
   { label: "Products", icon: "layers", href: "/admin/products" },
+  { label: "Categories", icon: "tag", href: "/admin/categories" },
   { label: "Orders", icon: "orders", href: "/admin/orders" },
-  { label: "Messages", icon: "contacts", href: "/admin/messages" },
-  { label: "Team", icon: "team", href: "/admin/team" },
+  { label: "Customers", icon: "contacts", href: "/admin/customers" },
   { label: "Settings", icon: "settings", href: "/admin/settings" },
 ] as const;
 
@@ -36,6 +36,7 @@ export function AdminIcon({ name }: { name: IconName }) {
     case "plus": return <svg viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>;
     case "trash": return <svg viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 13h10l1-13" /><path d="M9 7V4h6v3" /></svg>;
     case "edit": return <svg viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 20h4l10-10-4-4L4 16v4z" /><path d="M13 7l4 4" /></svg>;
+    case "tag": return <svg viewBox="0 0 24 24" className={base} fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 13 13 20l-9-9V4h7l9 9z" /><circle cx="8.5" cy="8.5" r="1.2" /></svg>;
     default: return null;
   }
 }
@@ -100,7 +101,7 @@ export function AdminShell({ title, subtitle, children, searchValue, onSearchCha
       <div className="flex min-h-screen">
         <aside className="hidden w-80 shrink-0 border-r border-slate-200 bg-white/95 px-5 py-6 shadow-[0_16px_40px_rgba(15,23,42,0.06)] lg:flex lg:flex-col">
           <Link href="/admin" className="flex items-center gap-3 rounded-[1.4rem] bg-slate-50 px-4 py-3">
-            <Image src="/zowinks-removebg-preview.png" alt="Zowkins logo" width={40} height={40} className="h-10 w-10 object-contain" />
+            <Image src="/Backup_of_ZOWKINS%20LOGO%20BY%20ME.png" alt="Zowkins logo" width={56} height={56} className="h-12 w-12 object-contain" />
             <div>
               <p className="font-display text-sm font-bold leading-none">Zowkins Admin</p>
               <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Control center</p>
@@ -170,7 +171,7 @@ export function AdminShell({ title, subtitle, children, searchValue, onSearchCha
           <aside className="absolute inset-y-0 left-0 w-[86vw] max-w-sm bg-white px-5 py-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-3 py-2">
-                <Image src="/zowinks-removebg-preview.png" alt="Zowkins logo" width={36} height={36} className="h-9 w-9 object-contain" />
+            <Image src="/Backup_of_ZOWKINS%20LOGO%20BY%20ME.png" alt="Zowkins logo" width={48} height={48} className="h-11 w-11 object-contain" />
                 <div>
                   <p className="font-display text-sm font-bold leading-none">Zowkins Admin</p>
                   <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{title}</p>

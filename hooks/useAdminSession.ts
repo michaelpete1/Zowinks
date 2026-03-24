@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-export type AdminRole = "customer" | "admin";
+export type AdminRole = "admin";
 
 export interface AdminSession {
   role: AdminRole;
@@ -62,18 +62,6 @@ export function useAdminSession() {
     writeSession(next);
   }, []);
 
-  const signInCustomer = useCallback(
-    (name: string, email: string) => {
-      persistSession({
-        role: "customer",
-        name,
-        email,
-        loggedInAt: new Date().toISOString(),
-      });
-    },
-    [persistSession],
-  );
-
   const signInAdmin = useCallback(
     (name: string, email: string) => {
       persistSession({
@@ -94,7 +82,6 @@ export function useAdminSession() {
     session,
     ready,
     isAdmin: session?.role === "admin",
-    signInCustomer,
     signInAdmin,
     clearSession,
   };

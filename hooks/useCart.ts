@@ -67,9 +67,11 @@ export const useCart = create<CartState>()(
       getTotal: () => {
         const { items } = get();
         const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-        return total.toLocaleString("en-US", {
+        return total.toLocaleString("en-NG", {
           style: "currency",
-          currency: "USD",
+          currency: "NGN",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
         });
       },
     }),

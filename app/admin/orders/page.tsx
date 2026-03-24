@@ -2,25 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { AdminBadge, AdminShell } from "../../../components/AdminShell";
-
-type Order = {
-  id: string;
-  customer: string;
-  item: string;
-  amount: string;
-  status: "Delivered" | "Processing" | "Pending";
-  destination: string;
-  updated: string;
-};
-
-const initialOrders: Order[] = [
-  { id: "ORD-2042", customer: "Nova Logistics", item: "HP EliteBook 840 G11", amount: "$3,747", status: "Delivered", destination: "Lagos", updated: "2h ago" },
-  { id: "ORD-2041", customer: "Apex Finance", item: "Dell Latitude 7650", amount: "$7,554", status: "Processing", destination: "Abuja", updated: "6h ago" },
-  { id: "ORD-2040", customer: "Bluewave Group", item: "Lenovo ThinkPad T14", amount: "$2,196", status: "Pending", destination: "Port Harcourt", updated: "1d ago" },
-];
+import { useAdminRecords } from "../../../hooks/useAdminRecords";
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const orders = useAdminRecords((state) => state.orders);
+  const toggleOrderStatus = useAdminRecords((state) => state.toggleOrderStatus);
   const [query, setQuery] = useState("");
 
   const deliveredCount = useMemo(() => orders.filter((order) => order.status === "Delivered").length, [orders]);
@@ -31,14 +17,6 @@ export default function OrdersPage() {
     if (!needle) return orders;
     return orders.filter((order) => [order.id, order.customer, order.item, order.amount, order.status, order.destination].some((value) => value.toLowerCase().includes(needle)));
   }, [orders, query]);
-
-  const toggleDelivery = (id: string) => {
-    setOrders((current) =>
-      current.map((order) =>
-        order.id === id ? { ...order, status: order.status === "Delivered" ? "Pending" : "Delivered", updated: "Just now" } : order,
-      ),
-    );
-  };
 
   return (
     <AdminShell title="Orders" subtitle="Monitor delivered and pending orders from a dedicated page." searchValue={query} onSearchChange={setQuery} searchPlaceholder="Search orders...">
@@ -68,7 +46,7 @@ export default function OrdersPage() {
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <span className="text-xs uppercase tracking-[0.24em] text-slate-500">Updated {order.updated}</span>
-                <button type="button" onClick={() => toggleDelivery(order.id)} className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100">{order.status === "Delivered" ? "Mark pending" : "Mark delivered"}</button>
+                <button type="button" onClick={() => toggleOrderStatus(order.id)} className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100">{order.status === "Delivered" ? "Mark pending" : "Mark delivered"}</button>
               </div>
             </article>
           ))}

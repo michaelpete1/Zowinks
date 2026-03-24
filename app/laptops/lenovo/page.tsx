@@ -1,27 +1,33 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../../components/NewNavbar";
 import InfoStrip from "../../../components/InfoStrip";
 import AddToCartButton from "../../../components/AddToCartButton";
 
+export const metadata: Metadata = {
+  title: "Lenovo Laptops",
+  description: "Browse Lenovo ThinkPad and business laptop options for mobile work.",
+};
+
 const products = [
   {
     id: "lenovo-thinkpad-t14",
     title: "Lenovo ThinkPad T14",
     spec: "AMD Ryzen 5 PRO, 16GB RAM, 512GB SSD",
-    price: "$1,139",
+    price: "₦1,139",
   },
   {
     id: "lenovo-thinkpad-x1-carbon",
     title: "Lenovo ThinkPad X1 Carbon",
     spec: "Intel Core Ultra 7, 32GB RAM, 1TB SSD",
-    price: "$2,149",
+    price: "₦2,149",
   },
   {
     id: "lenovo-thinkpad-p1",
     title: "Lenovo ThinkPad P1",
     spec: "Workstation performance for technical teams",
-    price: "$2,749",
+    price: "₦2,749",
   },
 ];
 
@@ -47,7 +53,7 @@ export default function Lenovo() {
                   Back to brands
                 </Link>
                 <Link href="/cart" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
-                  View cart
+                  Open order form
                 </Link>
               </div>
             </div>
@@ -90,7 +96,7 @@ export default function Lenovo() {
                       item={{ id: product.id, title: product.title, price: product.price, spec: product.spec, image: "/lenovo.jpg" }}
                       className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
-                      Add to cart
+                      Order Now
                     </AddToCartButton>
                   </div>
                 </div>

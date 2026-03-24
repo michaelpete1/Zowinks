@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useCart, type CartItemInput } from "../hooks/useCart";
 
 interface AddToCartButtonProps {
@@ -11,8 +10,14 @@ interface AddToCartButtonProps {
 }
 
 export default function AddToCartButton({ item, className, children }: AddToCartButtonProps) {
-  const router = useRouter();
   const addItem = useCart((state) => state.addItem);
+  const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (!added) return;
+    const timeout = window.setTimeout(() => setAdded(false), 1200);
+    return () => window.clearTimeout(timeout);
+  }, [added]);
 
   return (
     <button
@@ -20,10 +25,10 @@ export default function AddToCartButton({ item, className, children }: AddToCart
       className={className}
       onClick={() => {
         addItem(item);
-        router.push("/cart");
+        setAdded(true);
       }}
     >
-      {children}
+      {added ? "Added" : children}
     </button>
   );
 }

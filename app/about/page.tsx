@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
+
+export const metadata: Metadata = {
+  title: "About Us",
+  description: "Learn about Zowkins Enterprise LTD and our business IT procurement approach.",
+};
 
 const metrics = [
   { label: "Authorized supply", value: "Genuine stock" },

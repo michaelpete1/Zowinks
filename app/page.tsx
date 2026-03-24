@@ -1,13 +1,28 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../components/NewNavbar";
 import Carousel from "../components/Carousel";
-import AddToCartButton from "../components/AddToCartButton";
+import FeaturedProductsSection from "../components/FeaturedProductsSection";
+
+export const metadata: Metadata = {
+  title: "Zowkins Enterprise",
+  description: "Business laptops, desktops, accessories, and trusted supplier brands for modern teams.",
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Zowkins Enterprise",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://zowkins.com",
+  logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://zowkins.com"}/icon.png`,
+  description: "Business laptops, desktops, accessories, and IT procurement solutions for modern teams.",
+};
 
 const valueProps = [
   {
     title: "Trusted Supplier",
-    body: "Authorized distributor with genuine stock and warranties.",
+    body: "HP, Dell, Lenovo, Asus, Logitech, Canon, Premax, Apple, and Microsoft.",
   },
   {
     title: "Expert Support",
@@ -19,28 +34,28 @@ const valueProps = [
   },
 ];
 
-const featured = [
-  {
-    title: "HP ProBook Series",
-    label: "Business Performance",
-    price: "$849",
-    spec: "Business Performance",
-    img: "/hp.jpg",
-  },
-  {
-    title: "HP EliteBook",
-    label: "Premium Laptops",
-    price: "$1,199",
-    spec: "Premium Laptops",
-    img: "/mb.jpg",
-  },
-  {
-    title: "Networking Equipment",
-    label: "Advanced Connectivity",
-    price: "$229",
-    spec: "Advanced Connectivity",
-    img: "/desktop 2.jpg",
-  },
+const supplierSlides = [
+  { title: "HP", img: "/hplogo.jpg", href: "/laptops/hp" },
+  { title: "Dell", img: "/delllogo.jpg", href: "/laptops/dell" },
+  { title: "Lenovo", img: "/lenovologo.jpg", href: "/laptops/lenovo" },
+  { title: "Asus", img: "/asuslogo.jpg", href: "/laptops" },
+  { title: "Logitech", img: "/logitech.jpg", href: "/accessories" },
+  { title: "Canon", img: "/canonlogo.jpg", href: "/accessories" },
+  { title: "Premax", img: "/premaxlogo.png", href: "/accessories" },
+  { title: "Apple", img: "/applelogo.jpg", href: "/laptops/apple" },
+  { title: "Microsoft", img: "/microsoft%20logo.jpg", href: "/contact" },
+];
+
+const supplierHighlights = [
+  "HP",
+  "Dell",
+  "Lenovo",
+  "Asus",
+  "Logitech",
+  "Canon",
+  "Premax",
+  "Apple",
+  "Microsoft",
 ];
 
 function getValueIcon(title: string) {
@@ -98,24 +113,18 @@ function getValueIcon(title: string) {
     </svg>
   );
 }
-const categories = [
+  const categories = [
   {
     title: "Laptops",
     body: "HP, Dell, and Lenovo lines for work and business use.",
     href: "/laptops",
-    img: "/mb.jpg",
+    img: "/hp.jpg",
   },
   {
     title: "Desktop PCs",
-    body: "Compact and powerful desktops for office deployments.",
-    href: "/desktops/hp",
-    img: "/desktop 2.jpg",
-  },
-  {
-    title: "Networking Solutions",
-    body: "Switches, routers, and access gear for stable infrastructure.",
-    href: "/search?q=networking",
-    img: "/desktop 2.jpg",
+    body: "HP and Lenovo desktops for office deployments.",
+    href: "/desktops",
+    img: "/d.jpg",
   },
   {
     title: "Accessories",
@@ -127,10 +136,14 @@ const categories = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f2e6_0%,#f1ebdb_100%)] text-slate-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
       <Navbar />
 
-      <section className="relative overflow-hidden bg-[#0f2f5d] text-white">
+      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white">
         <div className="absolute inset-0">
           <Image
             src="/desktop.jpg"
@@ -139,32 +152,32 @@ export default function Home() {
             priority
             className="object-cover object-center opacity-70 mix-blend-screen [mask-image:linear-gradient(180deg,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.9)_60%,rgba(0,0,0,0.4)_100%)]"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,33,67,0.82)_0%,rgba(11,33,67,0.58)_46%,rgba(11,33,67,0.16)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,29,59,0.82)_0%,rgba(11,29,59,0.58)_46%,rgba(11,33,67,0.16)_100%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_45%)]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-20 lg:py-24">
           <div className="max-w-2xl space-y-6 animate-[fadeIn_0.9s_ease-out]">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/80 md:text-sm">
-              Zowkins Enterprise LTD
+              Zowkins Enterprise
             </p>
             <h1 className="font-display text-4xl font-bold leading-tight text-white drop-shadow-2xl md:text-5xl lg:text-6xl">
               Empowering Your Business
               <span className="block">with Innovative IT Solutions</span>
             </h1>
             <p className="max-w-xl text-base leading-7 text-white/95 md:text-lg">
-              Trusted partner for laptops, desktops, networking gear, and
+              Trusted partner for laptops, desktops, and
               accessories built for modern teams.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/laptops"
-                className="rounded-lg bg-slate-950 px-6 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(0,0,0,0.22)] transition hover:bg-slate-900"
+                className="rounded-lg bg-[#0b1d3b] px-6 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(11,29,59,0.22)] transition hover:bg-[#12386a]"
               >
                 Explore Products
               </Link>
               <Link
                 href="/contact"
-                className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg transition hover:bg-slate-100"
+                className="rounded-lg bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e7ba2a]"
               >
                 Contact Us
               </Link>
@@ -174,52 +187,22 @@ export default function Home() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-12 md:px-8 md:py-16">
-        <div className="md:hidden space-y-10">
-          <Carousel
-            title="Featured Laptops"
-            slides={[
-              {
-                img: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&auto=format&fit=crop&q=80",
-                title: "HP",
-                href: "/laptops/hp",
-              },
-              {
-                img: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800&auto=format&fit=crop&q=80",
-                title: "Lenovo",
-                href: "/laptops/lenovo",
-              },
-              {
-                img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80",
-                title: "Dell",
-                href: "/laptops/dell",
-              },
-            ]}
-          />
-          <Carousel
-            title="Featured Desktops"
-            slides={[
-              {
-                img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80",
-                title: "HP",
-                href: "/desktops/hp",
-              },
-              {
-                img: "https://images.unsplash.com/photo-1581232321812-9d00e8451d1d?w=800&auto=format&fit=crop&q=80",
-                title: "Lenovo",
-                href: "/desktops/hp",
-              },
-              {
-                img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&auto=format&fit=crop&q=80",
-                title: "Dell",
-                href: "/desktops/hp",
-              },
-            ]}
-          />
+        <div className="md:hidden rounded-[2rem] border border-[#d4a11d]/16 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.98),rgba(255,248,228,0.9)_45%,rgba(243,234,215,0.95)_100%)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
+          <div className="space-y-8">
+            <Carousel
+              title="Our Products"
+              variant="photo"
+              slides={categories.map((card) => ({
+                img: card.img,
+                title: card.title,
+                href: card.href,
+              }))}
+            />
+          </div>
         </div>
-
         <div className="hidden md:block">
           <div className="text-center">
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
+            <p className="text-xs uppercase tracking-[0.35em] text-[#0b1d3b]/70">
               Our Products
             </p>
             <h2 className="mt-2 font-display text-3xl font-bold text-slate-900 md:text-4xl">
@@ -248,9 +231,9 @@ export default function Home() {
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     {card.body}
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700">
-                    View More <span aria-hidden="true">&rarr;</span>
-                  </span>
+                    <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#5ab214]">
+                      View More <span aria-hidden="true">&rarr;</span>
+                    </span>
                 </div>
               </Link>
             ))}
@@ -258,7 +241,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[linear-gradient(180deg,#1d4f93_0%,#12386a_100%)]">
+      <section className="bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)]">
         <div className="mx-auto max-w-6xl px-4 py-14 md:px-8 md:py-16">
           <div className="text-center text-white">
             <p className="text-xs uppercase tracking-[0.35em] text-white/75">
@@ -274,7 +257,7 @@ export default function Home() {
                 key={card.title}
                 className="rounded-[1.5rem] border border-white/10 bg-white p-6 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)] animate-[rise_0.7s_ease-out]"
               >
-                <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[linear-gradient(180deg,#1f4f93_0%,#12386a_100%)] text-white shadow-[0_10px_24px_rgba(11,33,67,0.24)]">
+                <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.24)]">
                   {getValueIcon(card.title)}
                 </div>
                 <h3 className="font-display text-lg font-bold text-slate-900">
@@ -283,72 +266,86 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   {card.body}
                 </p>
+                {card.title === "Trusted Supplier" ? (
+                  <Link
+                    href="#suppliers"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#5ab214] hover:text-[#0b1d3b]"
+                  >
+                    See suppliers <span aria-hidden="true">&rarr;</span>
+                  </Link>
+                ) : null}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-14 md:px-8 md:py-16">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
-              Featured Products
-            </p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-slate-900 md:text-4xl">
-              Best picks for modern teams
-            </h2>
-          </div>
-          <Link
-            href="/laptops"
-            className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-          >
-            View All Products
-          </Link>
-        </div>
-        <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          {featured.map((item) => (
-            <div
-              key={item.title}
-              className="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.08)] animate-[rise_0.8s_ease-out]"
-            >
-              <div className="relative h-52 overflow-hidden">
-                <Image
-                  src={item.img}
-                  alt={item.title}
-                  fill
-                  className="object-cover transition duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="space-y-2 p-5">
-                <h3 className="font-display text-lg font-bold text-slate-900">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-slate-500">{item.label}</p>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {item.price}
-                  </span>
-                  <AddToCartButton
-                    item={{
-                      id: item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-                      title: item.title,
-                      price: item.price,
-                      spec: item.spec,
-                      image: item.img,
-                    }}
-                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] transition hover:border-slate-900"
-                  >
-                    Add to cart
-                  </AddToCartButton>
+      <section id="suppliers" className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-16">
+        <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(247,242,230,0.92)_55%,rgba(243,235,219,0.95)_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+          <div className="px-5 py-10 sm:px-8 sm:py-12">
+            <div className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.45em] text-slate-500 sm:text-sm">
+                They choose Zowkins
+              </p>
+              <h2 className="mt-3 font-display text-3xl font-bold text-slate-900 md:text-5xl">
+                Trusted brands we stock and source from
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
+                A clean supplier wall keeps the focus on the brands and works better on mobile than the old card layout.
+              </p>
+            </div>
+
+            <div className="mt-10 md:hidden">
+              <div className="overflow-hidden">
+                <div className="flex w-max items-center gap-4 py-2 animate-[supplier-scroll_28s_linear_infinite]">
+                  {[...supplierSlides, ...supplierSlides].map((supplier, index) => (
+                    <Link
+                      key={`${supplier.title}-${index}`}
+                      href={supplier.href}
+                      className="flex h-20 w-36 shrink-0 items-center justify-center rounded-[1.2rem] border border-slate-200 bg-white px-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)]"
+                    >
+                      <Image
+                        src={supplier.img}
+                        alt={supplier.title}
+                        width={140}
+                        height={56}
+                        className="h-10 w-auto max-w-full object-contain opacity-90 grayscale transition duration-300"
+                      />
+                    </Link>
+                  ))}
                 </div>
               </div>
+              <p className="mt-3 text-center text-xs uppercase tracking-[0.3em] text-slate-500">
+                Swipe or watch it move
+              </p>
             </div>
-          ))}
+
+            <div className="mt-10 hidden md:block">
+              <div className="grid grid-cols-3 gap-4 lg:grid-cols-6">
+                {supplierSlides.map((supplier) => (
+                  <Link
+                    key={supplier.title}
+                    href={supplier.href}
+                    className="flex h-24 items-center justify-center rounded-[1.2rem] border border-slate-200 bg-white px-5 shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(15,23,42,0.08)]"
+                  >
+                    <Image
+                      src={supplier.img}
+                      alt={supplier.title}
+                      width={160}
+                      height={60}
+                      className="h-12 w-auto max-w-full object-contain opacity-90 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
+                    />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="bg-[linear-gradient(180deg,#224f8e_0%,#0f2f5d_100%)] text-white">
+      <FeaturedProductsSection />
+
+      <section className="bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:px-8 md:py-16 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
             <p className="text-xs uppercase tracking-[0.35em] text-white/75">

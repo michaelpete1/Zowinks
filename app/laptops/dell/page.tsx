@@ -1,26 +1,32 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../../components/NewNavbar";
 import AddToCartButton from "../../../components/AddToCartButton";
+
+export const metadata: Metadata = {
+  title: "Dell Laptops",
+  description: "Explore Dell Latitude and Precision laptops for dependable business performance.",
+};
 
 const products = [
   {
     id: "dell-latitude-5450",
     title: "Dell Latitude 5450",
     spec: "Intel Core Ultra 5, 16GB RAM, 512GB SSD",
-    price: "$1,189",
+    price: "₦1,189",
   },
   {
     id: "dell-latitude-7650",
     title: "Dell Latitude 7650",
     spec: "Intel Core Ultra 7, 32GB RAM, 1TB SSD",
-    price: "$1,889",
+    price: "₦1,889",
   },
   {
     id: "dell-precision-3591",
     title: "Dell Precision 3591",
     spec: "Workstation-grade graphics and expandable memory",
-    price: "$2,449",
+    price: "₦2,449",
   },
 ];
 
@@ -45,7 +51,7 @@ export default function Dell() {
                 Back to brands
               </Link>
               <Link href="/cart" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
-                View cart
+                Open order form
               </Link>
             </div>
           </div>
@@ -90,7 +96,7 @@ export default function Dell() {
                       item={{ id: product.id, title: product.title, price: product.price, spec: product.spec }}
                       className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
-                      Add to cart
+                      Order Now
                     </AddToCartButton>
                   </div>
                 </div>

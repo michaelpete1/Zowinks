@@ -16,9 +16,28 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Zowkins - Enterprise IT Procurement",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://zowkins.com"),
+  title: {
+    default: "Zowkins Enterprise",
+    template: "%s | Zowkins Enterprise",
+  },
   description:
-    "Premium laptops, desktops, networking gear and accessories for businesses in UAE.",
+    "Business laptops, desktops, accessories, and IT procurement solutions for modern teams.",
+  openGraph: {
+    title: "Zowkins Enterprise",
+    description:
+      "Business laptops, desktops, accessories, and IT procurement solutions for modern teams.",
+    url: "/",
+    siteName: "Zowkins Enterprise",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Zowkins Enterprise",
+    description:
+      "Business laptops, desktops, accessories, and IT procurement solutions for modern teams.",
+  },
   icons: {
     icon: "/icon.png",
     apple: "/apple-icon.png",
@@ -33,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${manrope.variable} ${spaceGrotesk.variable} antialiased font-manrope bg-slate-50 text-slate-900`}
+        className={`${manrope.variable} ${spaceGrotesk.variable} antialiased font-manrope bg-[linear-gradient(180deg,#f7f2e6_0%,#f1ebdb_100%)] text-slate-900`}
       >
         {children}
         <Footer />

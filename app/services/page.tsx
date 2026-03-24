@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
+
+export const metadata: Metadata = {
+  title: "Services",
+  description: "Discover sourcing, delivery, support, and procurement services for business clients.",
+};
 
 const services = [
   {

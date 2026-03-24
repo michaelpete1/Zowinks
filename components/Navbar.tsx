@@ -11,18 +11,17 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-8 px-4 py-4 md:gap-4">
         <div className="flex flex-shrink-0 items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-900">
+          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-900">
             <Image
               src="/zowinks-removebg-preview.png"
               alt="Zowkins logo"
-              width={44}
-              height={44}
-              className="h-9 w-9 object-contain"
+              width={56}
+              height={56}
+              className="h-11 w-11 object-contain"
             />
           </div>
           <div>
-            <p className="font-display text-lg font-semibold leading-none">Zowkins</p>
-            <p className="text-xs text-emerald-700">Enterprise LTD</p>
+            <p className="font-display text-lg font-semibold leading-none">Zowkins Enterprise</p>
           </div>
         </div>
 
@@ -70,38 +69,10 @@ export default function Navbar() {
         <div className="hidden items-center gap-2 lg:flex">
           <button
             type="button"
-            className="rounded-full border border-slate-200 px-3 py-2 text-xs transition hover:border-slate-900 hover:text-slate-900 lg:px-4 lg:py-2 lg:text-sm"
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
             className="rounded-full bg-emerald-700 px-3 py-2 text-xs text-white shadow-lg transition hover:bg-emerald-600 lg:px-4 lg:py-2 lg:text-sm"
             aria-label="Request Quote"
           >
             Request Quote
-          </button>
-          <button
-            type="button"
-            className="relative grid h-9 w-9 place-items-center rounded-full border border-slate-200 lg:h-10 lg:w-10"
-            aria-label="Shopping cart (3 items)"
-            title="Shopping cart (3 items)"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4 text-slate-700 lg:h-5 lg:w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            >
-              <path d="M6 6h15l-1.5 9h-12z" />
-              <path d="M8 6l-1-3H3" />
-              <circle cx="9" cy="20" r="1.6" />
-              <circle cx="18" cy="20" r="1.6" />
-            </svg>
-            <span className="absolute -right-0.5 -top-0.5 grid h-4 w-4 place-items-center rounded-full bg-amber-400 text-[8px] font-semibold text-slate-900 lg:-right-1 lg:-top-1 lg:h-5 lg:w-5 lg:text-[10px]">
-              3
-            </span>
           </button>
         </div>
 
@@ -136,18 +107,17 @@ export default function Navbar() {
             <div className="border-b border-slate-200 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-900">
-                    <Image
-                      src="/zowinks-removebg-preview.png"
-                      alt="Zowkins logo"
-                      width={44}
-                      height={44}
-                      className="h-9 w-9 object-contain"
+                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-900">
+                <Image
+                  src="/zowinks-removebg-preview.png"
+                  alt="Zowkins logo"
+                  width={56}
+                  height={56}
+                      className="h-11 w-11 object-contain"
                     />
                   </div>
                   <div>
-                    <p className="font-display text-lg font-semibold leading-none">Zowkins</p>
-                    <p className="text-xs text-emerald-700">Enterprise LTD</p>
+                    <p className="font-display text-lg font-semibold leading-none">Zowkins Enterprise</p>
                   </div>
                 </div>
                 <button
@@ -234,12 +204,6 @@ export default function Navbar() {
               </div>
 
               <div className="space-y-3 border-t border-slate-200 pt-4">
-                <button
-                  type="button"
-                  className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold transition hover:border-slate-900"
-                >
-                  Sign In
-                </button>
                 <button
                   type="button"
                   className="w-full rounded-full bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-600"

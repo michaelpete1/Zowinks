@@ -5,14 +5,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --background: #f7f2e6;
+  --foreground: #0b1d3b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #050b16;
+    --foreground: #f7f2e6;
   }
 }
 
@@ -67,5 +67,13 @@ h6 {
   }
 }
 
+@keyframes supplier-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
 
 
