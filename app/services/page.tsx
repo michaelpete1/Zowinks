@@ -36,21 +36,21 @@ const process = [
 
 export default function ServicesPage() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
-        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
           <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-6 px-6 py-8 md:px-10 md:py-10">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">
                   Services
                 </p>
-                <h1 className="mt-3 font-display text-4xl font-bold leading-tight text-slate-900 md:text-5xl">
+                <h1 className="mt-3 font-display text-4xl font-bold leading-tight text-white md:text-5xl">
                   Practical services for teams that need hardware to work.
                 </h1>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">
                   We keep the service side simple: source the right products, deliver them properly, and stay available when you need support.
                 </p>
               </div>
@@ -66,13 +66,13 @@ export default function ServicesPage() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/contact"
-                  className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  className="rounded-full bg-[#f3c74d] px-5 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
                 >
                   Contact us
                 </Link>
                 <Link
                   href="/laptops"
-                  className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900"
+                  className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
                 >
                   Browse products
                 </Link>
@@ -122,33 +122,33 @@ export default function ServicesPage() {
 
         <section className="mt-10 grid gap-6 md:grid-cols-2">
           {services.map((service) => (
-            <div
+              <div
               key={service.title}
-              className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(15,23,42,0.06)]"
+              className="rounded-[1.5rem] border border-white/10 bg-[#111a2f] p-6 shadow-[0_12px_30px_rgba(0,0,0,0.18)]"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-700">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/55">
                 Service
               </p>
-              <h2 className="mt-3 font-display text-2xl font-bold text-slate-900">
+              <h2 className="mt-3 font-display text-2xl font-bold text-white">
                 {service.title}
               </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
+              <p className="mt-3 text-sm leading-6 text-slate-300">
                 {service.body}
               </p>
             </div>
           ))}
         </section>
 
-        <section className="mt-10 rounded-[2rem] bg-white px-6 py-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)] md:px-10 md:py-10">
+        <section className="mt-10 rounded-[2rem] bg-[#0a1020] px-6 py-8 shadow-[0_18px_50px_rgba(0,0,0,0.18)] md:px-10 md:py-10">
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-700">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">
                 How we work
               </p>
-              <h2 className="font-display text-3xl font-bold text-slate-900 md:text-4xl">
+              <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
                 A simple process that keeps things moving.
               </h2>
-              <p className="max-w-xl text-sm leading-6 text-slate-600 md:text-base">
+              <p className="max-w-xl text-sm leading-6 text-slate-300 md:text-base">
                 We keep the handoff straightforward so procurement, delivery, and support do not become a project of their own.
               </p>
             </div>
@@ -157,9 +157,9 @@ export default function ServicesPage() {
               {process.map((step, index) => (
                 <div
                   key={step}
-                  className="flex items-start gap-4 border-b border-slate-200 pb-4 last:border-b-0 last:pb-0"
+                  className="flex items-start gap-4 border-b border-white/10 pb-4 last:border-b-0 last:pb-0"
                 >
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-900">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/10 text-xs font-bold text-white">
                     {index + 1}
                   </div>
                   <p className="pt-1 text-sm leading-6 text-slate-700 md:text-base">

@@ -39,11 +39,11 @@ const capabilities = [
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f9fc_0%,#eef3f8_100%)] text-slate-900">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
-        <section className="overflow-hidden rounded-[2.25rem] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+        <section className="overflow-hidden rounded-[2.25rem] bg-[#0a1020] shadow-[0_24px_80px_rgba(0,0,0,0.24)] ring-1 ring-white/10">
           <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="relative overflow-hidden bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] px-6 py-10 text-white md:px-10 md:py-14 lg:px-12 lg:py-16">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_28%),radial-gradient(circle_at_75%_15%,rgba(255,255,255,0.12),transparent_22%)]" />

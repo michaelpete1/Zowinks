@@ -31,12 +31,12 @@ export default function Navbar() {
   };
 
   const shellClassName = isHome
-    ? "sticky top-0 z-50 border-b border-[#d4a11d]/25 bg-[linear-gradient(180deg,rgba(247,242,230,0.98),rgba(240,233,217,0.96))] text-slate-900 shadow-[0_14px_40px_rgba(9,22,44,0.12)] backdrop-blur-xl"
-    : "sticky top-0 z-50 border-b border-[#d4a11d]/25 bg-[linear-gradient(180deg,rgba(247,242,230,0.98),rgba(240,233,217,0.95))] text-slate-900 shadow-sm backdrop-blur-xl";
+    ? "sticky top-0 z-50 border-b border-[#f3c74d]/15 bg-[linear-gradient(180deg,rgba(7,12,24,0.98),rgba(6,14,30,0.96))] text-slate-100 shadow-[0_14px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+    : "sticky top-0 z-50 border-b border-[#f3c74d]/15 bg-[linear-gradient(180deg,rgba(7,12,24,0.98),rgba(6,14,30,0.95))] text-slate-100 shadow-sm backdrop-blur-xl";
 
-  const navLinkClassName = "text-sm font-semibold tracking-[0.01em] text-slate-700 transition hover:text-slate-950";
+  const navLinkClassName = "text-sm font-semibold tracking-[0.01em] text-slate-300 transition hover:text-white";
 
-  const mobileSurfaceClassName = isHome ? "bg-[linear-gradient(180deg,#f6f0df_0%,#ebe2ce_100%)]" : "bg-white";
+  const mobileSurfaceClassName = isHome ? "bg-[linear-gradient(180deg,#07142a_0%,#050b16_100%)]" : "bg-[#050b16]";
 
   return (
     <header className={shellClassName}>
@@ -64,14 +64,14 @@ export default function Navbar() {
           {selectedCount > 0 ? (
             <Link
               href="/cart"
-              className="rounded-full border border-[#d4a11d]/30 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-[#0b1d3b] hover:bg-white"
-            >
-              Review order ({selectedCount})
-            </Link>
+            className="rounded-full border border-[#f3c74d]/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+          >
+            Review order ({selectedCount})
+          </Link>
           ) : null}
           <Link
             href="/contact"
-            className="rounded-full bg-[#0b1d3b] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-[#0b1d3b]/20 transition hover:bg-[#12386a]"
+            className="rounded-full bg-[#f3c74d] px-5 py-2 text-sm font-semibold text-[#050b16] shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e4b935]"
           >
             Contact Us
           </Link>
@@ -80,7 +80,7 @@ export default function Navbar() {
         <button
           type="button"
           className={`ml-auto grid h-8 w-8 place-items-center rounded-full border lg:hidden ${
-            isHome ? "border-[#d4a11d]/30 bg-white/80 text-slate-900" : "border-[#d4a11d]/30 bg-white text-slate-700"
+            isHome ? "border-[#f3c74d]/25 bg-white/8 text-white" : "border-[#f3c74d]/25 bg-white/8 text-white"
           }`}
           onClick={() => setOpen((value) => !value)}
           aria-label="Toggle menu"
@@ -97,8 +97,8 @@ export default function Navbar() {
       {open ? (
         <>
           <div className="fixed inset-0 z-40 bg-black/75 lg:hidden" onClick={() => setOpen(false)} />
-          <div className={`fixed inset-y-0 right-0 z-50 w-[92vw] max-w-sm shadow-2xl lg:hidden ${isHome ? "bg-[#f6f0df] text-slate-900" : "bg-white text-slate-900"}`}>
-            <div className={`flex items-center justify-between border-b px-4 py-2.5 ${isHome ? "border-[#d4a11d]/20 bg-[#f6f0df]" : "border-slate-200 bg-white"}`}>
+          <div className={`fixed inset-y-0 right-0 z-50 w-[92vw] max-w-sm shadow-2xl lg:hidden ${isHome ? "bg-[#050b16] text-slate-100" : "bg-[#050b16] text-slate-100"}`}>
+            <div className={`flex items-center justify-between border-b px-4 py-2.5 ${isHome ? "border-white/10 bg-[#050b16]" : "border-white/10 bg-[#050b16]"}`}>
               <Link href="/" className="inline-flex items-center" onClick={() => setOpen(false)} aria-label="Zowkins home">
                 <Image
                   src="/zowinks-removebg-preview.png"
@@ -111,7 +111,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className={`grid h-8 w-8 place-items-center rounded-lg border ${isHome ? "border-[#d4a11d]/30 hover:bg-white" : "border-slate-200 hover:bg-slate-50"}`}
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 hover:bg-white/10"
                 aria-label="Close menu"
                 title="Close menu"
               >
@@ -129,7 +129,7 @@ export default function Navbar() {
                   placeholder="Search products"
                   className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
                 />
-                <button type="submit" className="rounded-full bg-slate-900 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white">
+                <button type="submit" className="rounded-full bg-[#f3c74d] px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-[#050b16]">
                   Go
                 </button>
               </form>
@@ -139,7 +139,7 @@ export default function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                  className="rounded-xl px-4 py-3 text-center font-medium text-slate-900 transition hover:bg-amber-50"
+                  className="rounded-xl px-4 py-3 text-center font-medium text-slate-100 transition hover:bg-white/10"
                     onClick={() => setOpen(false)}
                   >
                     {link.label}
@@ -151,7 +151,7 @@ export default function Navbar() {
                 {selectedCount > 0 ? (
                   <Link
                     href="/cart"
-                    className="block rounded-full border border-[#d4a11d]/30 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-900 transition hover:border-[#0b1d3b]"
+                    className="block rounded-full border border-[#f3c74d]/20 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
                     onClick={() => setOpen(false)}
                   >
                     Review order ({selectedCount})
@@ -159,7 +159,7 @@ export default function Navbar() {
                 ) : null}
                 <Link
                   href="/contact"
-                  className="block rounded-full bg-[#0b1d3b] px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#12386a]"
+                  className="block rounded-full bg-[#f3c74d] px-4 py-3 text-center text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
                   onClick={() => setOpen(false)}
                 >
                   Contact Us

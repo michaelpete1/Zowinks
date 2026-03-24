@@ -39,10 +39,10 @@ export default function FeaturedProductsSection() {
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
+          <p className="text-xs uppercase tracking-[0.35em] text-white/55">
             Featured products
           </p>
-          <h2 className="mt-2 font-display text-3xl font-bold text-slate-900 md:text-4xl">
+          <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
             Best picks for modern teams
           </h2>
         </div>
@@ -53,16 +53,16 @@ export default function FeaturedProductsSection() {
           {collections.map((collection) => (
             <article
               key={collection.title}
-              className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+              className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0a1020] shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
             >
-              <div className="border-b border-slate-100 px-5 py-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              <div className="border-b border-white/10 px-5 py-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/55">
                   Homepage spotlight
                 </p>
-                <h3 className="mt-1 font-display text-2xl font-bold text-slate-900">
+                <h3 className="mt-1 font-display text-2xl font-bold text-white">
                   {collection.title}
                 </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+                <p className="mt-2 text-sm leading-6 text-slate-300">
                   {collection.description}
                 </p>
               </div>
@@ -73,9 +73,9 @@ export default function FeaturedProductsSection() {
                     {collection.items.map((item) => (
                       <div
                         key={item.id}
-                        className="group w-[82%] shrink-0 overflow-hidden rounded-[1.4rem] border border-slate-200 bg-slate-50 shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
+                        className="group w-[82%] shrink-0 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0f172a] shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
                       >
-                        <div className="relative h-48 overflow-hidden bg-white">
+                        <div className="relative h-48 overflow-hidden bg-[#0b1220]">
                           <Image
                             src={item.image || "/desktop.jpg"}
                             alt={item.name}
@@ -85,15 +85,15 @@ export default function FeaturedProductsSection() {
                         </div>
                         <div className="space-y-2 p-4">
                           <div>
-                            <h4 className="font-display text-base font-bold text-slate-900">
+                            <h4 className="font-display text-base font-bold text-white">
                               {item.brand} {item.name}
                             </h4>
-                            <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
                               {item.category}
                             </p>
                           </div>
                           <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-semibold text-slate-900">
+                            <span className="text-sm font-semibold text-white">
                               {item.price}
                             </span>
                             <AddToCartButton
@@ -104,7 +104,7 @@ export default function FeaturedProductsSection() {
                                 spec: item.category,
                                 image: item.image,
                               }}
-                              className="rounded-full border border-slate-200 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] transition hover:border-slate-900"
+                              className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
                             >
                               Order Now
                             </AddToCartButton>
@@ -118,9 +118,9 @@ export default function FeaturedProductsSection() {
                     {collection.items.map((item) => (
                       <div
                         key={item.id}
-                        className="group overflow-hidden rounded-[1.4rem] border border-slate-200 bg-slate-50 shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
+                        className="group overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0f172a] shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
                       >
-                        <div className="relative h-48 overflow-hidden bg-white">
+                        <div className="relative h-48 overflow-hidden bg-[#0b1220]">
                           <Image
                             src={item.image || "/desktop.jpg"}
                             alt={item.name}
@@ -130,15 +130,15 @@ export default function FeaturedProductsSection() {
                         </div>
                         <div className="space-y-2 p-4">
                           <div>
-                            <h4 className="font-display text-lg font-bold text-slate-900">
+                            <h4 className="font-display text-lg font-bold text-white">
                               {item.brand} {item.name}
                             </h4>
-                            <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
                               {item.category}
                             </p>
                           </div>
                           <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-semibold text-slate-900">
+                            <span className="text-sm font-semibold text-white">
                               {item.price}
                             </span>
                             <AddToCartButton
@@ -149,7 +149,7 @@ export default function FeaturedProductsSection() {
                                 spec: item.category,
                                 image: item.image,
                               }}
-                              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] transition hover:border-slate-900"
+                              className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
                             >
                               Order Now
                             </AddToCartButton>
@@ -168,7 +168,7 @@ export default function FeaturedProductsSection() {
           ))}
         </div>
       ) : (
-        <div className="mt-8 rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-600">
+        <div className="mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300">
           No featured products selected. Open admin products and mark products as featured.
         </div>
       )}

@@ -34,30 +34,6 @@ const valueProps = [
   },
 ];
 
-const supplierSlides = [
-  { title: "HP", img: "/hplogo.jpg", href: "/laptops/hp" },
-  { title: "Dell", img: "/delllogo.jpg", href: "/laptops/dell" },
-  { title: "Lenovo", img: "/lenovologo.jpg", href: "/laptops/lenovo" },
-  { title: "Asus", img: "/asuslogo.jpg", href: "/laptops" },
-  { title: "Logitech", img: "/logitech.jpg", href: "/accessories" },
-  { title: "Canon", img: "/canonlogo.jpg", href: "/accessories" },
-  { title: "Premax", img: "/premaxlogo.png", href: "/accessories" },
-  { title: "Apple", img: "/applelogo.jpg", href: "/laptops/apple" },
-  { title: "Microsoft", img: "/microsoft%20logo.jpg", href: "/contact" },
-];
-
-const supplierHighlights = [
-  "HP",
-  "Dell",
-  "Lenovo",
-  "Asus",
-  "Logitech",
-  "Canon",
-  "Premax",
-  "Apple",
-  "Microsoft",
-];
-
 function getValueIcon(title: string) {
   if (title === "Trusted Supplier") {
     return (
@@ -136,7 +112,7 @@ function getValueIcon(title: string) {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f2e6_0%,#f1ebdb_100%)] text-slate-900">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
@@ -150,10 +126,11 @@ export default function Home() {
             alt="Zowkins business desktop setup"
             fill
             priority
-            className="object-cover object-center opacity-70 mix-blend-screen [mask-image:linear-gradient(180deg,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.9)_60%,rgba(0,0,0,0.4)_100%)]"
+            className="object-cover object-[center_35%] brightness-[0.68] contrast-[1.15] saturate-[1.08] scale-[1.02]"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,29,59,0.82)_0%,rgba(11,29,59,0.58)_46%,rgba(11,33,67,0.16)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_45%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,12,26,0.92)_0%,rgba(10,25,48,0.76)_42%,rgba(11,29,59,0.34)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.10),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(243,199,77,0.16),transparent_26%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(5,11,22,0.18)_60%,rgba(5,11,22,0.45)_100%)]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-20 lg:py-24">
           <div className="max-w-2xl space-y-6 animate-[fadeIn_0.9s_ease-out]">
@@ -187,7 +164,7 @@ export default function Home() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-12 md:px-8 md:py-16">
-        <div className="md:hidden rounded-[2rem] border border-[#d4a11d]/16 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.98),rgba(255,248,228,0.9)_45%,rgba(243,234,215,0.95)_100%)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
+        <div className="md:hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(11,29,59,0.98),rgba(7,12,24,0.96)_55%,rgba(5,11,22,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] sm:p-6">
           <div className="space-y-8">
             <Carousel
               title="Our Products"
@@ -202,19 +179,19 @@ export default function Home() {
         </div>
         <div className="hidden md:block">
           <div className="text-center">
-            <p className="text-xs uppercase tracking-[0.35em] text-[#0b1d3b]/70">
+            <p className="text-xs uppercase tracking-[0.35em] text-white/55">
               Our Products
             </p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-slate-900 md:text-4xl">
+            <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
               High-Quality Technology for Your Business
             </h2>
           </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mx-auto mt-8 grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">
             {categories.map((card) => (
               <Link
                 key={card.title}
                 href={card.href}
-                className="group overflow-hidden rounded-[1.5rem] border border-white bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.12)]"
+                className="group mx-auto w-full max-w-[22rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)]"
               >
                 <div className="relative h-44 overflow-hidden bg-slate-100">
                   <Image
@@ -225,13 +202,13 @@ export default function Home() {
                   />
                 </div>
                 <div className="p-5 text-center">
-                  <h3 className="font-display text-lg font-bold text-slate-900">
+                  <h3 className="font-display text-lg font-bold text-white">
                     {card.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
                     {card.body}
                   </p>
-                    <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#5ab214]">
+                    <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#f3c74d]">
                       View More <span aria-hidden="true">&rarr;</span>
                     </span>
                 </div>
@@ -268,7 +245,7 @@ export default function Home() {
                 </p>
                 {card.title === "Trusted Supplier" ? (
                   <Link
-                    href="#suppliers"
+                    href="/suppliers"
                     className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#5ab214] hover:text-[#0b1d3b]"
                   >
                     See suppliers <span aria-hidden="true">&rarr;</span>
@@ -276,69 +253,6 @@ export default function Home() {
                 ) : null}
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="suppliers" className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-16">
-        <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(247,242,230,0.92)_55%,rgba(243,235,219,0.95)_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-          <div className="px-5 py-10 sm:px-8 sm:py-12">
-            <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.45em] text-slate-500 sm:text-sm">
-                They choose Zowkins
-              </p>
-              <h2 className="mt-3 font-display text-3xl font-bold text-slate-900 md:text-5xl">
-                Trusted brands we stock and source from
-              </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-                A clean supplier wall keeps the focus on the brands and works better on mobile than the old card layout.
-              </p>
-            </div>
-
-            <div className="mt-10 md:hidden">
-              <div className="overflow-hidden">
-                <div className="flex w-max items-center gap-4 py-2 animate-[supplier-scroll_28s_linear_infinite]">
-                  {[...supplierSlides, ...supplierSlides].map((supplier, index) => (
-                    <Link
-                      key={`${supplier.title}-${index}`}
-                      href={supplier.href}
-                      className="flex h-20 w-36 shrink-0 items-center justify-center rounded-[1.2rem] border border-slate-200 bg-white px-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)]"
-                    >
-                      <Image
-                        src={supplier.img}
-                        alt={supplier.title}
-                        width={140}
-                        height={56}
-                        className="h-10 w-auto max-w-full object-contain opacity-90 grayscale transition duration-300"
-                      />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              <p className="mt-3 text-center text-xs uppercase tracking-[0.3em] text-slate-500">
-                Swipe or watch it move
-              </p>
-            </div>
-
-            <div className="mt-10 hidden md:block">
-              <div className="grid grid-cols-3 gap-4 lg:grid-cols-6">
-                {supplierSlides.map((supplier) => (
-                  <Link
-                    key={supplier.title}
-                    href={supplier.href}
-                    className="flex h-24 items-center justify-center rounded-[1.2rem] border border-slate-200 bg-white px-5 shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(15,23,42,0.08)]"
-                  >
-                    <Image
-                      src={supplier.img}
-                      alt={supplier.title}
-                      width={160}
-                      height={60}
-                      className="h-12 w-auto max-w-full object-contain opacity-90 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
-                    />
-                  </Link>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </section>

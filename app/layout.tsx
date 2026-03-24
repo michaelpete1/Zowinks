@@ -52,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${manrope.variable} ${spaceGrotesk.variable} antialiased font-manrope bg-[linear-gradient(180deg,#f7f2e6_0%,#f1ebdb_100%)] text-slate-900`}
+        className={`${manrope.variable} ${spaceGrotesk.variable} antialiased font-manrope bg-[linear-gradient(180deg,#050b16_0%,#07142a_45%,#0b1d3b_100%)] text-slate-100`}
       >
         {children}
         <Footer />

@@ -164,11 +164,11 @@ export default function Cart() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(243,199,77,0.10),_transparent_30%),linear-gradient(180deg,_#f7f2e6,_#f1ebdb)] text-slate-900">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 md:py-16">
-        <section className="mb-10 overflow-hidden rounded-[2rem] border border-[#d4a11d]/20 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+        <section className="mb-10 overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
           <div className="grid gap-8 px-6 py-10 md:px-10 lg:grid-cols-[1.1fr_0.9fr] lg:px-14">
             <div className="space-y-5">
               <p className="text-xs uppercase tracking-[0.35em] text-[#5ab214]">Order form</p>
@@ -205,21 +205,21 @@ export default function Cart() {
         </section>
 
         {!items.length && stage === "form" ? (
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-12">
-            <div className="mx-auto grid h-24 w-24 place-items-center rounded-3xl bg-slate-100">
-              <svg className="h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <section className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-8 text-center shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-12">
+            <div className="mx-auto grid h-24 w-24 place-items-center rounded-3xl bg-white/10">
+              <svg className="h-12 w-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
             </div>
-            <h2 className="mt-6 font-display text-3xl font-bold text-slate-900">No selected product yet</h2>
-            <p className="mx-auto mt-3 max-w-md text-lg text-slate-600">
+            <h2 className="mt-6 font-display text-3xl font-bold text-white">No selected product yet</h2>
+            <p className="mx-auto mt-3 max-w-md text-lg text-slate-300">
               Use the Order Now button on any product page and each selected item will appear here automatically.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link href="/laptops" className="rounded-full bg-[#0b1d3b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a]">
                 Shop laptops
               </Link>
-              <Link href="/accessories" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900">
+              <Link href="/accessories" className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10">
                 Shop accessories
               </Link>
             </div>
@@ -228,10 +228,10 @@ export default function Cart() {
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <section className="space-y-5">
               {stage === "form" && (
-                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
+                <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-8">
                   <div className="mb-6 border-b border-slate-200 pb-5">
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Checkout details</p>
-                    <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900">Tell us where to deliver or where to pick up</h2>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/55">Checkout details</p>
+                  <h2 className="mt-2 font-display text-2xl font-semibold text-white">Tell us where to deliver or where to pick up</h2>
                   </div>
 
                   <form className="space-y-5" onSubmit={handleSubmit}>
@@ -366,25 +366,25 @@ export default function Cart() {
               )}
 
               {stage === "payment" && (
-                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
-                  <p className="text-xs uppercase tracking-[0.3em] text-[#5ab214]">Payment gateway</p>
-                  <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900">Transfer to our account details</h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-8">
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/55">Payment gateway</p>
+                  <h2 className="mt-2 font-display text-2xl font-semibold text-white">Transfer to our account details</h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-300">
                     Use the details below, then click the confirmation button so we can email your order information.
                   </p>
 
-                  <div className="mt-6 grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                  <div className="mt-6 grid gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
                     <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
-                      <span className="text-sm font-semibold text-slate-600">Account name</span>
-                      <span className="text-sm font-bold text-slate-900">{PAYMENT_DETAILS.accountName}</span>
+                      <span className="text-sm font-semibold text-slate-300">Account name</span>
+                      <span className="text-sm font-bold text-white">{PAYMENT_DETAILS.accountName}</span>
                     </div>
                     <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
-                      <span className="text-sm font-semibold text-slate-600">Bank name</span>
-                      <span className="text-sm font-bold text-slate-900">{PAYMENT_DETAILS.bankName}</span>
+                      <span className="text-sm font-semibold text-slate-300">Bank name</span>
+                      <span className="text-sm font-bold text-white">{PAYMENT_DETAILS.bankName}</span>
                     </div>
                     <div className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-semibold text-slate-600">Account number</span>
-                      <span className="text-sm font-bold text-slate-900">{PAYMENT_DETAILS.accountNumber}</span>
+                      <span className="text-sm font-semibold text-slate-300">Account number</span>
+                      <span className="text-sm font-bold text-white">{PAYMENT_DETAILS.accountNumber}</span>
                     </div>
                   </div>
 
@@ -406,7 +406,7 @@ export default function Cart() {
                     <button
                       type="button"
                       onClick={() => setStage("form")}
-                      className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900"
+                      className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
                     >
                       Back to form
                     </button>
@@ -415,16 +415,16 @@ export default function Cart() {
               )}
 
               {stage === "processing" && (
-                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 text-center shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-10">
-                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-amber-50 text-amber-700">
+                <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 text-center shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-10">
+                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-amber-500/10 text-amber-300">
                     <svg className="h-8 w-8 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <circle cx="12" cy="12" r="9" strokeOpacity="0.25" />
                       <path d="M21 12a9 9 0 0 0-9-9" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <p className="mt-5 text-xs uppercase tracking-[0.35em] text-slate-500">Processing</p>
-                  <h2 className="mt-3 font-display text-3xl font-bold text-slate-900">Your order is being processed</h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-5 text-xs uppercase tracking-[0.35em] text-white/55">Processing</p>
+                  <h2 className="mt-3 font-display text-3xl font-bold text-white">Your order is being processed</h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-300">
                     We have prepared your order and opened an email draft with the details. Our team can now follow up.
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -434,7 +434,7 @@ export default function Cart() {
                     <button
                       type="button"
                       onClick={resetFlow}
-                      className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900"
+                      className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
                     >
                       New order
                     </button>
@@ -443,15 +443,15 @@ export default function Cart() {
               )}
 
               {stage === "success" && (
-                <div className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 text-center shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-10">
-                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-600 text-white">
+                <div className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/10 p-6 text-center shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-10">
+                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-[#050b16]">
                     <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.2">
                       <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <p className="mt-5 text-xs uppercase tracking-[0.35em] text-emerald-700">Success</p>
-                  <h2 className="mt-3 font-display text-3xl font-bold text-emerald-950">Order sent</h2>
-                  <p className="mt-3 text-sm leading-6 text-emerald-900/80">
+                  <p className="mt-5 text-xs uppercase tracking-[0.35em] text-emerald-300">Success</p>
+                  <h2 className="mt-3 font-display text-3xl font-bold text-white">Order sent</h2>
+                  <p className="mt-3 text-sm leading-6 text-emerald-50/80">
                     Your order details have been prepared for email and the selected products are ready for processing.
                   </p>
                   <p className="mt-3 text-xs uppercase tracking-[0.28em] text-emerald-700">
@@ -464,7 +464,7 @@ export default function Cart() {
                     <button
                       type="button"
                       onClick={resetFlow}
-                      className="rounded-full border border-emerald-200 bg-white px-6 py-3 text-sm font-semibold text-emerald-900 transition hover:border-emerald-400"
+                      className="rounded-full border border-emerald-500/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-emerald-400 hover:bg-white/10"
                     >
                       Start new order
                     </button>
@@ -474,27 +474,27 @@ export default function Cart() {
             </section>
 
             <aside className="space-y-5">
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8 lg:sticky lg:top-24">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Selected product</p>
-                <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900">Your order summary</h2>
+                <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-8 lg:sticky lg:top-24">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/55">Selected product</p>
+                <h2 className="mt-2 font-display text-2xl font-semibold text-white">Your order summary</h2>
 
                 <div className="mt-6 space-y-4">
                   {summaryItems.map((item) => (
-                    <article key={item.id} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+                    <article key={item.id} className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="font-semibold text-slate-900">{item.title}</p>
-                          <p className="mt-1 text-sm text-slate-500">{item.spec}</p>
+                          <p className="font-semibold text-white">{item.title}</p>
+                          <p className="mt-1 text-sm text-slate-400">{item.spec}</p>
                         </div>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">Qty {item.qty}</span>
+                        <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">Qty {item.qty}</span>
                       </div>
                       <div className="mt-4 flex items-center justify-between">
-                        <span className="text-sm text-slate-600">Item price</span>
-                        <span className="text-sm font-semibold text-slate-900">{currency(item.price)}</span>
+                        <span className="text-sm text-slate-300">Item price</span>
+                        <span className="text-sm font-semibold text-white">{currency(item.price)}</span>
                       </div>
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="text-sm text-slate-600">Line total</span>
-                        <span className="text-sm font-semibold text-slate-900">{currency(item.price * item.qty)}</span>
+                        <span className="text-sm text-slate-300">Line total</span>
+                        <span className="text-sm font-semibold text-white">{currency(item.price * item.qty)}</span>
                       </div>
                     </article>
                   ))}

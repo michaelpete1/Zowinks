@@ -32,11 +32,11 @@ const desktops = [
 
 export default function HPDesktop() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
-        <section className="grid overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="grid overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_20px_60px_rgba(0,0,0,0.22)] lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-6 px-6 py-10 md:px-10 md:py-14 lg:px-14 lg:py-16">
             <p className="text-xs uppercase tracking-[0.35em] text-emerald-700">HP desktops</p>
             <h1 className="font-display text-4xl font-bold leading-tight md:text-5xl">

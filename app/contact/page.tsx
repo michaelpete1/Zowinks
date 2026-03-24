@@ -61,7 +61,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
 
       <main className="mx-auto max-w-[1400px] px-4 py-6 md:px-6 md:py-10 lg:px-8 lg:py-12">
@@ -124,16 +124,16 @@ export default function Contact() {
               </div>
             </div>
 
-            <div className="bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-8 lg:px-8 lg:py-10">
-              <div className="rounded-[2rem] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] md:p-8 lg:sticky lg:top-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-700">Send message</p>
-                <h2 className="mt-3 font-display text-3xl font-bold text-slate-900">Tell us what you need</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+            <div className="bg-[#050b16] px-4 py-6 text-slate-100 md:px-6 md:py-8 lg:px-8 lg:py-10">
+              <div className="rounded-[2rem] bg-[#0a1020] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.18)] md:p-8 lg:sticky lg:top-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">Send message</p>
+                <h2 className="mt-3 font-display text-3xl font-bold text-white">Tell us what you need</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
                   We will review your request and get back to you with product options and next steps.
                 </p>
 
                 {status === "sent" && (
-                  <div className="mt-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 shadow-[0_12px_30px_rgba(16,185,129,0.12)] animate-[fadeIn_0.4s_ease-out]">
+                  <div className="mt-6 rounded-[1.5rem] border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-50 shadow-[0_12px_30px_rgba(0,0,0,0.16)] animate-[fadeIn_0.4s_ease-out]">
                     <div className="flex items-start gap-3">
                       <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-emerald-600 text-white">
                         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
@@ -141,8 +141,8 @@ export default function Contact() {
                         </svg>
                       </div>
                       <div>
-                        <p className="font-display text-lg font-bold text-emerald-950">Message sent</p>
-                        <p className="mt-1 text-sm leading-6 text-emerald-900/80">
+                        <p className="font-display text-lg font-bold text-white">Message sent</p>
+                        <p className="mt-1 text-sm leading-6 text-emerald-50/80">
                           Thanks. We received your message and will reply within 24 hours.
                         </p>
                       </div>
@@ -153,13 +153,13 @@ export default function Contact() {
                 <form onSubmit={handleSubmit} className="mt-8 grid gap-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <input
-                      className="rounded-2xl border-0 bg-slate-100 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-cyan-700/20"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
                       placeholder="Full name"
                       value={formData.name}
                       onChange={(event) => setFormData({ ...formData, name: event.target.value })}
                     />
                     <input
-                      className="rounded-2xl border-0 bg-slate-100 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-cyan-700/20"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
                       placeholder="Work email"
                       value={formData.email}
                       onChange={(event) => setFormData({ ...formData, email: event.target.value })}
@@ -167,7 +167,7 @@ export default function Contact() {
                   </div>
 
                   <input
-                    className="rounded-2xl border-0 bg-slate-100 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-cyan-700/20"
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
                     placeholder="Company"
                     value={formData.company}
                     onChange={(event) => setFormData({ ...formData, company: event.target.value })}
@@ -175,7 +175,7 @@ export default function Contact() {
 
                   <textarea
                     rows={7}
-                    className="rounded-[1.5rem] border-0 bg-slate-100 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-cyan-700/20"
+                    className="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
                     placeholder="Tell us about the devices, quantities, and timing..."
                     value={formData.message}
                     onChange={(event) => setFormData({ ...formData, message: event.target.value })}
@@ -184,7 +184,7 @@ export default function Contact() {
                   <button
                     type="submit"
                     disabled={status === "sending"}
-                    className="rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {status === "sending" ? "Sending..." : "Send message"}
                   </button>
