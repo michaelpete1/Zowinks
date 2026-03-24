@@ -326,14 +326,13 @@ export default function Home() {
           </div>
           <div className="rounded-[1.75rem] border border-white/10 bg-white/8 p-6 shadow-2xl backdrop-blur-sm">
             <p className="text-xs uppercase tracking-[0.35em] text-white/75">
-              Fast quote
+              Message us
             </p>
             <h3 className="mt-2 font-display text-2xl font-bold">
-              Request pricing today
+              Send us a message today
             </h3>
             <p className="mt-2 text-sm leading-6 text-white/80">
-              Get a tailored quote within 24 hours for your team size and
-              requirements.
+              Send your details and our team will reply within 24 hours for your team size and requirements.
             </p>
             <div className="mt-6 grid gap-3">
               <input
@@ -344,13 +343,14 @@ export default function Home() {
                 className="rounded-full border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/60 focus:outline-none"
                 placeholder="Work email"
               />
-              <input
-                className="rounded-full border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/60 focus:outline-none"
-                placeholder="Company size"
+              <textarea
+                rows={4}
+                className="rounded-[1.25rem] border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/60 focus:outline-none"
+                placeholder="Write your message here"
               />
-              <button className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
-                Contact us
-              </button>
+              <a href="mailto:info@zowkins.com?subject=Zowkins%20enterprise%20inquiry" className="rounded-full bg-white px-6 py-3 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+                Message us here
+              </a>
             </div>
           </div>
         </div>

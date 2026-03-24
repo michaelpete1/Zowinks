@@ -6,6 +6,7 @@ import Image from "next/image";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const quoteMailto = "mailto:info@zowkins.com?subject=Zowkins%20enterprise%20inquiry";
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -67,13 +68,13 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <button
-            type="button"
+          <a
+            href={quoteMailto}
             className="rounded-full bg-emerald-700 px-3 py-2 text-xs text-white shadow-lg transition hover:bg-emerald-600 lg:px-4 lg:py-2 lg:text-sm"
-            aria-label="Request Quote"
+            aria-label="Message us here"
           >
-            Request Quote
-          </button>
+            Message us here
+          </a>
         </div>
 
         <button
@@ -204,13 +205,14 @@ export default function Navbar() {
               </div>
 
               <div className="space-y-3 border-t border-slate-200 pt-4">
-                <button
-                  type="button"
-                  className="w-full rounded-full bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-600"
-                  aria-label="Request Quote"
+                <a
+                  href={quoteMailto}
+                  className="block w-full rounded-full bg-emerald-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-600"
+                  aria-label="Message us here"
+                  onClick={() => setIsOpen(false)}
                 >
-                  Request Quote
-                </button>
+                  Message us here
+                </a>
               </div>
             </div>
           </div>
