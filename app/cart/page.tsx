@@ -4,7 +4,6 @@ import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import { useCart, type CartItem } from "../../hooks/useCart";
-import { useAnonymousSession } from "../../hooks/useAnonymousSession";
 
 type OrderStage = "form" | "payment" | "processing" | "success";
 type PaymentMethod = "pay_now" | "pay_on_delivery";
@@ -53,7 +52,6 @@ function currency(value: number) {
 export default function Cart() {
   const items = useCart((state): CartItem[] => state.items);
   const clearCart = useCart((state) => state.clearCart);
-  const sessionId = useAnonymousSession();
   const [formData, setFormData] = useState<OrderFormState>(emptyFormState);
   const [stage, setStage] = useState<OrderStage>("form");
   const [orderReference, setOrderReference] = useState("");
@@ -81,7 +79,6 @@ export default function Cart() {
   const sendOrderEmail = (reference = orderReference) => {
     const lines = [
       `Order reference: ${reference}`,
-      `Session ID: ${sessionId || "Pending"}`,
       `Customer name: ${formData.name}`,
       `Email: ${formData.email}`,
       `Phone: ${formData.phone}`,
@@ -197,9 +194,6 @@ export default function Cart() {
                 <span className="hidden h-1 w-1 rounded-full bg-white/25 sm:inline-block" />
                 <span>Email order details after checkout</span>
               </div>
-              <p className="text-xs uppercase tracking-[0.28em] text-slate-400">
-                Session {sessionId || "loading..."}
-              </p>
             </div>
           </div>
         </section>
@@ -391,7 +385,6 @@ export default function Cart() {
                   <div className="mt-6 rounded-[1.5rem] bg-[#0b1d3b] p-5 text-white">
                     <p className="text-xs uppercase tracking-[0.3em] text-white/70">Reference</p>
                     <p className="mt-2 text-2xl font-bold">{orderReference}</p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.28em] text-white/70">Session {sessionId || "loading..."}</p>
                     <p className="mt-2 text-sm text-white/80">Total due: {totalLabel}</p>
                   </div>
 
@@ -453,9 +446,6 @@ export default function Cart() {
                   <h2 className="mt-3 font-display text-3xl font-bold text-white">Order sent</h2>
                   <p className="mt-3 text-sm leading-6 text-emerald-50/80">
                     Your order details have been prepared for email and the selected products are ready for processing.
-                  </p>
-                  <p className="mt-3 text-xs uppercase tracking-[0.28em] text-emerald-700">
-                    Session {sessionId || "loading..."}
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <Link href="/laptops" className="rounded-full bg-[#0b1d3b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a]">
