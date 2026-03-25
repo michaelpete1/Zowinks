@@ -37,7 +37,6 @@ export default function Navbar() {
             <Link href="/accessories">Accessories</Link>
             <Link href="/laptops">Laptops</Link>
             <Link href="/support">Support</Link>
-            <Link href="/contact">Contact</Link>
           </div>
         </div>
 
@@ -194,13 +193,6 @@ export default function Navbar() {
                   onClick={() => setIsOpen(false)}
                 >
                   Support
-                </Link>
-                <Link
-                  href="/contact"
-                  className="block rounded-lg px-3 py-3 font-medium text-slate-900 hover:bg-slate-50"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Contact
                 </Link>
               </div>
 

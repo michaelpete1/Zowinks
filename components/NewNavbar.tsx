@@ -19,7 +19,6 @@ export default function Navbar() {
     { href: "/about", label: "About Us" },
     { href: "/laptops", label: "Products" },
     { href: "/services", label: "Services" },
-    { href: "/contact", label: "Contact" },
   ];
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
