@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import { useCart, type CartItem } from "../../hooks/useCart";
@@ -52,9 +52,11 @@ function currency(value: number) {
 export default function Cart() {
   const items = useCart((state): CartItem[] => state.items);
   const clearCart = useCart((state) => state.clearCart);
+  const removeItem = useCart((state) => state.removeItem);
   const [formData, setFormData] = useState<OrderFormState>(emptyFormState);
   const [stage, setStage] = useState<OrderStage>("form");
   const [orderReference, setOrderReference] = useState("");
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [submittedOrder, setSubmittedOrder] = useState<{
     items: CartItem[];
     subtotal: number;
@@ -75,6 +77,30 @@ export default function Cart() {
   const totalLabel = currency(summaryTotal);
 
   const selectedLocation = formData.deliveryAddress || formData.pickupPoint || "Not provided yet";
+
+  useEffect(() => {
+    setSelectedItemIds((current) => current.filter((id) => items.some((item) => item.id === id)));
+  }, [items]);
+
+  const selectedItemCount = selectedItemIds.length;
+
+  const toggleSelectedItem = (id: string) => {
+    setSelectedItemIds((current) => (current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id]));
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItemCount === summaryItems.length) {
+      setSelectedItemIds([]);
+      return;
+    }
+
+    setSelectedItemIds(summaryItems.map((item) => item.id));
+  };
+
+  const removeSelectedItems = () => {
+    selectedItemIds.forEach((id) => removeItem(id));
+    setSelectedItemIds([]);
+  };
 
   const sendOrderEmail = (reference = orderReference) => {
     const lines = [
@@ -157,6 +183,7 @@ export default function Cart() {
     setStage("form");
     setOrderReference("");
     setSubmittedOrder(null);
+    setSelectedItemIds([]);
     setError("");
   };
 
@@ -223,10 +250,10 @@ export default function Cart() {
             <section className="space-y-5">
               {stage === "form" && (
                 <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-8">
-                <div className="mb-6 border-b border-white/10 pb-5">
-                <p className="text-xs uppercase tracking-[0.3em] text-white/55">Checkout details</p>
-                <h2 className="mt-2 font-display text-2xl font-semibold text-white">Tell us where to deliver or where to pick up</h2>
-                </div>
+                  <div className="mb-6 border-b border-white/10 pb-5">
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/55">Checkout details</p>
+                    <h2 className="mt-2 font-display text-2xl font-semibold text-white">Tell us where to deliver or where to pick up</h2>
+                  </div>
 
                   <form className="space-y-5" onSubmit={handleSubmit}>
                     <div className="grid gap-4 md:grid-cols-2">
@@ -468,13 +495,43 @@ export default function Cart() {
                 <p className="text-xs uppercase tracking-[0.3em] text-white/55">Selected product</p>
                 <h2 className="mt-2 font-display text-2xl font-semibold text-white">Your order summary</h2>
 
+                {stage === "form" && summaryItems.length > 0 ? (
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={toggleSelectAll}
+                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                    >
+                      {selectedItemCount === summaryItems.length ? "Deselect all" : "Select all"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={removeSelectedItems}
+                      disabled={!selectedItemCount}
+                      className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Cancel selected ({selectedItemCount})
+                    </button>
+                  </div>
+                ) : null}
+
                 <div className="mt-6 space-y-4">
                   {summaryItems.map((item) => (
                     <article key={item.id} className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
                       <div className="flex items-start justify-between gap-4">
-                        <div>
+                        <div className="flex min-w-0 items-start gap-3">
+                          {stage === "form" ? (
+                            <input
+                              type="checkbox"
+                              checked={selectedItemIds.includes(item.id)}
+                              onChange={() => toggleSelectedItem(item.id)}
+                              className="mt-1 h-4 w-4 rounded border-white/20 bg-white/10 text-[#f3c74d] focus:ring-[#f3c74d]"
+                            />
+                          ) : null}
+                          <div className="min-w-0">
                           <p className="font-semibold text-white">{item.title}</p>
                           <p className="mt-1 text-sm text-slate-400">{item.spec}</p>
+                          </div>
                         </div>
                         <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">Qty {item.qty}</span>
                       </div>

@@ -52,7 +52,7 @@ export default function SuppliersPage() {
                         alt={supplier.title}
                         width={120}
                         height={60}
-                        className="h-12 w-auto object-contain grayscale transition duration-300 group-hover:grayscale-0"
+                        className="h-12 w-auto object-contain transition duration-300"
                       />
                     </div>
                     <div className="min-w-0 flex-1 text-right">

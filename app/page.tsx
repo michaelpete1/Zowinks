@@ -89,6 +89,27 @@ function getValueIcon(title: string) {
     </svg>
   );
 }
+
+function getValueTone(title: string) {
+  if (title === "Trusted Supplier") {
+    return {
+      badge: "bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]",
+      link: "text-[#f3c74d] hover:text-white",
+    };
+  }
+
+  if (title === "Expert Support") {
+    return {
+      badge: "bg-[linear-gradient(180deg,#12386a_0%,#5ab214_100%)] text-white shadow-[0_10px_24px_rgba(18,56,106,0.28)]",
+      link: "text-[#5ab214] hover:text-white",
+    };
+  }
+
+  return {
+    badge: "bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]",
+    link: "text-[#f3c74d] hover:text-white",
+  };
+}
   const categories = [
   {
     title: "Laptops",
@@ -230,30 +251,34 @@ export default function Home() {
             </h2>
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {valueProps.map((card) => (
-              <div
-                key={card.title}
-                className="rounded-[1.5rem] border border-white/10 bg-white p-6 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)] animate-[rise_0.7s_ease-out]"
-              >
-                <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.24)]">
-                  {getValueIcon(card.title)}
+            {valueProps.map((card) => {
+              const tone = getValueTone(card.title);
+
+              return (
+                <div
+                  key={card.title}
+                  className="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] p-6 text-center shadow-[0_12px_30px_rgba(0,0,0,0.28)] ring-1 ring-white/5 animate-[rise_0.7s_ease-out]"
+                >
+                  <div className={`mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl ${tone.badge}`}>
+                    <span className="scale-105">{getValueIcon(card.title)}</span>
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-white">
+                    {card.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    {card.body}
+                  </p>
+                  {card.title === "Trusted Supplier" ? (
+                    <Link
+                      href="/suppliers"
+                      className={`mt-4 inline-flex items-center gap-2 text-sm font-semibold transition ${tone.link}`}
+                    >
+                      See suppliers <span aria-hidden="true">&rarr;</span>
+                    </Link>
+                  ) : null}
                 </div>
-                <h3 className="font-display text-lg font-bold text-slate-900">
-                  {card.title}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {card.body}
-                </p>
-                {card.title === "Trusted Supplier" ? (
-                  <Link
-                    href="/suppliers"
-                    className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#5ab214] hover:text-[#0b1d3b]"
-                  >
-                    See suppliers <span aria-hidden="true">&rarr;</span>
-                  </Link>
-                ) : null}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
