@@ -68,7 +68,7 @@ export default function ServicesPage() {
                   href="/contact"
                   className="rounded-full bg-[#f3c74d] px-5 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
                 >
-                  Contact us
+                  Request a Quote
                 </Link>
                 <Link
                   href="/laptops"

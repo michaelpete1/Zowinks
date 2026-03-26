@@ -90,10 +90,10 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.10)] md:p-8">
+      <section className="rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.10)] md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">Operations</p>
             <h2 className="mt-2 font-display text-2xl font-bold">Keep the store moving</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-200">Use the separate pages for products, categories, orders, and customer records. The dashboard stays as a compact control entry point.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-200">Use the separate pages for products, categories, orders, and customer records. The dashboard stays as a compact control entry point for managing new products and the rest of the store.</p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/admin/products" className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">Open products</Link>
               <Link href="/admin/settings" className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">Image settings</Link>
@@ -104,7 +104,7 @@ export default function AdminDashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Status</p>
             <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">What lives where</h2>
             <div className="mt-5 space-y-3 text-sm text-slate-600">
-              <p><strong className="text-slate-900">Products</strong> handles add, edit, hide, and remove flows.</p>
+              <p><strong className="text-slate-900">Products</strong> handles add, edit, hide, remove, and mark-new flows.</p>
               <p><strong className="text-slate-900">Categories</strong> handles category uploads and grouping.</p>
               <p><strong className="text-slate-900">Orders</strong> handles delivered and pending tracking.</p>
               <p><strong className="text-slate-900">Customers</strong> holds customer records and contact details.</p>

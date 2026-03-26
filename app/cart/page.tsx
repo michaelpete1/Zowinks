@@ -525,6 +525,8 @@ export default function Cart() {
                               type="checkbox"
                               checked={selectedItemIds.includes(item.id)}
                               onChange={() => toggleSelectedItem(item.id)}
+                              aria-label={`Select ${item.title} for cancellation`}
+                              title={`Select ${item.title} for cancellation`}
                               className="mt-1 h-4 w-4 rounded border-white/20 bg-white/10 text-[#f3c74d] focus:ring-[#f3c74d]"
                             />
                           ) : null}

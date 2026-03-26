@@ -70,9 +70,9 @@ export default function Navbar() {
           <a
             href={quoteMailto}
             className="rounded-full bg-emerald-700 px-3 py-2 text-xs text-white shadow-lg transition hover:bg-emerald-600 lg:px-4 lg:py-2 lg:text-sm"
-            aria-label="Message us here"
+            aria-label="Request a quote"
           >
-            Message us here
+            Request a Quote
           </a>
         </div>
 
@@ -200,10 +200,10 @@ export default function Navbar() {
                 <a
                   href={quoteMailto}
                   className="block w-full rounded-full bg-emerald-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-600"
-                  aria-label="Message us here"
+                  aria-label="Request a quote"
                   onClick={() => setIsOpen(false)}
                 >
-                  Message us here
+                  Request a Quote
                 </a>
               </div>
             </div>

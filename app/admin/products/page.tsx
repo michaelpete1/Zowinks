@@ -252,11 +252,11 @@ export default function ProductsPage() {
           <div className="rounded-2xl bg-white px-4 py-3 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Total products</p><p className="mt-2 text-2xl font-bold text-slate-900">{products.length}</p></div>
           <div className="rounded-2xl bg-white px-4 py-3 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Visible</p><p className="mt-2 text-2xl font-bold text-slate-900">{visibleCount}</p></div>
           <div className="rounded-2xl bg-white px-4 py-3 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Hidden</p><p className="mt-2 text-2xl font-bold text-slate-900">{products.length - visibleCount}</p></div>
-          <div className="rounded-2xl bg-white px-4 py-3 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Featured</p><p className="mt-2 text-2xl font-bold text-slate-900">{featuredCount}</p></div>
+          <div className="rounded-2xl bg-white px-4 py-3 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">New</p><p className="mt-2 text-2xl font-bold text-slate-900">{featuredCount}</p></div>
         </div>
 
         <div className="mt-4 rounded-[1.25rem] border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          Use <span className="font-semibold">Feature</span> and <span className="font-semibold">Unfeature</span> to control the homepage featured laptops and desktops sections.
+          Use <span className="font-semibold">Mark new</span> and <span className="font-semibold">Remove new</span> to control the homepage new products section.
         </div>
 
         <div className="mt-6 hidden overflow-hidden rounded-[1.5rem] border border-slate-100 md:block">
@@ -267,12 +267,12 @@ export default function ProductsPage() {
             <div key={product.id} className="grid grid-cols-[0.7fr_0.8fr_1.1fr_0.9fr_0.8fr_0.7fr_1fr] gap-3 border-t border-slate-100 px-4 py-4 text-sm">
               <div className="h-14 w-14 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200"><Image src={product.image || "/desktop.jpg"} alt={product.name} width={56} height={56} className="h-full w-full object-cover" /></div>
               <div><p className="font-semibold text-slate-900">{product.brand}</p><p className="mt-1 text-xs text-slate-500">Brand</p></div>
-              <div><p className="font-semibold text-slate-900">{product.name}</p><div className="mt-1 flex flex-wrap gap-2"><AdminBadge label={product.visibility} />{product.featured ? <span className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">Featured</span> : null}</div></div>
+              <div><p className="font-semibold text-slate-900">{product.name}</p><div className="mt-1 flex flex-wrap gap-2"><AdminBadge label={product.visibility} />{product.featured ? <span className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">New</span> : null}</div></div>
               <span className="text-slate-600">{product.category}</span>
               <span className="font-semibold text-slate-900">{product.price}</span>
               <span className="font-semibold text-slate-900">{product.stock}</span>
               <div className="flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => toggleFeatured(product.id)} className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100">{product.featured ? "Unfeature" : "Feature"}</button>
+                <button type="button" onClick={() => toggleFeatured(product.id)} className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100">{product.featured ? "Remove new" : "Mark new"}</button>
                 <button type="button" onClick={() => openEditProduct(product)} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"><AdminIcon name="edit" />Edit</button>
                 <button type="button" onClick={() => removeProduct(product.id)} className="inline-flex items-center justify-center rounded-full bg-rose-50 p-2 text-rose-700 transition hover:bg-rose-100" aria-label={`Remove ${product.name}`}><AdminIcon name="trash" /></button>
               </div>
@@ -296,7 +296,7 @@ export default function ProductsPage() {
                 <div className="col-span-2">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Actions</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => toggleFeatured(product.id)} className="rounded-full bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100">{product.featured ? "Unfeature" : "Feature"}</button>
+                    <button type="button" onClick={() => toggleFeatured(product.id)} className="rounded-full bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100">{product.featured ? "Remove new" : "Mark new"}</button>
                     <button type="button" onClick={() => openEditProduct(product)} className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200">Edit</button>
                     <button type="button" onClick={() => removeProduct(product.id)} className="rounded-full bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100">Delete</button>
                   </div>

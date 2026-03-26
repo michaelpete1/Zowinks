@@ -3,173 +3,92 @@
 import { useMemo } from "react";
 import Image from "next/image";
 import AddToCartButton from "./AddToCartButton";
+import Carousel from "./Carousel";
 import { useCatalog } from "../hooks/useCatalog";
 
 export default function FeaturedProductsSection() {
   const products = useCatalog((state) => state.products);
-  const featured = useMemo(
+  const newProducts = useMemo(
     () => products.filter((product) => product.featured && product.visibility === "Visible"),
     [products],
   );
-  const featuredLaptops = useMemo(
-    () => featured.filter((product) => product.category === "Laptops"),
-    [featured],
-  );
-  const featuredDesktops = useMemo(
-    () => featured.filter((product) => product.category === "Desktops"),
-    [featured],
-  );
-
-  const collections = [
-    {
-      title: "Featured Laptops",
-      description: "Products marked as featured in admin will appear here.",
-      items: featuredLaptops,
-      emptyState: "No featured laptops selected in admin yet.",
-    },
-    {
-      title: "Featured Desktops",
-      description: "Keep desktop picks visible by marking them featured in admin.",
-      items: featuredDesktops,
-      emptyState: "No featured desktops selected in admin yet.",
-    },
-  ] as const;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-16">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-            Featured products
-          </p>
-          <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-            Best picks for modern teams
-          </h2>
-        </div>
+      <div className="text-center">
+        <p className="text-xs uppercase tracking-[0.35em] text-white/55">
+          New products
+        </p>
+        <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
+          Fresh picks for modern teams
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
+          Products marked as new in admin will appear here, whether they are laptops or desktops.
+        </p>
       </div>
 
-      {featured.length ? (
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          {collections.map((collection) => (
+      {newProducts.length ? (
+        <>
+          <div className="mx-auto mt-8 md:hidden">
+            <div className="rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(11,29,59,0.98),rgba(7,12,24,0.96)_55%,rgba(5,11,22,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] sm:p-5">
+              <Carousel
+                title="New Products"
+                titleClassName="text-white"
+                slides={newProducts.map((item) => ({
+                  img: item.image || "/desktop.jpg",
+                  title: `${item.brand} ${item.name}`,
+                  href: `/search?q=${encodeURIComponent(`${item.brand} ${item.name}`)}`,
+                }))}
+              />
+            </div>
+          </div>
+
+          <div className="mx-auto mt-8 hidden gap-6 md:grid sm:grid-cols-2 xl:grid-cols-3">
+          {newProducts.map((item) => (
             <article
-              key={collection.title}
-              className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0a1020] shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
+              key={item.id}
+              className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)]"
             >
-              <div className="border-b border-white/10 px-5 py-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                  Homepage spotlight
-                </p>
-                <h3 className="mt-1 font-display text-2xl font-bold text-white">
-                  {collection.title}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
-                  {collection.description}
-                </p>
+              <div className="relative h-52 overflow-hidden bg-[#0b1220]">
+                <Image
+                  src={item.image || "/desktop.jpg"}
+                  alt={item.name}
+                  fill
+                  className="object-cover transition duration-500 group-hover:scale-105"
+                />
               </div>
-
-              {collection.items.length ? (
-                <>
-                  <div className="flex gap-4 overflow-x-auto px-5 py-5 md:hidden">
-                    {collection.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="group w-[82%] shrink-0 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0f172a] shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
-                      >
-                        <div className="relative h-48 overflow-hidden bg-[#0b1220]">
-                          <Image
-                            src={item.image || "/desktop.jpg"}
-                            alt={item.name}
-                            fill
-                            className="object-cover transition duration-500 group-hover:scale-105"
-                          />
-                        </div>
-                        <div className="space-y-2 p-4">
-                          <div>
-                            <h4 className="font-display text-base font-bold text-white">
-                              {item.brand} {item.name}
-                            </h4>
-                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
-                              {item.category}
-                            </p>
-                          </div>
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-semibold text-white">
-                              {item.price}
-                            </span>
-                            <AddToCartButton
-                              item={{
-                                id: item.id,
-                                title: `${item.brand} ${item.name}`,
-                                price: item.price,
-                                spec: item.category,
-                                image: item.image,
-                              }}
-                              className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
-                            >
-                              Order Now
-                            </AddToCartButton>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="hidden gap-4 px-5 py-5 md:grid sm:grid-cols-2">
-                    {collection.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="group overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0f172a] shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
-                      >
-                        <div className="relative h-48 overflow-hidden bg-[#0b1220]">
-                          <Image
-                            src={item.image || "/desktop.jpg"}
-                            alt={item.name}
-                            fill
-                            className="object-cover transition duration-500 group-hover:scale-105"
-                          />
-                        </div>
-                        <div className="space-y-2 p-4">
-                          <div>
-                            <h4 className="font-display text-lg font-bold text-white">
-                              {item.brand} {item.name}
-                            </h4>
-                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
-                              {item.category}
-                            </p>
-                          </div>
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-semibold text-white">
-                              {item.price}
-                            </span>
-                            <AddToCartButton
-                              item={{
-                                id: item.id,
-                                title: `${item.brand} ${item.name}`,
-                                price: item.price,
-                                spec: item.category,
-                                image: item.image,
-                              }}
-                              className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
-                            >
-                              Order Now
-                            </AddToCartButton>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="px-5 py-8 text-sm text-slate-600">
-                  {collection.emptyState}
+              <div className="space-y-3 p-5 text-center">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f3c74d]">
+                    {item.category}
+                  </p>
+                  <h3 className="mt-2 font-display text-lg font-bold text-white">
+                    {item.brand} {item.name}
+                  </h3>
                 </div>
-              )}
-            </article>
-          ))}
-        </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-white">{item.price}</span>
+                  <AddToCartButton
+                    item={{
+                      id: item.id,
+                      title: `${item.brand} ${item.name}`,
+                      price: item.price,
+                      spec: item.category,
+                      image: item.image,
+                    }}
+                    className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                  >
+                    Order Now
+                  </AddToCartButton>
+                </div>
+              </div>
+              </article>
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300">
-          No featured products selected. Open admin products and mark products as featured.
+        <div className="mx-auto mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300">
+          No new products selected. Open admin products and mark products as new.
         </div>
       )}
     </section>

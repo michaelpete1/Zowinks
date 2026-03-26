@@ -35,13 +35,13 @@ export default function Footer() {
             <Link href="/desktops" className="transition-colors hover:text-[#f3c74d]">Desktops</Link>
             <Link href="/accessories" className="transition-colors hover:text-[#5ab214]">Accessories</Link>
             <Link href="/about" className="transition-colors hover:text-[#f3c74d]">About</Link>
-            <Link href="/contact" className="transition-colors hover:text-[#5ab214]">Contact</Link>
+            <Link href="/contact" className="transition-colors hover:text-[#5ab214]">Request a Quote</Link>
           </nav>
 
           <div className="flex flex-col items-start gap-2 text-xs text-slate-400 md:items-end">
             <Link href="/signin" className="transition-colors hover:text-[#f3c74d]">Admin Sign In</Link>
-            <Link href="/privacy" className="transition-colors hover:text-[#f3c74d]">Privacy</Link>
-            <Link href="/terms" className="transition-colors hover:text-[#5ab214]">Terms</Link>
+            <Link href="/privacy" className="transition-colors hover:text-[#f3c74d]">Privacy Policy</Link>
+            <Link href="/terms" className="transition-colors hover:text-[#5ab214]">Terms and Conditions</Link>
           </div>
         </div>
       </div>

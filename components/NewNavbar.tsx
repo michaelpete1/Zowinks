@@ -72,7 +72,7 @@ export default function Navbar() {
             href="/contact"
             className="rounded-full bg-[#f3c74d] px-5 py-2 text-sm font-semibold text-[#050b16] shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e4b935]"
           >
-            Contact Us
+            Request a Quote
           </Link>
         </div>
 
@@ -161,7 +161,7 @@ export default function Navbar() {
                   className="block rounded-full bg-[#f3c74d] px-4 py-3 text-center text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
                   onClick={() => setOpen(false)}
                 >
-                  Contact Us
+                  Request a Quote
                 </Link>
               </div>
             </div>
