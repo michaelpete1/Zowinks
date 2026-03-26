@@ -43,16 +43,8 @@ function getValueIcon(title: string) {
         fill="none"
         stroke="currentColor"
       >
-        <path
-          d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z"
-          strokeWidth="1.8"
-        />
-        <path
-          d="M9.5 12l1.8 1.8L15 10"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.8"
-        />
+        <path d="M12 3.5l7 3.5v4.5c0 4.6-3.2 8.8-7 9.9-3.8-1.1-7-5.3-7-9.9V7l7-3.5z" strokeWidth="1.8" />
+        <path d="M9.3 12.1l1.9 1.9L15.8 9.4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.9" />
       </svg>
     );
   }
@@ -65,12 +57,11 @@ function getValueIcon(title: string) {
         fill="none"
         stroke="currentColor"
       >
-        <path d="M4 12a8 8 0 0 1 16 0" strokeWidth="1.8" />
-        <path
-          d="M4 12v4a2 2 0 0 0 2 2h1v-6H4zM20 12v4a2 2 0 0 1-2 2h-1v-6h3z"
-          strokeWidth="1.8"
-        />
-        <path d="M10 19h4" strokeLinecap="round" strokeWidth="1.8" />
+        <path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5" strokeWidth="1.8" />
+        <path d="M12 7.5a4.5 4.5 0 0 1 4.5 4.5v1.5" strokeWidth="1.8" />
+        <path d="M7.8 14.2a1.8 1.8 0 0 1 1.8-1.8h1.1a1.5 1.5 0 0 1 1.5 1.5v1.6a1.5 1.5 0 0 1-1.5 1.5H9.6a1.8 1.8 0 0 1-1.8-1.8v-1z" strokeWidth="1.8" />
+        <path d="M14.2 14.2a1.8 1.8 0 0 1 1.8-1.8h1.1a1.5 1.5 0 0 1 1.5 1.5v1.6a1.5 1.5 0 0 1-1.5 1.5H16a1.8 1.8 0 0 1-1.8-1.8v-1z" strokeWidth="1.8" />
+        <path d="M10.5 18.5h3" strokeLinecap="round" strokeWidth="1.8" />
       </svg>
     );
   }
@@ -82,10 +73,10 @@ function getValueIcon(title: string) {
       fill="none"
       stroke="currentColor"
     >
-      <path d="M4 7h16v10H4z" strokeWidth="1.8" />
-      <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="1.8" />
-      <path d="M9 12h2" strokeLinecap="round" strokeWidth="1.8" />
-      <path d="M13 12h2" strokeLinecap="round" strokeWidth="1.8" />
+      <path d="M7 4.5h8.5l3 3V18a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 18V6A1.5 1.5 0 0 1 7 4.5z" strokeWidth="1.8" />
+      <path d="M15.5 4.5V7h2.5" strokeWidth="1.8" />
+      <path d="M8 11.5h8" strokeLinecap="round" strokeWidth="1.8" />
+      <path d="M8 14.5h5.5" strokeLinecap="round" strokeWidth="1.8" />
     </svg>
   );
 }
