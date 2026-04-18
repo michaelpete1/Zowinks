@@ -1,7 +1,15 @@
+import {
+  zowkinsApi,
+  ProductDetails,
+  CategoryProductsResponse,
+  CategoryListItem,
+} from "./zowkins-api";
+
 export type CatalogItem = {
   id: string;
+  slug: string;
   title: string;
-  category: "Laptop" | "Desktop" | "Accessory";
+  category: string;
   brand: string;
   price: string;
   href: string;
@@ -9,125 +17,129 @@ export type CatalogItem = {
   description: string;
 };
 
-export const catalog: CatalogItem[] = [
-  {
-    id: "hp-probook-450",
-    title: "HP ProBook 450",
-    category: "Laptop",
-    brand: "HP",
-    price: "$849",
-    href: "/laptops/hp",
-    image: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=900&auto=format&fit=crop",
-    description: "Business laptop for secure office and remote work.",
-  },
-  {
-    id: "hp-elitebook-840",
-    title: "HP EliteBook 840",
-    category: "Laptop",
-    brand: "HP",
-    price: "$1,199",
-    href: "/laptops/hp",
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=900&auto=format&fit=crop",
-    description: "Premium enterprise notebook with strong mobility.",
-  },
-  {
-    id: "dell-latitude-5440",
-    title: "Dell Latitude 5440",
-    category: "Laptop",
-    brand: "Dell",
-    price: "$929",
-    href: "/laptops/dell",
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=900&auto=format&fit=crop",
-    description: "Reliable Dell workstation for daily productivity.",
-  },
-  {
-    id: "lenovo-thinkpad-t14",
-    title: "Lenovo ThinkPad T14",
-    category: "Laptop",
-    brand: "Lenovo",
-    price: "$999",
-    href: "/laptops/lenovo",
-    image: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=900&auto=format&fit=crop",
-    description: "Durable ThinkPad built for hybrid teams.",
-  },
-  {
-    id: "macbook-air-m3",
-    title: "MacBook Air M3",
-    category: "Laptop",
-    brand: "Apple",
-    price: "$1,599",
-    href: "/laptops/macbook",
-    image: "/mb.jpg",
-    description: "Lightweight MacBook for mobile productivity and executive work.",
-  },
-  {
-    id: "macbook-pro-14-m3-pro",
-    title: "MacBook Pro 14 M3 Pro",
-    category: "Laptop",
-    brand: "Apple",
-    price: "$2,499",
-    href: "/laptops/macbook",
-    image: "/mb.jpg",
-    description: "Premium MacBook for demanding creative teams.",
-  },
-  {
-    id: "hp-prodesk-400",
-    title: "HP ProDesk 400",
-    category: "Desktop",
-    brand: "HP",
-    price: "$699",
-    href: "/desktops/hp",
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=900&auto=format&fit=crop",
-    description: "Compact desktop for office deployments.",
-  },
-  {
-    id: "dell-optiplex-7010",
-    title: "Dell OptiPlex 7010",
-    category: "Desktop",
-    brand: "Dell",
-    price: "$749",
-    href: "/desktops/hp",
-    image: "https://images.unsplash.com/photo-1486401899868-0e435ed85128?q=80&w=900&auto=format&fit=crop",
-    description: "Stable desktop platform for scaling teams.",
-  },
-  {
-    id: "usb-c-dock",
-    title: "USB-C Dock",
-    category: "Accessory",
-    brand: "Zowkins",
-    price: "$229",
-    href: "/accessories",
-    image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?q=80&w=900&auto=format&fit=crop",
-    description: "One-cable expansion for monitor and peripherals.",
-  },
-  {
-    id: "wireless-headset",
-    title: "Wireless Headset",
-    category: "Accessory",
-    brand: "Zowkins",
-    price: "$179",
-    href: "/accessories",
-    image: "https://images.unsplash.com/photo-1518441902117-f0a5a1f0f9b4?q=80&w=900&auto=format&fit=crop",
-    description: "Clear audio for meetings and support teams.",
-  },
-];
-
-export function searchCatalog(query: string) {
-  const normalized = query.trim().toLowerCase();
-
-  if (!normalized) return [];
-
-  return catalog.filter((item) => {
-    const haystack = [
-      item.title,
-      item.brand,
-      item.category,
-      item.description,
-      item.price,
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(normalized);
+export function formatPrice(value: number): string {
+  return value.toLocaleString("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   });
 }
+
+function productToCatalogItem(product: ProductDetails): CatalogItem {
+  const categoryLabel =
+    typeof product.category === "object" && product.category !== null
+      ? (product.category as any).name || "Unknown"
+      : product.category;
+
+  const subcategoryLabel =
+    typeof product.subcategory === "object" && product.subcategory !== null
+      ? (product.subcategory as any).name || "Unknown"
+      : product.subcategory;
+
+  return {
+    id: product.id || (product as any)._id || "",
+    slug: product.slug,
+    title: product.name,
+    category: String(categoryLabel),
+    brand: String(subcategoryLabel || categoryLabel),
+    price: formatPrice(product.price),
+    href: `/products/${product.slug}`,
+    image: typeof product.image === "string" ? product.image : product.image?.url || "/desktop.jpg",
+    description: product.description,
+  };
+}
+
+
+const emptyProductsResponse: CategoryProductsResponse = {
+  products: [],
+  meta: {
+    totalItems: 0,
+    itemCount: 0,
+    itemsPerPage: 50,
+    totalPages: 0,
+    currentPage: 1,
+  },
+  maxPrice: 0,
+};
+
+/**
+ * Fetch visible products for a specific category slug,
+ * optionally filtered by subcategory slugs.
+ */
+export async function fetchProductsForCategory(
+  categorySlug: string,
+  options?: { subcategories?: string[]; page?: number; limit?: number },
+): Promise<ProductDetails[]> {
+  try {
+    const response = await zowkinsApi.listCategoryProducts(categorySlug, {
+      page: options?.page ?? 1,
+      limit: options?.limit ?? 50,
+      subcategories: options?.subcategories,
+    });
+    return response.products;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch all visible products across every category.
+ */
+export async function fetchAllProducts(): Promise<CatalogItem[]> {
+  try {
+    const categoriesResponse = await zowkinsApi.listCategories({
+      page: 1,
+      limit: 100,
+    });
+    const categories: CategoryListItem[] = Array.isArray(
+      categoriesResponse?.categories,
+    )
+      ? categoriesResponse.categories
+      : [];
+
+    if (categories.length === 0) return [];
+
+    const results = await Promise.all(
+      categories.map((cat) =>
+        zowkinsApi
+          .listCategoryProducts(cat.slug, { page: 1, limit: 100 })
+          .catch(() => emptyProductsResponse),
+      ),
+    );
+
+    const allProducts: CatalogItem[] = [];
+    for (const result of results) {
+      if (!result?.products) continue;
+      for (const product of result.products) {
+        if (product && product.visible !== false) {
+          allProducts.push(productToCatalogItem(product));
+        }
+      }
+    }
+
+    return allProducts;
+  } catch (error) {
+    console.error("Error fetching all products:", error);
+    return [];
+  }
+}
+
+/**
+ * Search across all visible products in every category.
+ */
+export async function searchCatalog(query: string): Promise<CatalogItem[]> {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return [];
+
+  const allProducts = await fetchAllProducts();
+  return allProducts.filter((item) => {
+    return (
+      item.title.toLowerCase().includes(normalized) ||
+      item.brand.toLowerCase().includes(normalized) ||
+      item.category.toLowerCase().includes(normalized) ||
+      item.description.toLowerCase().includes(normalized)
+    );
+  });
+}
+

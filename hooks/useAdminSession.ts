@@ -5,16 +5,13 @@ import { useCallback, useEffect, useState } from "react";
 export type AdminRole = "admin";
 
 export interface AdminSession {
+  id?: string;
   role: AdminRole;
   name: string;
   email: string;
   loggedInAt: string;
+  accessToken?: string;
 }
-
-export const ADMIN_CREDENTIALS = {
-  email: "admin@zowkins.com",
-  password: "Admin@1234",
-};
 
 const STORAGE_KEY = "zowkins-session";
 
@@ -63,12 +60,14 @@ export function useAdminSession() {
   }, []);
 
   const signInAdmin = useCallback(
-    (name: string, email: string) => {
+    (name: string, email: string, accessToken?: string, id?: string) => {
       persistSession({
+        id,
         role: "admin",
         name,
         email,
         loggedInAt: new Date().toISOString(),
+        accessToken,
       });
     },
     [persistSession],

@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../components/NewNavbar";
+import HeroCarousel from "../components/HeroCarousel";
 import Carousel from "../components/Carousel";
 import FeaturedProductsSection from "../components/FeaturedProductsSection";
-import QuoteRequestForm from "../components/QuoteRequestForm";
+import { getAppSettings } from "../lib/app-settings";
+import { zowkinsApi } from "../lib/zowkins-api";
 
 export const metadata: Metadata = {
   title: "Zowkins Enterprise",
-  description: "Business laptops, desktops, accessories, and trusted supplier brands for modern teams.",
+  description:
+    "Business laptops, desktops, accessories, and trusted supplier brands for modern teams.",
 };
 
 const organizationJsonLd = {
@@ -17,7 +20,8 @@ const organizationJsonLd = {
   name: "Zowkins Enterprise",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://zowkins.com",
   logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://zowkins.com"}/icon.png`,
-  description: "Business laptops, desktops, accessories, and IT procurement solutions for modern teams.",
+  description:
+    "Business laptops, desktops, accessories, and IT procurement solutions for modern teams.",
 };
 
 const officeMapsUrl =
@@ -47,8 +51,16 @@ function getValueIcon(title: string) {
         fill="none"
         stroke="currentColor"
       >
-        <path d="M12 3.5l7 3.5v4.5c0 4.6-3.2 8.8-7 9.9-3.8-1.1-7-5.3-7-9.9V7l7-3.5z" strokeWidth="1.8" />
-        <path d="M9.3 12.1l1.9 1.9L15.8 9.4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.9" />
+        <path
+          d="M12 3.5l7 3.5v4.5c0 4.6-3.2 8.8-7 9.9-3.8-1.1-7-5.3-7-9.9V7l7-3.5z"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M9.3 12.1l1.9 1.9L15.8 9.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.9"
+        />
       </svg>
     );
   }
@@ -63,8 +75,14 @@ function getValueIcon(title: string) {
       >
         <path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5" strokeWidth="1.8" />
         <path d="M12 7.5a4.5 4.5 0 0 1 4.5 4.5v1.5" strokeWidth="1.8" />
-        <path d="M7.8 14.2a1.8 1.8 0 0 1 1.8-1.8h1.1a1.5 1.5 0 0 1 1.5 1.5v1.6a1.5 1.5 0 0 1-1.5 1.5H9.6a1.8 1.8 0 0 1-1.8-1.8v-1z" strokeWidth="1.8" />
-        <path d="M14.2 14.2a1.8 1.8 0 0 1 1.8-1.8h1.1a1.5 1.5 0 0 1 1.5 1.5v1.6a1.5 1.5 0 0 1-1.5 1.5H16a1.8 1.8 0 0 1-1.8-1.8v-1z" strokeWidth="1.8" />
+        <path
+          d="M7.8 14.2a1.8 1.8 0 0 1 1.8-1.8h1.1a1.5 1.5 0 0 1 1.5 1.5v1.6a1.5 1.5 0 0 1-1.5 1.5H9.6a1.8 1.8 0 0 1-1.8-1.8v-1z"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M14.2 14.2a1.8 1.8 0 0 1 1.8-1.8h1.1a1.5 1.5 0 0 1 1.5 1.5v1.6a1.5 1.5 0 0 1-1.5 1.5H16a1.8 1.8 0 0 1-1.8-1.8v-1z"
+          strokeWidth="1.8"
+        />
         <path d="M10.5 18.5h3" strokeLinecap="round" strokeWidth="1.8" />
       </svg>
     );
@@ -77,7 +95,10 @@ function getValueIcon(title: string) {
       fill="none"
       stroke="currentColor"
     >
-      <path d="M7 4.5h8.5l3 3V18a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 18V6A1.5 1.5 0 0 1 7 4.5z" strokeWidth="1.8" />
+      <path
+        d="M7 4.5h8.5l3 3V18a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 18V6A1.5 1.5 0 0 1 7 4.5z"
+        strokeWidth="1.8"
+      />
       <path d="M15.5 4.5V7h2.5" strokeWidth="1.8" />
       <path d="M8 11.5h8" strokeLinecap="round" strokeWidth="1.8" />
       <path d="M8 14.5h5.5" strokeLinecap="round" strokeWidth="1.8" />
@@ -88,96 +109,75 @@ function getValueIcon(title: string) {
 function getValueTone(title: string) {
   if (title === "Trusted Supplier") {
     return {
-      badge: "bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]",
+      badge:
+        "bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]",
       link: "text-[#f3c74d] hover:text-white",
     };
   }
 
   if (title === "Expert Support") {
     return {
-      badge: "bg-[linear-gradient(180deg,#12386a_0%,#5ab214_100%)] text-white shadow-[0_10px_24px_rgba(18,56,106,0.28)]",
+      badge:
+        "bg-[linear-gradient(180deg,#12386a_0%,#5ab214_100%)] text-white shadow-[0_10px_24px_rgba(18,56,106,0.28)]",
       link: "text-[#5ab214] hover:text-white",
     };
   }
 
   return {
-    badge: "bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]",
+    badge:
+      "bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]",
     link: "text-[#f3c74d] hover:text-white",
   };
 }
-  const categories = [
-  {
-    title: "Laptops",
-    body: "HP, Dell, and Lenovo lines for work and business use.",
-    href: "/laptops",
-    img: "/hp.jpg",
-  },
-  {
-    title: "Desktop PCs",
-    body: "HP and Lenovo desktops for office deployments.",
-    href: "/desktops",
-    img: "/d.jpg",
-  },
-  {
-    title: "Accessories",
-    body: "Docks, headsets, keyboards, and daily-use peripherals.",
-    href: "/accessories",
-    img: "/keyboard.jpg",
-  },
-];
 
-export default function Home() {
+export default async function Home() {
+  const { app } = await getAppSettings();
+
+  let categories: any[] = [];
+  let allProducts: any[] = [];
+
+  try {
+    const response = await zowkinsApi.listCategories({ page: 1, limit: 20 });
+    const apiCats = response?.categories || [];
+
+    categories = apiCats.map((cat) => ({
+      title: cat.name,
+      body: cat.description,
+      href: `/categories/${cat.slug}`,
+      img:
+        typeof cat.image === "string"
+          ? cat.image
+          : cat.image?.url || "/desktop.jpg",
+    }));
+
+    allProducts = apiCats.map((cat) => ({
+      title: cat.name,
+      image:
+        typeof cat.image === "string"
+          ? cat.image
+          : cat.image?.url || "/desktop.jpg",
+      href: `/categories/${cat.slug}`,
+    }));
+  } catch (error) {
+    console.error("Error fetching homepage categories:", error);
+  }
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            ...organizationJsonLd,
+            name: app.name,
+            description: app.description,
+            logo: app.branding.logo,
+          }),
+        }}
       />
       <Navbar />
 
-      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white">
-        <div className="absolute inset-0">
-          <Image
-            src="/desktop.jpg"
-            alt="Zowkins business desktop setup"
-            fill
-            priority
-            className="object-cover object-[center_35%] brightness-[0.68] contrast-[1.15] saturate-[1.08] scale-[1.02]"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,12,26,0.92)_0%,rgba(10,25,48,0.76)_42%,rgba(11,29,59,0.34)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.10),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(243,199,77,0.16),transparent_26%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(5,11,22,0.18)_60%,rgba(5,11,22,0.45)_100%)]" />
-        </div>
-        <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-20 lg:py-24">
-          <div className="max-w-2xl space-y-6 animate-[fadeIn_0.9s_ease-out]">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/80 md:text-sm">
-              ZOWKINS ENTERPRISE LIMITED
-            </p>
-            <h1 className="font-display text-4xl font-bold leading-tight text-white drop-shadow-2xl md:text-5xl lg:text-6xl">
-              Empowering Your Business
-              <span className="block">with Innovative IT Solutions</span>
-            </h1>
-            <p className="max-w-xl text-base leading-7 text-white/95 md:text-lg">
-              Trusted partner for laptops, desktops, and
-              accessories built for modern teams.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/laptops"
-                className="rounded-lg bg-[#0b1d3b] px-6 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(11,29,59,0.22)] transition hover:bg-[#12386a]"
-              >
-                Explore Products
-              </Link>
-              <Link
-                href="/contact"
-                className="rounded-lg bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e7ba2a]"
-              >
-                Request a Quote
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroCarousel />
 
       <section className="mx-auto max-w-6xl px-4 py-12 md:px-8 md:py-16">
         <div className="md:hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(11,29,59,0.98),rgba(7,12,24,0.96)_55%,rgba(5,11,22,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] sm:p-6">
@@ -211,11 +211,10 @@ export default function Home() {
                 className="group mx-auto w-full max-w-[22rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)]"
               >
                 <div className="relative h-44 overflow-hidden bg-slate-100">
-                  <Image
+                  <img
                     src={card.img}
                     alt={card.title}
-                    fill
-                    className="object-cover transition duration-500 group-hover:scale-105"
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />
                 </div>
                 <div className="p-5 text-center">
@@ -225,9 +224,9 @@ export default function Home() {
                   <p className="mt-2 text-sm leading-6 text-slate-300">
                     {card.body}
                   </p>
-                    <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#f3c74d]">
-                      View More <span aria-hidden="true">&rarr;</span>
-                    </span>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#f3c74d]">
+                    View More <span aria-hidden="true">&rarr;</span>
+                  </span>
                 </div>
               </Link>
             ))}
@@ -254,8 +253,12 @@ export default function Home() {
                   key={card.title}
                   className="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] p-6 text-center shadow-[0_12px_30px_rgba(0,0,0,0.28)] ring-1 ring-white/5 animate-[rise_0.7s_ease-out]"
                 >
-                  <div className={`mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl ${tone.badge}`}>
-                    <span className="scale-105">{getValueIcon(card.title)}</span>
+                  <div
+                    className={`mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl ${tone.badge}`}
+                  >
+                    <span className="scale-105">
+                      {getValueIcon(card.title)}
+                    </span>
                   </div>
                   <h3 className="font-display text-lg font-bold text-white">
                     {card.title}
@@ -280,86 +283,6 @@ export default function Home() {
 
       <FeaturedProductsSection />
 
-      <section className="bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:px-8 md:py-16 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/75">
-              Request a Quote
-            </p>
-            <h2 className="font-display text-3xl font-bold md:text-4xl">
-              Tell us what you need and we&apos;ll send pricing fast
-            </h2>
-            <p className="max-w-xl text-sm leading-6 text-white/85 md:text-base">
-              Use the form to request pricing for laptops, desktops, accessories, and bulk orders. We&apos;ll reply by email or WhatsApp.
-            </p>
-            <div className="flex flex-col gap-4 pt-4 text-sm text-white/90 sm:flex-row sm:flex-wrap sm:items-center">
-              <div className="flex items-center gap-3">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                  >
-                    <path
-                      d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 3 5.2 2 2 0 0 1 5 3h3a2 2 0 0 1 2 1.7c.1.8.3 1.6.6 2.3a2 2 0 0 1-.5 2.1L9 10a16 16 0 0 0 5 5l.9-1.1a2 2 0 0 1 2.1-.5c.7.3 1.5.5 2.3.6a2 2 0 0 1 1.7 2z"
-                      strokeWidth="1.6"
-                    />
-                  </svg>
-                </span>
-                <span>+971 54 389 5126</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                  >
-                    <path
-                      d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"
-                      strokeWidth="1.6"
-                    />
-                    <path d="M22 7l-10 7L2 7" strokeWidth="1.6" />
-                  </svg>
-                </span>
-                <span>info@zowkins.com</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                  >
-                    <path
-                      d="M12 22s8-6 8-12a8 8 0 1 0-16 0c0 6 8 12 8 12z"
-                      strokeWidth="1.6"
-                    />
-                    <circle cx="12" cy="10" r="3" strokeWidth="1.6" />
-                  </svg>
-                </span>
-                <a
-                  href={officeMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition-colors hover:text-[#f3c74d]"
-                >
-                  No. 158, Adetokunbo Ademola Cres, Kamdi Arena, Wuse, Abuja, FCT, Nigeria
-                </a>
-              </div>
-            </div>
-          </div>
-          <QuoteRequestForm
-            title="Send a quote request"
-            description="Tell us the product, quantity, and location. We&apos;ll prepare pricing and delivery details."
-            className="bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))]"
-          />
-        </div>
-      </section>
-
       <section className="bg-[linear-gradient(180deg,#050b16_0%,#07142a_100%)] text-white">
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-12">
           <div className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] px-5 py-6 shadow-[0_12px_30px_rgba(0,0,0,0.22)] md:px-6 md:py-8">
@@ -378,7 +301,12 @@ export default function Home() {
                 className="group flex items-center gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08]"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                  >
                     <path
                       d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 3 5.2 2 2 0 0 1 5 3h3a2 2 0 0 1 2 1.7c.1.8.3 1.6.6 2.3a2 2 0 0 1-.5 2.1L9 10a16 16 0 0 0 5 5l.9-1.1a2 2 0 0 1 2.1-.5c.7.3 1.5.5 2.3.6a2 2 0 0 1 1.7 2z"
                       strokeWidth="1.6"
@@ -400,7 +328,12 @@ export default function Home() {
                 className="group flex items-center gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08]"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#12386a_0%,#5ab214_100%)] text-white shadow-[0_10px_24px_rgba(18,56,106,0.28)]">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                  >
                     <path
                       d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"
                       strokeWidth="1.6"
@@ -425,7 +358,12 @@ export default function Home() {
                 className="group flex items-start gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08]"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                  >
                     <path
                       d="M12 22s8-6 8-12a8 8 0 1 0-16 0c0 6 8 12 8 12z"
                       strokeWidth="1.6"
@@ -448,7 +386,72 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white">
+        <div className="mx-auto max-w-6xl px-4 py-14 md:px-8 md:py-16">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-[0.35em] text-white/75">
+                All products
+              </p>
+              <h2 className="font-display text-3xl font-bold md:text-4xl">
+                Explore our product range
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-white/85 md:text-base">
+                Browse the main product categories we supply, from laptops and
+                desktops to accessories and brand-specific options.
+              </p>
+            </div>
+            <Link
+              href="/contact"
+              className="rounded-full bg-[#f3c74d] px-5 py-3 text-sm font-semibold text-[#050b16] shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e4b935]"
+            >
+              Request a Quote
+            </Link>
+          </div>
+
+          <div className="md:hidden mt-8 rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(11,29,59,0.98),rgba(7,12,24,0.96)_55%,rgba(5,11,22,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] sm:p-6">
+            <Carousel
+              title="All Products"
+              variant="photo"
+              titleClassName="text-white"
+              slides={allProducts.map((product) => ({
+                img: product.image,
+                title: product.title,
+                href: product.href,
+              }))}
+            />
+          </div>
+          <div className="hidden md:block">
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {allProducts.map((product) => (
+                <Link
+                  key={product.title}
+                  href={product.href}
+                  className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition hover:-translate-y-1"
+                >
+                  <div className="relative h-40 overflow-hidden">
+                    <Image
+                      src={product.image}
+                      alt={product.title}
+                      fill
+                      className="object-cover transition duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.08)_0%,rgba(5,11,22,0.68)_100%)]" />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-display text-lg font-bold text-white">
+                      {product.title}
+                    </h3>
+                    <p className="mt-2 text-sm text-slate-300">
+                      View products in this category.
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
-

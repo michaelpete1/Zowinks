@@ -13,6 +13,7 @@ const navItems = [
   { label: "Products", icon: "layers", href: "/admin/products" },
   { label: "Categories", icon: "tag", href: "/admin/categories" },
   { label: "Orders", icon: "orders", href: "/admin/orders" },
+  { label: "Delivery", icon: "truck", href: "/admin/delivery-methods" },
   { label: "Customers", icon: "contacts", href: "/admin/customers" },
   { label: "Settings", icon: "settings", href: "/admin/settings" },
 ] as const;
@@ -119,7 +120,15 @@ export function AdminShell({ title, subtitle, children, searchValue, onSearchCha
 
           <div className="mt-auto space-y-3 pt-6">
             <Link href="/" className="block rounded-2xl border border-slate-200 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-900">Back to Store</Link>
-            <button onClick={handleLogout} className="block w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">Logout</button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="block w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              aria-label="Logout from admin"
+              title="Logout from admin"
+            >
+              Logout
+            </button>
           </div>
         </aside>
 
@@ -156,7 +165,15 @@ export function AdminShell({ title, subtitle, children, searchValue, onSearchCha
                     <p className="text-xs text-slate-500">{session?.email ?? "admin@zowkins.com"}</p>
                   </div>
                 </div>
-                <button onClick={handleLogout} className="hidden rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 md:inline-flex">Logout</button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hidden rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 md:inline-flex"
+                  aria-label="Logout from admin"
+                  title="Logout from admin"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </header>
@@ -177,7 +194,15 @@ export function AdminShell({ title, subtitle, children, searchValue, onSearchCha
                   <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{title}</p>
                 </div>
               </div>
-              <button type="button" onClick={() => setSidebarOpen(false)} className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-700"><AdminIcon name="menu" /></button>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                aria-label="Close admin menu"
+                title="Close admin menu"
+              >
+                Close menu
+              </button>
             </div>
 
             <nav className="mt-5 space-y-2">
@@ -191,7 +216,15 @@ export function AdminShell({ title, subtitle, children, searchValue, onSearchCha
 
             <div className="mt-8 space-y-3 border-t border-slate-100 pt-5">
               <Link href="/" className="block rounded-2xl border border-slate-200 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-900">Back to Store</Link>
-              <button onClick={handleLogout} className="block w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">Logout</button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="block w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                aria-label="Logout from admin"
+                title="Logout from admin"
+              >
+                Logout
+              </button>
             </div>
           </aside>
         </div>

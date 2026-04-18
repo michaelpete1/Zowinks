@@ -69,10 +69,10 @@ export default function Navbar() {
           </Link>
           ) : null}
           <Link
-            href="/contact"
+            href="/full-quote-bill"
             className="rounded-full bg-[#f3c74d] px-5 py-2 text-sm font-semibold text-[#050b16] shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e4b935]"
           >
-            Request a Quote
+            Request a Full Quote/Bill
           </Link>
         </div>
 
@@ -157,11 +157,11 @@ export default function Navbar() {
                   </Link>
                 ) : null}
                 <Link
-                  href="/contact"
+                  href="/full-quote-bill"
                   className="block rounded-full bg-[#f3c74d] px-4 py-3 text-center text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
                   onClick={() => setOpen(false)}
                 >
-                  Request a Quote
+                  Request a Full Quote/Bill
                 </Link>
               </div>
             </div>

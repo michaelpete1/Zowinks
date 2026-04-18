@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
+import { getAppSettings } from "../../lib/app-settings";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -37,7 +38,8 @@ const capabilities = [
   "Networking gear for office rollouts",
 ];
 
-export default function About() {
+export default async function About() {
+  const { app } = await getAppSettings();
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
@@ -56,8 +58,7 @@ export default function About() {
                     A practical IT supplier for growing businesses.
                   </h1>
                   <p className="max-w-xl text-base leading-8 text-slate-100/90 md:text-lg">
-                    Zowkins Enterprise LTD supplies laptops, desktops, networking equipment, and peripherals with a
-                    focus on dependable stock, responsive support, and procurement that is easy to manage.
+                    {app.description}
                   </p>
                 </div>
 
@@ -76,11 +77,11 @@ export default function About() {
                   </div>
                   <div className="rounded-[1.25rem] bg-white/10 px-4 py-4 backdrop-blur-sm">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100">Support</p>
-                    <p className="mt-1 text-sm font-semibold">Clear pre- and post-sale help</p>
+                    <p className="mt-1 text-sm font-semibold">{app.status.portal === "online" ? "Live support available" : "Support available"}</p>
                   </div>
                   <div className="rounded-[1.25rem] bg-white/10 px-4 py-4 backdrop-blur-sm">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100">Delivery</p>
-                    <p className="mt-1 text-sm font-semibold">Local and regional reach</p>
+                    <p className="mt-1 text-sm font-semibold">{app.address.split(",")[2]?.trim() ?? "Local and regional reach"}</p>
                   </div>
                 </div>
               </div>

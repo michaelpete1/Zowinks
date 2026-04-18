@@ -16,8 +16,11 @@ type QuoteFormState = {
 
 type QuoteRequestFormProps = {
   className?: string;
+  eyebrow?: string;
   title?: string;
   description?: string;
+  submitLabel?: string;
+  whatsappLabel?: string;
 };
 
 const ORDER_EMAIL = "info@zowkins.com";
@@ -54,8 +57,11 @@ function buildQuoteLines(formData: QuoteFormState) {
 
 export default function QuoteRequestForm({
   className = "",
+  eyebrow = "Quote request",
   title = "Request a Quote",
   description = "Tell us what you need and we will reply with pricing, delivery, and availability.",
+  submitLabel = "Send quote by email",
+  whatsappLabel = "Request via WhatsApp",
 }: QuoteRequestFormProps) {
   const [formData, setFormData] = useState<QuoteFormState>(emptyFormState);
   const [status, setStatus] = useState<"idle" | "sent">("idle");
@@ -136,7 +142,7 @@ export default function QuoteRequestForm({
 
   return (
     <div className={`rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.18)] md:p-8 ${className}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">Quote request</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">{eyebrow}</p>
       <h3 className="mt-3 font-display text-3xl font-bold text-white">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-slate-300">{description}</p>
 
@@ -208,7 +214,7 @@ export default function QuoteRequestForm({
         <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p id="quote-products-label" className="text-sm font-semibold text-white">Product needed</p>
+              <p id="quote-products-label" className="text-sm font-semibold text-white">Products needed</p>
               <p className="text-xs text-slate-400">Add one product or multiple products with their quantities.</p>
             </div>
             <button
@@ -274,14 +280,14 @@ export default function QuoteRequestForm({
             type="submit"
             className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
           >
-            Send quote by email
+            {submitLabel}
           </button>
           <button
             type="button"
             onClick={handleWhatsApp}
             className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#5ab214]/45 hover:bg-white/10"
           >
-            Request via WhatsApp
+            {whatsappLabel}
           </button>
         </div>
       </form>

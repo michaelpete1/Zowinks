@@ -1,8 +1,10 @@
+"use client";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface CartItem {
   id: string;
+  slug?: string;
   title: string;
   price: number;
   spec?: string;
@@ -12,6 +14,7 @@ export interface CartItem {
 
 export interface CartItemInput {
   id: string;
+  slug?: string;
   title: string;
   price: string;
   spec?: string;

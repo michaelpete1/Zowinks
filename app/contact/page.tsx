@@ -3,13 +3,15 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import QuoteRequestForm from "../../components/QuoteRequestForm";
+import { getAppSettings } from "../../lib/app-settings";
 
 export const metadata: Metadata = {
   title: "Request a Quote",
   description: "Request pricing for laptops, desktops, accessories, and bulk IT orders from Zowkins Enterprise.",
 };
 
-export default function Contact() {
+export default async function Contact() {
+  const { app } = await getAppSettings();
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
@@ -20,8 +22,8 @@ export default function Contact() {
             <div className="relative overflow-hidden px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
               <div className="absolute inset-0">
                 <Image
-                  src="/desktop.jpg"
-                  alt="Business desktop setup"
+                  src={app.images.find((image) => image.startsWith("/")) || "/desktop.jpg"}
+                  alt={`${app.name} contact setup`}
                   fill
                   priority
                   className="object-cover object-center opacity-25"
@@ -52,6 +54,11 @@ export default function Contact() {
                     <p className="mt-2 text-sm font-semibold text-white">Usually within 24 hours</p>
                     <p className="mt-1 text-sm text-slate-300">For quotes, support, and procurement queries</p>
                   </div>
+                  <div className="rounded-[1.25rem] bg-white/6 p-5 backdrop-blur-sm sm:col-span-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200">Live status</p>
+                    <p className="mt-2 text-sm font-semibold text-white">{app.name}</p>
+                    <p className="mt-1 text-sm text-slate-300">{app.status.portal}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -59,7 +66,9 @@ export default function Contact() {
             <div className="bg-[#050b16] px-4 py-6 text-slate-100 md:px-6 md:py-8 lg:px-8 lg:py-10">
               <QuoteRequestForm
                 title="Build your quote request"
-                description="Use the form below for product pricing, bulk orders, and delivery quotes. You can send it by email or WhatsApp."
+                description={`Use the form below for product pricing, bulk orders, and delivery quotes. You can send it by email or WhatsApp at ${app.whatsAppNumber}.`}
+                submitLabel="Send quote by email"
+                whatsappLabel="Request via WhatsApp"
               />
               <div className="mt-4 flex flex-wrap gap-3 px-1 text-xs text-slate-400">
                 <Link href="/laptops" className="transition-colors hover:text-[#f3c74d]">

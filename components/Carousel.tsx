@@ -85,12 +85,13 @@ export default function Carousel({ slides, title, variant = "photo", titleClassN
                   </>
                 ) : (
                   <>
-                    <Image
+                   <img
                       src={slide.img}
                       alt={slide.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/desktop.jpg";
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
                     <div className="relative flex h-full flex-col justify-end p-5 sm:p-6 lg:p-8">

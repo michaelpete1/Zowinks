@@ -1,254 +1,829 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import Image from "next/image";
-import { AdminBadge, AdminIcon, AdminShell } from "../../../components/AdminShell";
-import { useAdminRecords, type CategoryRecord } from "../../../hooks/useAdminRecords";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { AdminBadge, AdminShell } from "../../../components/AdminShell";
+import { useAdminSession } from "../../../hooks/useAdminSession";
+import {
+  AdminCategory,
+  AdminCategoryInput,
+  ApiError,
+  zowkinsApi,
+} from "../../../lib/zowkins-api";
 
-function CategoryModal({
-  open,
-  onClose,
-  onSubmit,
-  form,
-  setForm,
-  editing,
-  onUpload,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  form: { name: string; description: string; productCount: string; visibility: CategoryRecord["visibility"]; image: string };
-  setForm: Dispatch<SetStateAction<{ name: string; description: string; productCount: string; visibility: CategoryRecord["visibility"]; image: string }>>;
-  editing: CategoryRecord | null;
-  onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
-}) {
-  if (!open) return null;
+const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
 
+type ApiConnection = {
+  accessToken: string;
+};
+
+type CategoryForm = {
+  name: string;
+  description: string;
+  slug: string;
+  visible: boolean;
+  file: File | null;
+  subcategories: string;
+};
+
+const emptyForm = (): CategoryForm => ({
+  name: "",
+  description: "",
+  slug: "",
+  visible: true,
+  file: null,
+  subcategories: "",
+});
+
+const STANDARD_CATEGORIES = [
+  { name: "Laptops", slug: "laptops", description: "Professional laptop collections for business and creative work." },
+  { name: "Desktops", slug: "desktops", description: "Powerful desktop systems for office and enterprise deployment." },
+  { name: "Accessories", slug: "accessories", description: "Essential peripherals, docks, and workspace add-ons." },
+];
+
+const normalizeToken = (value: string) =>
+  value.trim().replace(/^Bearer\s+/i, "");
+
+const slugify = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
+const normalizeAdminCategories = (response: unknown): AdminCategory[] => {
+  if (Array.isArray(response)) return response;
+
+  if (
+    response &&
+    typeof response === "object" &&
+    Array.isArray((response as { categories?: unknown }).categories)
+  ) {
+    return (response as { categories: AdminCategory[] }).categories;
+  }
+
+  return [];
+};
+
+function CategoryPreview({ src, alt }: { src?: string | null; alt: string }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 px-4 py-6 backdrop-blur-sm">
-      <div className="flex h-[100dvh] w-full max-w-none flex-col overflow-y-auto rounded-none bg-white p-4 shadow-2xl md:h-auto md:max-w-2xl md:rounded-[2rem] md:p-8">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Catalog</p>
-            <h3 className="mt-2 font-display text-2xl font-bold text-slate-900">{editing ? "Edit category" : "Add category"}</h3>
-          </div>
-          <button type="button" onClick={onClose} className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Close</button>
-        </div>
-
-        <form onSubmit={onSubmit} className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="md:col-span-2 grid gap-4 rounded-[1.5rem] bg-slate-50 p-4">
-            <div className="overflow-hidden rounded-[1.3rem] bg-white ring-1 ring-slate-200">
-              <Image src={form.image || "/desktop.jpg"} alt="Category preview" width={1200} height={675} className="h-36 w-full object-cover md:h-48" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-2 text-sm font-medium text-slate-700">
-                <span>Image URL</span>
-                <input
-                  value={form.image}
-                  onChange={(event) => setForm((current) => ({ ...current, image: event.target.value }))}
-                  placeholder="/mb.jpg or https://..."
-                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78]"
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-medium text-slate-700">
-                <span>Upload file</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={onUpload}
-                  className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:border-[#0a2a78]"
-                />
-              </label>
-            </div>
-          </div>
-
-          <label className="grid gap-2 text-sm font-medium text-slate-700 md:col-span-2">
-            <span>Category name</span>
-            <input
-              value={form.name}
-              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-              placeholder="Laptops"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-            />
-          </label>
-
-          <label className="grid gap-2 text-sm font-medium text-slate-700 md:col-span-2">
-            <span>Description</span>
-            <textarea
-              value={form.description}
-              onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-              rows={4}
-              placeholder="Short category description"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-            />
-          </label>
-
-          <input
-            value={form.productCount}
-            onChange={(event) => setForm((current) => ({ ...current, productCount: event.target.value }))}
-            placeholder="Product count"
-            type="number"
-            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-          />
-
-          <select
-            value={form.visibility}
-            onChange={(event) => setForm((current) => ({ ...current, visibility: event.target.value as CategoryRecord["visibility"] }))}
-            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-          >
-            <option>Visible</option>
-            <option>Hidden</option>
-          </select>
-
-          <div className="flex items-center gap-3 md:justify-end md:col-span-2">
-            <button type="button" onClick={onClose} className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Cancel</button>
-            <button type="submit" className="rounded-2xl bg-[#0a2a78] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#12386a]">{editing ? "Save changes" : "Add category"}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <img
+      src={src || "/desktop.jpg"}
+      alt={alt}
+      className="h-40 w-full object-cover md:h-48"
+    />
   );
 }
 
 export default function CategoriesPage() {
-  const categories = useAdminRecords((state) => state.categories);
-  const setCategories = useAdminRecords((state) => state.setCategories);
+  const { session, ready: sessionReady, clearSession } = useAdminSession();
+  const [apiConnection, setApiConnection] = useState<ApiConnection>({
+    accessToken: "",
+  });
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] =
+    useState<AdminCategory | null>(null);
+  const [form, setForm] = useState<CategoryForm>(emptyForm());
+  const [preview, setPreview] = useState("");
   const [query, setQuery] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<CategoryRecord | null>(null);
-  const [form, setForm] = useState({ name: "", description: "", productCount: "", visibility: "Visible" as CategoryRecord["visibility"], image: "" });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState("");
+  const [message, setMessage] = useState("");
+  const [connectionMessage, setConnectionMessage] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const [error, setError] = useState("");
+  const [ready, setReady] = useState(false);
 
-  const visibleCount = useMemo(() => categories.filter((category) => category.visibility === "Visible").length, [categories]);
+  useEffect(() => {
+    if (!toastMessage) return;
+
+    const timer = window.setTimeout(() => setToastMessage(""), 2800);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
+
+  useEffect(() => {
+    if (!sessionReady || typeof window === "undefined") return;
+
+    const storedToken = normalizeToken(
+      window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "",
+    );
+    const sessionToken = normalizeToken(session?.accessToken ?? "");
+    const nextToken = sessionToken || storedToken;
+
+    setApiConnection({
+      accessToken: nextToken,
+    });
+
+    if (sessionToken && sessionToken !== storedToken) {
+      window.localStorage.setItem(ADMIN_API_TOKEN_KEY, sessionToken);
+    }
+
+    setConnectionMessage(
+      sessionToken
+        ? "Connected automatically from your admin session."
+        : storedToken
+          ? "Loaded saved API connection from this browser."
+          : "Add a token if you need a manual connection.",
+    );
+    setReady(true);
+  }, [session?.accessToken, sessionReady]);
+
+  const apiReady = Boolean(apiConnection.accessToken.trim());
+
+  const loadCategories = async () => {
+    if (!apiReady) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await zowkinsApi.listAdminCategories(
+        apiConnection.accessToken.trim(),
+      );
+      const normalizedCategories = normalizeAdminCategories(data);
+      setCategories(normalizedCategories);
+      setSelectedCategory((current) => {
+        if (!current) return normalizedCategories[0] ?? null;
+        return (
+          normalizedCategories.find((category) => (category.id || (category as any)._id) === (current.id || (current as any)._id)) ??
+          normalizedCategories[0] ??
+          null
+        );
+      });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearSession();
+        window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
+        window.location.href = "/signin";
+        return;
+      }
+      
+      setError(
+        err instanceof ApiError ? err.message : "Could not load categories.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!ready || !apiReady) return;
+    void loadCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiReady, ready]);
+
+  useEffect(() => {
+    if (!selectedCategory) {
+      setForm(emptyForm());
+      setPreview("");
+      return;
+    }
+
+    setForm({
+      name: selectedCategory.name,
+      description: selectedCategory.description,
+      slug: selectedCategory.slug,
+      visible: selectedCategory.visible,
+      file: null,
+      subcategories: Array.isArray(selectedCategory.subcategories) ? selectedCategory.subcategories.map(s => s.name || s).join(", ") : "",
+    });
+    setPreview(selectedCategory.image?.url ?? "");
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    return () => {
+      if (preview.startsWith("blob:")) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
 
   const filteredCategories = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return categories;
-    return categories.filter((category) => [category.id, category.name, category.description, String(category.productCount), category.visibility].some((value) => value.toLowerCase().includes(needle)));
+    return categories.filter((category) =>
+      [
+        category.id || (category as any)._id,
+        category.name,
+        category.description,
+        category.slug,
+        String(category.productsCount),
+      ].some((value) => value.toLowerCase().includes(needle)),
+    );
   }, [categories, query]);
 
-  const resetForm = () => {
-    setForm({ name: "", description: "", productCount: "", visibility: "Visible", image: "" });
-    setEditingCategory(null);
-  };
+  const missingStandards = useMemo(() => {
+    return STANDARD_CATEGORIES.filter(
+      (std) => !categories.some((cat) => cat.slug === std.slug)
+    );
+  }, [categories]);
 
-  const openAddCategory = () => {
-    resetForm();
-    setModalOpen(true);
-  };
-
-  const openEditCategory = (category: CategoryRecord) => {
-    setEditingCategory(category);
+  const prefillStandard = (std: (typeof STANDARD_CATEGORIES)[0]) => {
+    setSelectedCategory(null);
     setForm({
-      name: category.name,
-      description: category.description,
-      productCount: String(category.productCount),
-      visibility: category.visibility,
-      image: category.image ?? "",
+      ...emptyForm(),
+      name: std.name,
+      slug: std.slug,
+      description: std.description,
     });
-    setModalOpen(true);
+    setPreview("");
+    setError("");
+    setMessage(`Form pre-filled for "${std.name}". Just upload an image and click Add Category.`);
   };
 
-  const closeModal = () => {
-    setModalOpen(false);
-    resetForm();
+  const visibleCount = useMemo(
+    () => categories.filter((category) => category.visible).length,
+    [categories],
+  );
+
+  const saveConnection = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (typeof window === "undefined") return;
+
+    window.localStorage.setItem(
+      ADMIN_API_TOKEN_KEY,
+      apiConnection.accessToken.trim(),
+    );
+    setMessage("API connection saved.");
+    setError("");
+  };
+
+  const clearForm = () => {
+    setSelectedCategory(null);
+    setForm(emptyForm());
+    setPreview("");
+    setMessage("");
+    setError("");
+    setPendingDeleteId("");
   };
 
   const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setForm((current) => ({ ...current, image: String(reader.result) }));
+    setForm((current) => ({ ...current, file }));
+    setPreview((current) => {
+      if (current.startsWith("blob:")) {
+        URL.revokeObjectURL(current);
       }
-    };
-    reader.readAsDataURL(file);
+      return URL.createObjectURL(file);
+    });
   };
 
-  const submitCategory = (event: FormEvent<HTMLFormElement>) => {
+  const submitCategory = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!form.name.trim() || !form.description.trim()) return;
+    if (!apiReady) {
+      setError("Use your admin session token or save a bearer token first.");
+      return;
+    }
 
-    const nextCategory: CategoryRecord = {
-      id: editingCategory?.id ?? `CAT-${Math.floor(100 + Math.random() * 900)}`,
-      name: form.name.trim(),
-      description: form.description.trim(),
-      productCount: Number(form.productCount) || 0,
-      visibility: form.visibility,
-      image: form.image.trim(),
-    };
+    const name = form.name.trim().replace(/\s+/g, " ");
+    const description = form.description.trim().replace(/\s+/g, " ");
+    const slug = form.slug.trim().toLowerCase();
 
-    setCategories((current) => (editingCategory ? current.map((item) => (item.id === editingCategory.id ? nextCategory : item)) : [nextCategory, ...current]));
-    closeModal();
+    if (name.length < 3 || name.length > 80) {
+      setError("Category name must be between 3 and 80 characters.");
+      return;
+    }
+
+    if (description.length < 10 || description.length > 500) {
+      setError("Category description must be between 10 and 500 characters.");
+      return;
+    }
+
+    if (slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      setError(
+        "Category slug can only use lowercase letters, numbers, and hyphens.",
+      );
+      return;
+    }
+
+    if (form.file && !form.file.type.startsWith("image/")) {
+      setError("Upload a valid image file for the category.");
+      return;
+    }
+
+    if (!selectedCategory && !form.file) {
+      setError("Add a category image before creating a new category.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const payload: AdminCategoryInput = {
+        name,
+        description,
+        slug: slug || slugify(name),
+        visible: form.visible,
+        subcategories: form.subcategories
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map((name) => ({ name })),
+        file: form.file,
+      };
+
+      const saved = selectedCategory
+        ? await zowkinsApi.updateAdminCategory(
+            apiConnection.accessToken.trim(),
+            selectedCategory.id || (selectedCategory as any)._id,
+            payload,
+          )
+        : await zowkinsApi.createAdminCategory(
+            apiConnection.accessToken.trim(),
+            payload,
+          );
+
+      setSelectedCategory(saved);
+      const nextMessage = selectedCategory
+        ? "Category updated successfully."
+        : "Category created successfully.";
+      setMessage(nextMessage);
+      setToastMessage(nextMessage);
+      await loadCategories();
+      setSelectedCategory(saved);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearSession();
+        window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
+        window.location.href = "/signin";
+        return;
+      }
+      setError(
+        err instanceof ApiError ? err.message : "Could not save category.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const removeCategory = (id: string) => setCategories((current) => current.filter((item) => item.id !== id));
+  const deleteCategory = async (id: string) => {
+    if (!apiReady) return;
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
+      return;
+    }
+
+    setDeletingId(id);
+    setError("");
+    setMessage("");
+    setPendingDeleteId("");
+
+    try {
+      await zowkinsApi.deleteAdminCategory(
+        apiConnection.accessToken.trim(),
+        id,
+      );
+      setMessage("Category deleted successfully.");
+      if ((selectedCategory?.id || (selectedCategory as any)?._id) === id) {
+        clearForm();
+      }
+      await loadCategories();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearSession();
+        window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
+        window.location.href = "/signin";
+        return;
+      }
+      setError(
+        err instanceof ApiError ? err.message : "Could not delete category.",
+      );
+    } finally {
+      setDeletingId("");
+    }
+  };
+
+  const openCategory = async (category: AdminCategory) => {
+    if (!apiReady) {
+      setSelectedCategory(category);
+      return;
+    }
+
+    try {
+      const data = await zowkinsApi.getAdminCategory(
+        apiConnection.accessToken.trim(),
+        category.id || (category as any)._id,
+      );
+      setSelectedCategory(data);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearSession();
+        window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
+        window.location.href = "/signin";
+        return;
+      }
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Could not load category details.",
+      );
+      setSelectedCategory(category);
+    }
+  };
 
   return (
-    <AdminShell title="Categories" subtitle="Upload, edit, hide, or remove catalog categories from one place." searchValue={query} onSearchChange={setQuery} searchPlaceholder="Search categories...">
-      <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Catalog</p>
-            <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">Manage categories</h2>
+    <AdminShell
+      title="Categories"
+      subtitle="Operations related to categories from the admin access."
+      searchValue={query}
+      onSearchChange={setQuery}
+      searchPlaceholder="Search categories..."
+    >
+      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                Catalog
+              </p>
+              <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
+                Manage categories
+              </h2>
+            </div>
+            <AdminBadge label={apiReady ? "Visible" : "Hidden"} />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <AdminBadge label="Visible" />
-            <button type="button" onClick={openAddCategory} className="inline-flex items-center gap-2 rounded-full bg-[#0a2a78] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#12386a]"><AdminIcon name="plus" />Add category</button>
-          </div>
-        </div>
 
-        <div className="mt-6 grid gap-4 rounded-[1.5rem] bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-3">
-          <div className="rounded-2xl bg-white px-4 py-3 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Total categories</p><p className="mt-2 text-2xl font-bold text-slate-900">{categories.length}</p></div>
-          <div className="rounded-2xl bg-white px-4 py-3 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Visible</p><p className="mt-2 text-2xl font-bold text-slate-900">{visibleCount}</p></div>
-          <div className="rounded-2xl bg-white px-4 py-3 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Hidden</p><p className="mt-2 text-2xl font-bold text-slate-900">{categories.length - visibleCount}</p></div>
-        </div>
-
-        <div className="mt-6 hidden overflow-hidden rounded-[1.5rem] border border-slate-100 md:block">
-          <div className="grid grid-cols-[0.75fr_1fr_1.5fr_0.7fr_0.8fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-            <span>Image</span><span>Name</span><span>Description</span><span>Count</span><span>Actions</span>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.2rem] bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Total
+              </p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {categories.length}
+              </p>
+            </div>
+            <div className="rounded-[1.2rem] bg-emerald-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                Visible
+              </p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {visibleCount}
+              </p>
+            </div>
+            <div className="rounded-[1.2rem] bg-amber-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
+                Hidden
+              </p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {categories.length - visibleCount}
+              </p>
+            </div>
           </div>
-          {filteredCategories.map((category) => (
-            <div key={category.id} className="grid grid-cols-[0.75fr_1fr_1.5fr_0.7fr_0.8fr] gap-3 border-t border-slate-100 px-4 py-4 text-sm">
-              <div className="h-14 w-14 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200"><Image src={category.image || "/desktop.jpg"} alt={category.name} width={56} height={56} className="h-full w-full object-cover" /></div>
-              <div><p className="font-semibold text-slate-900">{category.name}</p><div className="mt-1"><AdminBadge label={category.visibility} /></div></div>
-              <p className="text-slate-600">{category.description}</p>
-              <span className="font-semibold text-slate-900">{category.productCount}</span>
-              <div className="flex items-center gap-2">
-                <button type="button" onClick={() => openEditCategory(category)} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"><AdminIcon name="edit" />Edit</button>
-                <button type="button" onClick={() => removeCategory(category.id)} className="inline-flex items-center justify-center rounded-full bg-rose-50 p-2 text-rose-700 transition hover:bg-rose-100" aria-label={`Remove ${category.name}`}><AdminIcon name="trash" /></button>
+
+          {missingStandards.length > 0 && (
+            <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50/50 p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-amber-900">Recommended Standards</h3>
+              </div>
+              <p className="mt-2 text-sm text-amber-700/80">
+                You are missing some standard categories. Pre-fill the form below to create them quickly:
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {missingStandards.map((std) => (
+                  <button
+                    key={std.slug}
+                    type="button"
+                    onClick={() => prefillStandard(std)}
+                    className="rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-amber-700 shadow-sm transition hover:bg-amber-100"
+                  >
+                    + Add {std.name}
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          )}
 
-        <div className="mt-6 grid gap-4 md:hidden">
-          {filteredCategories.map((category) => (
-            <article key={category.id} className="rounded-[1.4rem] border border-slate-100 bg-white p-4 shadow-sm">
-              <div className="mb-4 overflow-hidden rounded-[1.2rem] bg-slate-100"><Image src={category.image || "/desktop.jpg"} alt={category.name} width={640} height={360} className="h-40 w-full object-cover" /></div>
-              <div className="flex items-start justify-between gap-4">
-                <div><p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{category.id}</p><h3 className="mt-2 text-base font-bold text-slate-900">{category.name}</h3></div>
-                <AdminBadge label={category.visibility} />
-              </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{category.description}</p>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-600">
-                <div><p className="text-xs uppercase tracking-[0.2em] text-slate-400">Products</p><p className="mt-1 font-semibold text-slate-900">{category.productCount}</p></div>
-                <div><p className="text-xs uppercase tracking-[0.2em] text-slate-400">Status</p><p className="mt-1 font-semibold text-slate-900">{category.visibility}</p></div>
-                <div className="col-span-2">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Actions</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => openEditCategory(category)} className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200">Edit</button>
-                    <button type="button" onClick={() => removeCategory(category.id)} className="rounded-full bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100">Delete</button>
+          {error ? (
+            <p className="mt-5 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </p>
+          ) : null}
+          {message ? (
+            <p className="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {message}
+            </p>
+          ) : null}
+          {toastMessage ? (
+            <div className="fixed bottom-6 right-6 z-50 max-w-sm rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-emerald-900 shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
+              {toastMessage}
+            </div>
+          ) : null}
+
+          <div className="mt-6 space-y-4">
+            {loading ? (
+              <p className="text-sm text-slate-500">Loading categories...</p>
+            ) : null}
+            {filteredCategories.map((category) => (
+              <article
+                key={category.id || (category as any)._id}
+                className={`rounded-[1.4rem] border p-4 md:p-5 ${(selectedCategory?.id || (selectedCategory as any)?._id) === (category.id || (category as any)._id) ? "border-[#0a2a78] bg-[#f6f9ff]" : "border-slate-100 bg-slate-50"}`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      {category.name}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {category.slug}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <AdminBadge
+                      label={category.visible ? "Visible" : "Hidden"}
+                    />
+                    <span className="rounded-full bg-cyan-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-700">
+                      {category.productsCount} products
+                    </span>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
 
-      <CategoryModal open={modalOpen} onClose={closeModal} onSubmit={submitCategory} form={form} setForm={setForm} editing={editingCategory} onUpload={handleImageUpload} />
+                <p className="mt-4 text-sm leading-6 text-slate-600">
+                  {category.description}
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void openCategory(category)}
+                    className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
+                  >
+                    View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void deleteCategory(category.id || (category as any)._id)}
+                    disabled={deletingId === (category.id || (category as any)._id)}
+                    className={`rounded-full px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      pendingDeleteId === (category.id || (category as any)._id)
+                        ? "bg-amber-600 hover:bg-amber-700"
+                        : "bg-rose-600 hover:bg-rose-700"
+                    }`}
+                  >
+                    {pendingDeleteId === (category.id || (category as any)._id)
+                      ? "Confirm delete"
+                      : "Delete"}
+                  </button>
+                  {pendingDeleteId === (category.id || (category as any)._id) ? (
+                    <button
+                      type="button"
+                      onClick={() => setPendingDeleteId("")}
+                      className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <div className="space-y-6">
+          <section className="rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.10)] md:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">
+              Admin access
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-bold">
+              Category workflow
+            </h2>
+            <div className="mt-5 space-y-3 text-sm leading-7 text-slate-200">
+              <p>
+                Save a bearer token once, then manage categories from this
+                workspace.
+              </p>
+              <p>
+                Upload a category image, change visibility, and keep catalog
+                groups organized.
+              </p>
+              <p>
+                Create, inspect, update, or delete categories without leaving
+                the dashboard.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/admin/products"
+                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              >
+                Products
+              </Link>
+              <Link
+                href="/admin/settings"
+                className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+              >
+                Profile settings
+              </Link>
+            </div>
+          </section>
+
+          <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+              API connection
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
+              Connect to the admin API
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Your signed-in admin session is used automatically when available.
+              Save a bearer token only if you need to connect from another
+              session.
+            </p>
+            {connectionMessage ? (
+              <p className="mt-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                {connectionMessage}
+              </p>
+            ) : null}
+            <form onSubmit={saveConnection} className="mt-6 space-y-4">
+              <textarea
+                value={apiConnection.accessToken}
+                onChange={(event) =>
+                  setApiConnection((current) => ({
+                    ...current,
+                    accessToken: event.target.value,
+                  }))
+                }
+                placeholder={
+                  session?.accessToken
+                    ? "Using admin session token automatically"
+                    : "Bearer access token"
+                }
+                rows={4}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+              />
+              <button
+                type="submit"
+                className="rounded-2xl bg-[#0a2a78] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#12386a]"
+              >
+                Save connection
+              </button>
+            </form>
+          </section>
+
+          <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+              {selectedCategory ? "Edit category" : "Create category"}
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
+              {selectedCategory
+                ? "Update selected category"
+                : "Add a new category"}
+            </h2>
+            <form onSubmit={submitCategory} className="mt-6 grid gap-4">
+              <div className="grid gap-4 rounded-[1.5rem] bg-slate-50 p-4">
+                <CategoryPreview
+                  src={preview || selectedCategory?.image?.url}
+                  alt={form.name || "Category preview"}
+                />
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
+                    <span>Image file</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="w-full rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:border-[#0a2a78]"
+                    />
+                  </label>
+                  <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
+                    <span>Slug</span>
+                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+                      <input
+                        value={form.slug}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            slug: event.target.value,
+                          }))
+                        }
+                        placeholder="category-slug"
+                        className="min-w-0 w-full flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            slug: slugify(current.name || current.slug),
+                          }))
+                        }
+                        className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
+                      >
+                        Suggest
+                      </button>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <input
+                value={form.name}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    name: event.target.value,
+                    slug: current.slug
+                      ? current.slug
+                      : slugify(event.target.value),
+                  }))
+                }
+                placeholder="Category name"
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+              />
+
+              <textarea
+                value={form.description}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
+                }
+                rows={4}
+                placeholder="Category description"
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+              />
+              
+              <input
+                value={form.subcategories}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    subcategories: event.target.value,
+                  }))
+                }
+                placeholder="Subcategories (comma separated)"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+              />
+
+              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                <input
+                  checked={form.visible}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      visible: event.target.checked,
+                    }))
+                  }
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 text-[#0a2a78] focus:ring-[#0a2a78]"
+                />
+                Visible to customers
+              </label>
+
+              {error && (
+                <div className="mb-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  <strong className="block mb-1 font-semibold text-rose-800">Error</strong>
+                  {typeof error === "string" && error.includes("{") ? (
+                    <pre className="whitespace-pre-wrap font-mono text-[11px]">{error}</pre>
+                  ) : (
+                    error
+                  )}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  disabled={saving || !apiReady}
+                  className="rounded-2xl bg-[#0a2a78] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving
+                    ? "Saving..."
+                    : !apiReady
+                      ? "Connect first"
+                      : selectedCategory
+                        ? "Save changes"
+                        : "Add category"}
+                </button>
+                <button
+                  type="button"
+                  onClick={clearForm}
+                  className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Clear form
+                </button>
+              </div>
+              {!apiReady ? (
+                <p className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  Save a bearer token or sign in again to enable category
+                  creation.
+                </p>
+              ) : null}
+            </form>
+          </section>
+        </div>
+      </div>
     </AdminShell>
   );
 }

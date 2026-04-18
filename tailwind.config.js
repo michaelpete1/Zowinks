@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+// Triggering rebuild
 module.exports = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -7,6 +8,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        'xl': '1280px',
+      },
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
@@ -17,6 +21,7 @@ module.exports = {
       },
     },
   },
+
   plugins: [],
 }
 

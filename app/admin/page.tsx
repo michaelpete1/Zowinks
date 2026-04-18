@@ -1,58 +1,105 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminBadge, AdminIcon, AdminShell } from "../../components/AdminShell";
-import { useAdminRecords } from "../../hooks/useAdminRecords";
-import { useCatalog } from "../../hooks/useCatalog";
+import { useAdminSession } from "../../hooks/useAdminSession";
+import { ApiError, zowkinsApi } from "../../lib/zowkins-api";
 
 const shortcuts = [
   { label: "Products", href: "/admin/products", description: "Add, edit, hide, or remove products.", icon: "layers" as const },
   { label: "Categories", href: "/admin/categories", description: "Upload and organize product categories.", icon: "tag" as const },
   { label: "Orders", href: "/admin/orders", description: "Track delivered and pending orders.", icon: "orders" as const },
   { label: "Customers", href: "/admin/customers", description: "Review customer records and contact details.", icon: "contacts" as const },
-  { label: "Settings", href: "/admin/settings", description: "Manage product image workflow.", icon: "settings" as const },
+  { label: "Delivery", href: "/admin/delivery-methods", description: "Manage shipping methods and fees.", icon: "truck" as const },
+  { label: "Settings", href: "/admin/settings", description: "Manage admin profile and credentials.", icon: "settings" as const },
 ];
 
 export default function AdminDashboardPage() {
-  const products = useCatalog((state) => state.products);
-  const orders = useAdminRecords((state) => state.orders);
-  const customers = useAdminRecords((state) => state.customers);
-  const categories = useAdminRecords((state) => state.categories);
+  const { session } = useAdminSession();
+  const [productCount, setProductCount] = useState(0);
+  const [visibleProductCount, setVisibleProductCount] = useState(0);
+  const [categoryCount, setCategoryCount] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
+  const [processingOrderCount, setProcessingOrderCount] = useState(0);
+  const [customerCount, setCustomerCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const accessToken = session?.accessToken ?? (typeof window !== "undefined" ? window.localStorage.getItem("zowkins-admin-access-token") : null);
+
+  useEffect(() => {
+    if (!accessToken) return;
+
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+
+    Promise.all([
+      zowkinsApi.listAdminProducts(accessToken),
+      zowkinsApi.listAdminCategories(accessToken),
+      zowkinsApi.getAdminOrderStats(accessToken),
+      zowkinsApi.getAdminCustomerStats(accessToken),
+    ])
+      .then(([products, categories, orderStats, customerStats]) => {
+        if (cancelled) return;
+
+        setProductCount(products.length);
+        setVisibleProductCount(products.filter((product) => product.visible).length);
+        setCategoryCount(categories.length);
+        setOrderCount(orderStats.stats.totalOrders);
+        setProcessingOrderCount(orderStats.stats.processing);
+        setCustomerCount(customerStats.stats.totalUsers);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setError(err instanceof ApiError ? err.message : "Could not load dashboard data.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
 
   const stats = useMemo(
     () => [
       {
         label: "Products live",
-        value: String(products.length),
-        hint: `${products.filter((product) => product.visibility === "Visible").length} visible`,
+        value: String(productCount),
+        hint: `${visibleProductCount} visible`,
         tone: "bg-white",
       },
       {
         label: "Categories",
-        value: String(categories.length),
+        value: String(categoryCount),
         hint: "catalog groups",
         tone: "bg-white",
       },
-      {
-        label: "Orders tracked",
-        value: String(orders.length),
-        hint: `${orders.filter((order) => order.status === "Pending").length} pending`,
-        tone: "bg-white",
-      },
+        {
+          label: "Orders tracked",
+          value: String(orderCount),
+          hint: `${processingOrderCount} processing`,
+          tone: "bg-white",
+        },
       {
         label: "Customers",
-        value: String(customers.length),
+        value: String(customerCount),
         hint: "records stored",
         tone: "bg-white",
       },
       { label: "Admin routes", value: "6", hint: "separated views", tone: "bg-white" },
     ],
-    [products, orders, customers, categories],
+    [productCount, visibleProductCount, categoryCount, orderCount, processingOrderCount, customerCount],
   );
 
   return (
-      <AdminShell title="Admin overview" subtitle="Summary cards and route shortcuts for products, categories, orders, and customer records.">
+    <AdminShell title="Admin overview" subtitle="Live summary cards and route shortcuts for the admin backend.">
+      {error ? <p className="mb-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+      {loading ? <p className="mb-6 text-sm text-slate-500">Loading dashboard data...</p> : null}
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
           <article key={stat.label} className="rounded-[1.5rem] bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
@@ -72,7 +119,7 @@ export default function AdminDashboardPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Quick access</p>
               <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">Go straight to the page you need</h2>
             </div>
-            <AdminBadge label="Visible" />
+            <AdminBadge label={session?.name ? "Visible" : "Pending"} />
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -90,13 +137,15 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="space-y-6">
-      <section className="rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.10)] md:p-8">
+          <section className="rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.10)] md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">Operations</p>
             <h2 className="mt-2 font-display text-2xl font-bold">Keep the store moving</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-200">Use the separate pages for products, categories, orders, and customer records. The dashboard stays as a compact control entry point for managing new products and the rest of the store.</p>
+            <p className="mt-3 text-sm leading-6 text-slate-200">
+              The overview now reflects live backend data for products, categories, orders, and customers.
+            </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/admin/products" className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">Open products</Link>
-              <Link href="/admin/settings" className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">Image settings</Link>
+              <Link href="/admin/settings" className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">Profile settings</Link>
             </div>
           </section>
 
@@ -106,7 +155,7 @@ export default function AdminDashboardPage() {
             <div className="mt-5 space-y-3 text-sm text-slate-600">
               <p><strong className="text-slate-900">Products</strong> handles add, edit, hide, remove, and mark-new flows.</p>
               <p><strong className="text-slate-900">Categories</strong> handles category uploads and grouping.</p>
-              <p><strong className="text-slate-900">Orders</strong> handles delivered and pending tracking.</p>
+              <p><strong className="text-slate-900">Orders</strong> handles status updates and product line items.</p>
               <p><strong className="text-slate-900">Customers</strong> holds customer records and contact details.</p>
             </div>
           </section>
