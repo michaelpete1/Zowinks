@@ -4,6 +4,7 @@ import {
   CategoryProductsResponse,
   CategoryListItem,
 } from "./zowkins-api";
+import { resolveImageSource } from "./media";
 
 export type CatalogItem = {
   id: string;
@@ -45,7 +46,7 @@ function productToCatalogItem(product: ProductDetails): CatalogItem {
     brand: String(subcategoryLabel || categoryLabel),
     price: formatPrice(product.price),
     href: `/products/${product.slug}`,
-    image: typeof product.image === "string" ? product.image : product.image?.url || "/desktop.jpg",
+    image: resolveImageSource(product.image),
     description: product.description,
   };
 }

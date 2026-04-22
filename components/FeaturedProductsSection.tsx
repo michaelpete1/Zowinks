@@ -1,6 +1,6 @@
-import Image from "next/image";
 import AddToCartButton from "./AddToCartButton";
 import Carousel from "./Carousel";
+import FallbackImage from "./FallbackImage";
 import { fetchAllProducts } from "../lib/catalog";
 
 export default async function FeaturedProductsSection() {
@@ -38,51 +38,54 @@ export default async function FeaturedProductsSection() {
           </div>
 
           <div className="mx-auto mt-8 hidden gap-6 md:grid sm:grid-cols-2 xl:grid-cols-3">
-          {featured.map((item) => (
-            <article
-              key={item.id}
-              className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)]"
-            >
-              <div className="relative h-52 overflow-hidden bg-[#0b1220]">
-                <img
-                  src={item.image || "/desktop.jpg"}
-                  alt={item.title}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="space-y-3 p-5 text-center">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f3c74d]">
-                    {item.category}
-                  </p>
-                  <h3 className="mt-2 font-display text-lg font-bold text-white">
-                    {item.title}
-                  </h3>
+            {featured.map((item) => (
+              <article
+                key={item.id}
+                className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)]"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden bg-[#0b1220]">
+                  <FallbackImage
+                    src={item.image || "/desktop.jpg"}
+                    alt={item.title}
+                    className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold text-white">{item.price}</span>
-                  <AddToCartButton
-                    item={{
-                      id: item.id,
-                      slug: item.slug,
-                      title: item.title,
-                      price: item.price,
-                      spec: item.category,
-                      image: item.image,
-                    }}
-                    className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
-                  >
-                    Order Now
-                  </AddToCartButton>
+                <div className="space-y-3 p-5 text-center">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f3c74d]">
+                      {item.category}
+                    </p>
+                    <h3 className="mt-2 font-display text-lg font-bold text-white">
+                      {item.title}
+                    </h3>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-semibold text-white">
+                      {item.price}
+                    </span>
+                    <AddToCartButton
+                      item={{
+                        id: item.id,
+                        slug: item.slug,
+                        title: item.title,
+                        price: item.price,
+                        spec: item.category,
+                        image: item.image,
+                      }}
+                      className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                    >
+                      Order Now
+                    </AddToCartButton>
+                  </div>
                 </div>
-              </div>
               </article>
             ))}
           </div>
         </>
       ) : (
         <div className="mx-auto mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300">
-          No products available yet. Products will appear here when added through the admin.
+          No products available yet. Products will appear here when added
+          through the admin.
         </div>
       )}
     </section>

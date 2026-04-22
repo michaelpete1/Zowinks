@@ -35,7 +35,7 @@ export type AdminProductStatsResponse = {
 
 export type AdminProductInput = {
   name: string;
-  slug: string;
+  slug?: string;
   category: string;
   subcategory: string;
   price: number;
@@ -123,7 +123,7 @@ export type AdminCategory = CategoryDetails;
 export type AdminCategoryInput = {
   name: string;
   description: string;
-  slug: string;
+  slug?: string;
   visible: boolean;
   subcategories: { name: string }[];
   file: File | null;

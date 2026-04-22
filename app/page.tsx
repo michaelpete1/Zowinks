@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../components/NewNavbar";
 import HeroCarousel from "../components/HeroCarousel";
 import Carousel from "../components/Carousel";
+import FallbackImage from "../components/FallbackImage";
 import FeaturedProductsSection from "../components/FeaturedProductsSection";
 import { getAppSettings } from "../lib/app-settings";
 import { zowkinsApi } from "../lib/zowkins-api";
+import { resolveImageSource } from "../lib/media";
 
 export const metadata: Metadata = {
   title: "Zowkins Enterprise",
@@ -144,18 +145,12 @@ export default async function Home() {
       title: cat.name,
       body: cat.description,
       href: `/categories/${cat.slug}`,
-      img:
-        typeof cat.image === "string"
-          ? cat.image
-          : cat.image?.url || "/desktop.jpg",
+      img: resolveImageSource(cat.image),
     }));
 
     allProducts = apiCats.map((cat) => ({
       title: cat.name,
-      image:
-        typeof cat.image === "string"
-          ? cat.image
-          : cat.image?.url || "/desktop.jpg",
+      image: resolveImageSource(cat.image),
       href: `/categories/${cat.slug}`,
     }));
   } catch (error) {
@@ -210,11 +205,11 @@ export default async function Home() {
                 href={card.href}
                 className="group mx-auto w-full max-w-[22rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)]"
               >
-                <div className="relative h-44 overflow-hidden bg-slate-100">
-                  <img
+                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                  <FallbackImage
                     src={card.img}
                     alt={card.title}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />
                 </div>
                 <div className="p-5 text-center">
@@ -424,20 +419,19 @@ export default async function Home() {
           <div className="hidden md:block">
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {allProducts.map((product) => (
-                <Link
-                  key={product.title}
-                  href={product.href}
-                  className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition hover:-translate-y-1"
-                >
-                  <div className="relative h-40 overflow-hidden">
-                    <Image
-                      src={product.image}
-                      alt={product.title}
-                      fill
-                      className="object-cover transition duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.08)_0%,rgba(5,11,22,0.68)_100%)]" />
-                  </div>
+              <Link
+                key={product.title}
+                href={product.href}
+                className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition hover:-translate-y-1"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <FallbackImage
+                    src={product.image}
+                    alt={product.title}
+                    className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.08)_0%,rgba(5,11,22,0.68)_100%)]" />
+                </div>
                   <div className="p-5">
                     <h3 className="font-display text-lg font-bold text-white">
                       {product.title}

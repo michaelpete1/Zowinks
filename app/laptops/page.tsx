@@ -4,6 +4,7 @@ import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
 import { zowkinsApi } from "../../lib/zowkins-api";
+import { resolveImageSource } from "../../lib/media";
 
 export const metadata: Metadata = {
   title: "Laptops",
@@ -72,7 +73,7 @@ export default async function Laptops() {
       description: `Explore the latest ${sub.name} laptop models and configurations.`,
       badge,
       tone,
-      image: (typeof sub.image === "string" ? sub.image : sub.image?.url) || "/desktop.jpg",
+      image: resolveImageSource(sub.image),
     };
   });
 

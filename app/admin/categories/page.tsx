@@ -319,7 +319,6 @@ export default function CategoriesPage() {
       const payload: AdminCategoryInput = {
         name,
         description,
-        slug: slug || slugify(name),
         visible: form.visible,
         subcategories: form.subcategories
           .split(",")

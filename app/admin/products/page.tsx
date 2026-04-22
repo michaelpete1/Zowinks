@@ -18,7 +18,10 @@ import {
 const STANDARD_CATEGORIES = [
   { name: "Laptops", subcategories: ["HP", "Dell", "Lenovo", "Apple", "Asus"] },
   { name: "Desktops", subcategories: ["HP", "Dell", "Lenovo"] },
-  { name: "Accessories", subcategories: ["Keyboards", "Mice", "Monitors", "Printers", "Docks"] },
+  {
+    name: "Accessories",
+    subcategories: ["Keyboards", "Mice", "Monitors", "Printers", "Docks"],
+  },
 ];
 
 const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
@@ -51,8 +54,8 @@ const emptyForm = (category = "", subcategory = ""): ProductForm => ({
   file: null,
 });
 
-const slugify = (value: string) =>
-  value
+const slugify = (value: string = "") =>
+  (value || "")
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, "")
@@ -65,6 +68,9 @@ const formatCurrency = (value: number) =>
     currency: "NGN",
     maximumFractionDigits: 0,
   }).format(value);
+
+const asString = (value: unknown) =>
+  typeof value === "string" ? value : value == null ? "" : String(value);
 
 function ProductPreview({ src, alt }: { src?: string | null; alt: string }) {
   return (
@@ -82,7 +88,7 @@ function ProductPreview({ src, alt }: { src?: string | null; alt: string }) {
 }
 
 export default function ProductsPage() {
-  const { session, clearSession } = useAdminSession();
+  const { session, ready: sessionReady, clearSession } = useAdminSession();
   const [apiConnection, setApiConnection] = useState<ApiConnection>({
     accessToken: "",
   });
@@ -107,74 +113,97 @@ export default function ProductsPage() {
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
 
+  // Use session token (same pattern as categories page)
+  useEffect(() => {
+    if (!sessionReady || typeof window === "undefined") return;
+
+    const storedToken = window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "";
+    const sessionToken = session?.accessToken ?? "";
+    const nextToken = sessionToken || storedToken;
+
+    setApiConnection({ accessToken: nextToken });
+
+    if (sessionToken && sessionToken !== storedToken) {
+      window.localStorage.setItem(ADMIN_API_TOKEN_KEY, sessionToken);
+    }
+
+    setReady(true);
+  }, [session?.accessToken, sessionReady]);
+
   const selectedCategory = useMemo(
     () =>
-      categories.find((category) => (category.id || (category as any)._id) === form.category || category.name === form.category) ?? null,
+      categories.find(
+        (category) =>
+          (category.id || (category as any)._id) === form.category ||
+          category.name === form.category,
+      ) ?? null,
     [categories, form.category],
   );
   const subcategoryOptions = selectedCategory?.subcategories ?? [];
+
   const getCategoryLabel = (value: any) => {
-    if (typeof value === "object" && value !== null) return value.name || "Unknown";
-    return categories.find(
-      (category) => category.name === value || category.slug === value || category.id === value,
-    )?.name ?? value;
+    if (typeof value === "object" && value !== null)
+      return value.name || "Unknown";
+    return (
+      categories.find(
+        (category) =>
+          category.name === value ||
+          category.slug === value ||
+          category.id === value,
+      )?.name ?? value
+    );
   };
+
   const isEditing = Boolean(selectedProduct);
   const isCreating = !isEditing;
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    setApiConnection({
-      accessToken: window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "",
-    });
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
     if (typeof window === "undefined") return undefined;
-
     if (preview.startsWith("blob:")) {
       return () => URL.revokeObjectURL(preview);
     }
-
     return undefined;
   }, [preview]);
-
-  useEffect(() => {
-    if (!ready) return;
-
-    zowkinsApi
-      .listCategories({ limit: 100 })
-      .then((response) => {
-        console.log("First category structure:", JSON.stringify(response.categories[0], null, 2));
-        setCategories(response.categories);
-        if (!form.category && response.categories[0]) {
-          const firstCat = response.categories[0];
-          const firstCatId = firstCat.id || (firstCat as any)._id;
-          const firstSub = firstCat.subcategories?.[0];
-          const firstSubId = firstSub ? (firstSub.id || (firstSub as any)._id) : "";
-
-          setForm((current) => ({
-            ...current,
-            category: firstCatId,
-            subcategory: firstSubId,
-          }));
-        }
-      })
-      .catch(() => {
-        setCategories([]);
-      });
-  }, [ready]);
 
   const apiReady = Boolean(apiConnection.accessToken.trim());
   const authFailureMessage =
     "Your admin API token looks missing or expired. Save the token again from Settings, then refresh this page.";
 
+  // Load categories using the token from state (set after sessionReady)
+  useEffect(() => {
+    if (!ready || !apiConnection.accessToken.trim()) return;
+
+    zowkinsApi
+      .listAdminCategories(apiConnection.accessToken.trim())
+      .then((catList: any) => {
+        const list = Array.isArray(catList)
+          ? catList
+          : (catList?.categories ?? []);
+        console.log(
+          "First category structure:",
+          JSON.stringify(list[0], null, 2),
+        );
+        setCategories(list);
+        if (list[0]) {
+          const firstCat = list[0];
+          const firstCatId = firstCat.id || firstCat._id;
+          const firstSub = firstCat.subcategories?.[0];
+          const firstSubId = firstSub ? firstSub.id || firstSub._id : "";
+          setForm((current) => ({
+            ...current,
+            category: current.category || asString(firstCatId),
+            subcategory: current.subcategory || asString(firstSubId),
+          }));
+        }
+      })
+      .catch(() => setCategories([]));
+  }, [ready, apiConnection.accessToken]);
+
   const describeApiError = (err: unknown, fallback: string) => {
     if (err instanceof ApiError && err.status === 401) {
       clearSession?.();
-      if (typeof window !== "undefined") window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
+      if (typeof window !== "undefined")
+        window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
       return authFailureMessage;
     }
     return err instanceof ApiError ? err.message : fallback;
@@ -205,14 +234,8 @@ export default function ProductsPage() {
       setStatsInStock(statsResponse.stats.instock);
       setStatsOutOfStock(statsResponse.stats.outofstock);
       setStatsInventoryValue(statsResponse.stats.totalInventoryUnitCost);
-      setSelectedProduct((current) => {
-        if (!current) return normalizedProducts[0] ?? null;
-        return (
-          normalizedProducts.find((product) => (product.id || (product as any)._id) === (current.id || (current as any)._id)) ??
-          normalizedProducts[0] ??
-          null
-        );
-      });
+      // Don't auto-select first product to avoid unexpected edit mode
+      // setSelectedProduct(normalizedProducts[0] ?? null);
     } catch (err) {
       setError(describeApiError(err, "Could not load products."));
     } finally {
@@ -231,18 +254,27 @@ export default function ProductsPage() {
     const categoryObj = selectedProduct.category;
     const subcategoryObj = selectedProduct.subcategory;
 
-    const categoryId = typeof categoryObj === "object" ? categoryObj?.id || (categoryObj as any)?._id : categoryObj;
-    const subcategoryId = typeof subcategoryObj === "object" ? subcategoryObj?.id || (subcategoryObj as any)?._id : subcategoryObj;
+    const categoryId =
+      typeof categoryObj === "object"
+        ? categoryObj?.id || (categoryObj as any)?._id
+        : categoryObj;
+    const subcategoryId =
+      typeof subcategoryObj === "object"
+        ? subcategoryObj?.id || (subcategoryObj as any)?._id
+        : subcategoryObj;
 
     setForm({
-      name: selectedProduct.name,
-      slug: selectedProduct.slug,
-      category: categoryId || "",
-      subcategory: subcategoryId || "",
-      price: String(selectedProduct.price),
-      description: selectedProduct.description,
-      visible: selectedProduct.visible,
-      inStock: selectedProduct.inStock,
+      name: asString(selectedProduct.name),
+      slug: asString(selectedProduct.slug),
+      category: asString(categoryId),
+      subcategory: asString(subcategoryId),
+      price:
+        typeof selectedProduct.price === "number"
+          ? String(selectedProduct.price)
+          : "",
+      description: asString(selectedProduct.description),
+      visible: Boolean(selectedProduct.visible),
+      inStock: Boolean(selectedProduct.inStock),
       file: null,
     });
     setPreview(selectedProduct.image?.url ?? "");
@@ -260,19 +292,21 @@ export default function ProductsPage() {
         product.category,
         product.subcategory,
         product.description,
-      ].some((value) => value.toLowerCase().includes(needle)),
+      ].some((value) => String(value).toLowerCase().includes(needle)),
     );
   }, [products, query]);
 
   const resetForm = () => {
     const firstCat = categories[0];
-    const defaultCategoryId = firstCat ? (firstCat.id || (firstCat as any)._id) : "";
-    const defaultSubcategoryId = firstCat?.subcategories?.[0] ? (firstCat.subcategories[0].id || (firstCat.subcategories[0] as any)._id) : "";
+    const defaultCategoryId = firstCat
+      ? firstCat.id || (firstCat as any)._id
+      : "";
+    const defaultSubcategoryId = firstCat?.subcategories?.[0]
+      ? firstCat.subcategories[0].id || (firstCat.subcategories[0] as any)._id
+      : "";
 
     setSelectedProduct(null);
-    setForm(
-      emptyForm(defaultCategoryId, defaultSubcategoryId),
-    );
+    setForm(emptyForm(defaultCategoryId, defaultSubcategoryId));
     setPreview("");
   };
 
@@ -294,9 +328,7 @@ export default function ProductsPage() {
 
     setForm((current) => ({ ...current, file }));
     setPreview((current) => {
-      if (current.startsWith("blob:")) {
-        URL.revokeObjectURL(current);
-      }
+      if (current.startsWith("blob:")) URL.revokeObjectURL(current);
       return URL.createObjectURL(file);
     });
   };
@@ -315,12 +347,11 @@ export default function ProductsPage() {
     }
 
     const payload = {
-      name: form.name.trim(),
-      slug: form.slug.trim() || slugify(form.name),
-      category: form.category,
-      subcategory: form.subcategory,
+      name: (form.name || "").trim(),
+      category: form.category || "",
+      subcategory: form.subcategory || "",
       price: Number(form.price),
-      description: form.description.trim(),
+      description: (form.description || "").trim(),
       visible: form.visible,
       inStock: form.inStock,
       file: form.file,
@@ -328,13 +359,14 @@ export default function ProductsPage() {
 
     const missing = [];
     if (!payload.name) missing.push("Product Name");
-    if (!payload.slug) missing.push("Slug");
     if (!payload.category) missing.push("Category");
     if (!payload.subcategory) missing.push("Subcategory");
     if (!form.price || Number.isNaN(payload.price)) missing.push("Price");
 
     if (missing.length > 0) {
-      setError(`Please fill out the following required fields: ${missing.join(", ")}`);
+      setError(
+        `Please fill out the following required fields: ${missing.join(", ")}`,
+      );
       return;
     }
 
@@ -342,17 +374,39 @@ export default function ProductsPage() {
     setError("");
     setMessage("");
 
+    console.log("selectedProduct:", selectedProduct);
+    console.log(
+      "selectedProduct id:",
+      selectedProduct?.id,
+      (selectedProduct as any)?._id,
+    );
+    console.log(
+      "payload booleans:",
+      payload.visible,
+      payload.inStock,
+      typeof payload.visible,
+      typeof payload.inStock,
+      "payload keys:",
+      Object.keys(payload),
+    );
+
     try {
-      const saved = selectedProduct
+      const productId = selectedProduct?.id || (selectedProduct as any)?._id;
+      const isValidProduct = selectedProduct && productId;
+      console.log("isValidProduct:", isValidProduct, "productId:", productId);
+
+      const saved = isValidProduct
         ? await zowkinsApi.updateAdminProduct(
             apiConnection.accessToken.trim(),
-            selectedProduct.id || (selectedProduct as any)._id,
+            productId,
             payload,
           )
         : await zowkinsApi.createAdminProduct(
             apiConnection.accessToken.trim(),
             payload,
           );
+
+      console.log("saved:", saved);
 
       setMessage(
         selectedProduct
@@ -375,9 +429,8 @@ export default function ProductsPage() {
     if (
       typeof window !== "undefined" &&
       !window.confirm("Delete this product?")
-    ) {
+    )
       return;
-    }
 
     setDeletingId(productId);
     setError("");
@@ -389,9 +442,8 @@ export default function ProductsPage() {
         productId,
       );
       setMessage("Product deleted successfully.");
-      if ((selectedProduct?.id || (selectedProduct as any)?._id) === productId) {
+      if ((selectedProduct?.id || (selectedProduct as any)?._id) === productId)
         resetForm();
-      }
       await loadProducts();
     } catch (err) {
       setError(describeApiError(err, "Could not delete product."));
@@ -399,7 +451,6 @@ export default function ProductsPage() {
       setDeletingId("");
     }
   };
-
 
   return (
     <AdminShell
@@ -439,46 +490,25 @@ export default function ProductsPage() {
           </div>
 
           <div className="mt-6 grid gap-4 rounded-[1.5rem] bg-slate-50 p-4 text-slate-600 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                Total
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {statsTotal || products.length}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                Visible
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {statsVisible}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                Hidden
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {statsInvisible}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                In stock
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {statsInStock}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                Out of stock
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {statsOutOfStock}
-              </p>
-            </div>
+            {[
+              { label: "Total", value: statsTotal || products.length },
+              { label: "Visible", value: statsVisible },
+              { label: "Hidden", value: statsInvisible },
+              { label: "In stock", value: statsInStock },
+              { label: "Out of stock", value: statsOutOfStock },
+            ].map(({ label, value }) => (
+              <div
+                key={label}
+                className="rounded-2xl bg-white px-4 py-3 shadow-sm"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                  {label}
+                </p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">
+                  {value}
+                </p>
+              </div>
+            ))}
             <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
                 Inventory value
@@ -490,30 +520,32 @@ export default function ProductsPage() {
           </div>
 
           <div className="mt-4 rounded-[1.25rem] border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
-            Use the form on the right to create or edit products. The API
-            expects a multipart upload with a file and a JSON data payload.
+            Use the form on the right to create or edit products.
           </div>
 
-          {error ? (
+          {error && (
             <p className="mt-5 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {error}
             </p>
-          ) : null}
+          )}
           {apiReady ? (
             <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              <span className="font-semibold text-slate-900">API token status:</span>{" "}
-              Connected. If a create request returns 401, save the token again from Settings and refresh.
+              <span className="font-semibold text-slate-900">
+                API token status:
+              </span>{" "}
+              Connected.
             </div>
           ) : (
             <div className="mt-4 rounded-[1.25rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <span className="font-semibold">API token required:</span> connect your admin token in Settings before creating or editing products.
+              <span className="font-semibold">API token required:</span> connect
+              your admin token in Settings.
             </div>
           )}
-          {message ? (
+          {message && (
             <p className="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
               {message}
             </p>
-          ) : null}
+          )}
 
           <div className="mt-8 overflow-hidden rounded-[1.5rem] border border-slate-100 bg-white shadow-sm">
             <div className="w-full overflow-x-auto">
@@ -540,7 +572,10 @@ export default function ProductsPage() {
                     </tr>
                   ) : filteredProducts.length ? (
                     filteredProducts.map((product) => (
-                      <tr key={product.id || (product as any)._id} className="hover:bg-slate-50">
+                      <tr
+                        key={product.id || (product as any)._id}
+                        className="hover:bg-slate-50"
+                      >
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200">
@@ -564,7 +599,8 @@ export default function ProductsPage() {
                           {getCategoryLabel(product.category)}
                         </td>
                         <td className="px-4 py-4 text-slate-600">
-                          {typeof product.subcategory === "object" && product.subcategory !== null
+                          {typeof product.subcategory === "object" &&
+                          product.subcategory !== null
                             ? (product.subcategory as any).name
                             : product.subcategory}
                         </td>
@@ -595,8 +631,13 @@ export default function ProductsPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleDelete(product.id || (product as any)._id)}
-                              disabled={deletingId === (product.id || (product as any)._id)}
+                              onClick={() =>
+                                handleDelete(product.id || (product as any)._id)
+                              }
+                              disabled={
+                                deletingId ===
+                                (product.id || (product as any)._id)
+                              }
                               className="inline-flex items-center justify-center rounded-full bg-rose-50 p-2 text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                               aria-label={`Delete ${product.name}`}
                             >
@@ -642,7 +683,9 @@ export default function ProductsPage() {
                         {product.name}
                       </h3>
                     </div>
-                    <AdminBadge label={product.visible ? "Visible" : "Hidden"} />
+                    <AdminBadge
+                      label={product.visible ? "Visible" : "Hidden"}
+                    />
                   </div>
                   <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2">
                     <div>
@@ -658,7 +701,8 @@ export default function ProductsPage() {
                         Subcategory
                       </p>
                       <p className="mt-1 font-semibold text-slate-900">
-                        {typeof product.subcategory === "object" && product.subcategory !== null
+                        {typeof product.subcategory === "object" &&
+                        product.subcategory !== null
                           ? (product.subcategory as any).name
                           : product.subcategory}
                       </p>
@@ -690,8 +734,12 @@ export default function ProductsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(product.id || (product as any)._id)}
-                      disabled={deletingId === (product.id || (product as any)._id)}
+                      onClick={() =>
+                        handleDelete(product.id || (product as any)._id)
+                      }
+                      disabled={
+                        deletingId === (product.id || (product as any)._id)
+                      }
                       className="rounded-full bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
                       Delete
@@ -721,7 +769,7 @@ export default function ProductsPage() {
                 workspace.
               </p>
               <p>
-                Load categories from the public API so the product form stays
+                Load categories from the admin API so the product form stays
                 aligned with the catalog structure.
               </p>
               <p>
@@ -753,9 +801,7 @@ export default function ProductsPage() {
               Admin API status
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              The admin product page reads the saved API token from your browser
-              storage. If you need to connect or update the token, use the
-              settings page.
+              The admin product page uses your session token automatically.
             </p>
             <div className="mt-6 space-y-4">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
@@ -881,7 +927,7 @@ export default function ProductsPage() {
               <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
                 <span>Price</span>
                 <input
-                  value={form.price}
+                  value={form.price ?? ""}
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
@@ -902,14 +948,17 @@ export default function ProductsPage() {
                     value={form.category}
                     onChange={(event) => {
                       const nextCategoryId = event.target.value;
-                      const nextCategory = categories.find(
-                        (c) => (c.id || (c as any)._id) === nextCategoryId,
-                      ) ?? null;
-                      
+                      const nextCategory =
+                        categories.find(
+                          (c) => (c.id || (c as any)._id) === nextCategoryId,
+                        ) ?? null;
                       setForm((current) => ({
                         ...current,
                         category: nextCategoryId,
-                        subcategory: (nextCategory?.subcategories[0]?.id || (nextCategory?.subcategories[0] as any)?._id) ?? "",
+                        subcategory:
+                          (nextCategory?.subcategories[0]?.id ||
+                            (nextCategory?.subcategories[0] as any)?._id) ??
+                          "",
                       }));
                     }}
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
@@ -925,37 +974,37 @@ export default function ProductsPage() {
                     })}
                   </select>
                 ) : (
-                  <input
-                    value={form.category}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        category: event.target.value,
-                      }))
-                    }
-                    placeholder="Laptops"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                  />
-                )}
-                {!categories.length && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {STANDARD_CATEGORIES.map((std) => (
-                      <button
-                        key={std.name}
-                        type="button"
-                        onClick={() => {
-                          setForm((current) => ({
-                            ...current,
-                            category: std.name,
-                            subcategory: std.subcategories[0],
-                          }));
-                        }}
-                        className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600 transition hover:bg-[#0a2a78] hover:text-white"
-                      >
-                        {std.name}
-                      </button>
-                    ))}
-                  </div>
+                  <>
+                    <input
+                      value={form.category}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          category: event.target.value,
+                        }))
+                      }
+                      placeholder="Laptops"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                    />
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {STANDARD_CATEGORIES.map((std) => (
+                        <button
+                          key={std.name}
+                          type="button"
+                          onClick={() =>
+                            setForm((current) => ({
+                              ...current,
+                              category: std.name,
+                              subcategory: std.subcategories[0],
+                            }))
+                          }
+                          className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600 transition hover:bg-[#0a2a78] hover:text-white"
+                        >
+                          {std.name}
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
               </label>
 
@@ -983,31 +1032,41 @@ export default function ProductsPage() {
                     })}
                   </select>
                 ) : (
-                  <input
-                    value={form.subcategory}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        subcategory: event.target.value,
-                      }))
-                    }
-                    placeholder="Business laptops"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                  />
-                )}
-                {!subcategoryOptions.length && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {(STANDARD_CATEGORIES.find((s) => s.name === form.category)?.subcategories || ["Business", "Enterprise", "Productivity"]).map((sub) => (
-                      <button
-                        key={sub}
-                        type="button"
-                        onClick={() => setForm(c => ({ ...c, subcategory: sub }))}
-                        className="rounded-full border border-slate-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-500 transition hover:border-[#0a2a78] hover:text-[#0a2a78]"
-                      >
-                        {sub}
-                      </button>
-                    ))}
-                  </div>
+                  <>
+                    <input
+                      value={form.subcategory}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          subcategory: event.target.value,
+                        }))
+                      }
+                      placeholder="Business laptops"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                    />
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {(
+                        STANDARD_CATEGORIES.find(
+                          (s) => s.name === form.category,
+                        )?.subcategories || [
+                          "Business",
+                          "Enterprise",
+                          "Productivity",
+                        ]
+                      ).map((sub) => (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() =>
+                            setForm((c) => ({ ...c, subcategory: sub }))
+                          }
+                          className="rounded-full border border-slate-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-500 transition hover:border-[#0a2a78] hover:text-[#0a2a78]"
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
               </label>
 
@@ -1059,9 +1118,13 @@ export default function ProductsPage() {
 
               {error && (
                 <div className="mb-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700 md:col-span-2">
-                  <strong className="block mb-1 font-semibold text-rose-800">Error</strong>
+                  <strong className="block mb-1 font-semibold text-rose-800">
+                    Error
+                  </strong>
                   {typeof error === "string" && error.includes("{") ? (
-                    <pre className="whitespace-pre-wrap font-mono text-[11px]">{error}</pre>
+                    <pre className="whitespace-pre-wrap font-mono text-[11px]">
+                      {error}
+                    </pre>
                   ) : (
                     error
                   )}

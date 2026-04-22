@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../../components/NewNavbar";
 import { zowkinsApi } from "../../lib/zowkins-api";
+import { resolveImageSource } from "../../lib/media";
 
 export const metadata: Metadata = {
   title: "Desktops",
@@ -53,7 +54,7 @@ export default async function DesktopsPage() {
       title: sub.name,
       description: `Robust ${sub.name} desktop systems for business environments and professional workflows.`,
       href: `/categories/${activeCategory?.slug || "desktops"}/${sub.slug}`,
-      image: (typeof sub.image === "string" ? sub.image : sub.image?.url) || image,
+      image: resolveImageSource(sub.image, image),
     };
   });
 

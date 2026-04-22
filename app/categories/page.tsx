@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import { ApiError, zowkinsApi } from "../../lib/zowkins-api";
+import { resolveImageSource } from "../../lib/media";
 
 export const metadata: Metadata = {
   title: "Categories",
@@ -45,15 +46,12 @@ export default async function CategoriesPage() {
               href={`/categories/${category.slug}`}
               className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_40px_rgba(0,0,0,0.18)] transition hover:-translate-y-1"
             >
-              <div className="relative h-48 bg-slate-900">
+              <div className="relative h-48 md:h-64 lg:h-72 bg-slate-900">
                 <Image
-                  src={
-                    typeof category.image === "string"
-                      ? category.image
-                      : category.image?.url || "/desktop.jpg"
-                  }
+                  src={resolveImageSource(category.image)}
                   alt={category.name}
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-cover transition duration-500 group-hover:scale-105"
                 />
               </div>

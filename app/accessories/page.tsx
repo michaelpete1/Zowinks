@@ -6,6 +6,7 @@ import InfoStrip from "../../components/InfoStrip";
 import AddToCartButton from "../../components/AddToCartButton";
 import { zowkinsApi, ProductDetails } from "../../lib/zowkins-api";
 import { formatPrice } from "../../lib/catalog";
+import { resolveImageSource } from "../../lib/media";
 
 export const metadata: Metadata = {
   title: "Accessories",
@@ -122,11 +123,7 @@ export default async function Accessories() {
                 >
                   <div className="relative h-52 overflow-hidden bg-slate-900">
                     <Image
-                      src={
-                        typeof product.image === "string"
-                          ? product.image
-                          : product.image?.url || "/desktop.jpg"
-                      }
+                      src={resolveImageSource(product.image)}
                       alt={product.name}
                       fill
                       className="object-cover transition duration-500 group-hover:scale-105"
@@ -157,10 +154,7 @@ export default async function Accessories() {
                             (typeof product.category === "object"
                               ? (product.category as any).name
                               : product.category),
-                          image:
-                            typeof product.image === "string"
-                              ? product.image
-                              : product.image?.url,
+                          image: resolveImageSource(product.image),
                           slug: product.slug,
                         }}
                         className="rounded-full bg-[#f3c74d] px-5 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
