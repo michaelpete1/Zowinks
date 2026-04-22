@@ -7,6 +7,7 @@ type FallbackImageProps = {
   alt: string;
   fallbackSrc?: string;
   className?: string;
+  loading?: "eager" | "lazy";
 };
 
 export default function FallbackImage({
@@ -14,6 +15,7 @@ export default function FallbackImage({
   alt,
   fallbackSrc = "/desktop.jpg",
   className,
+  loading = "eager",
 }: FallbackImageProps) {
   const [currentSrc, setCurrentSrc] = useState(src || fallbackSrc);
 
@@ -26,6 +28,7 @@ export default function FallbackImage({
       src={currentSrc}
       alt={alt}
       className={className}
+      loading={loading}
       onError={() => {
         if (currentSrc !== fallbackSrc) {
           setCurrentSrc(fallbackSrc);

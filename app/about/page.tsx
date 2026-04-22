@@ -110,7 +110,7 @@ export default async function About() {
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div className="overflow-hidden rounded-[1.4rem] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
                   <div className="relative h-44">
-                    <Image src="/hp.jpg" alt="HP laptop" fill className="object-cover" />
+                    <Image src="/hp.jpg" alt="HP laptop" fill priority className="object-cover" />
                   </div>
                   <div className="p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Preferred options</p>
@@ -119,7 +119,7 @@ export default async function About() {
                 </div>
                 <div className="overflow-hidden rounded-[1.4rem] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
                   <div className="relative h-44">
-                    <Image src="/dell.jpg" alt="Dell laptop" fill className="object-cover" />
+                    <Image src="/dell.jpg" alt="Dell laptop" fill priority className="object-cover" />
                   </div>
                   <div className="p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Trusted lines</p>

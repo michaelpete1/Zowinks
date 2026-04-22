@@ -72,6 +72,25 @@ const asText = (value: unknown) => (typeof value === "string" ? value : "");
 const getCategoryId = (category?: AdminCategory | null) =>
   category ? asText(category.id || (category as any)._id).trim() : "";
 
+const normalizeAdminCategory = (response: unknown): AdminCategory | null => {
+  if (!response || typeof response !== "object") return null;
+
+  const candidate = response as Record<string, unknown>;
+  const nested =
+    candidate.category ??
+    candidate.data ??
+    candidate.item ??
+    candidate.result ??
+    candidate.categoryDetails ??
+    candidate.categoryDetail;
+
+  if (nested && typeof nested === "object") {
+    return nested as AdminCategory;
+  }
+
+  return response as AdminCategory;
+};
+
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
   "image/png",
   "image/jpeg",
@@ -155,6 +174,22 @@ export default function CategoriesPage() {
 
   const apiReady = Boolean(apiConnection.accessToken.trim());
 
+  const hydrateCategory = async (category: AdminCategory | null) => {
+    if (!category || !apiReady) return category;
+
+    const categoryId = getCategoryId(category);
+    if (!categoryId) return category;
+
+    try {
+      return await zowkinsApi.getAdminCategory(
+        apiConnection.accessToken.trim(),
+        categoryId,
+      );
+    } catch {
+      return category;
+    }
+  };
+
   const loadCategories = async () => {
     if (!apiReady) return;
 
@@ -167,14 +202,16 @@ export default function CategoriesPage() {
       );
       const normalizedCategories = normalizeAdminCategories(data);
       setCategories(normalizedCategories);
-      setSelectedCategory((current) => {
+      const nextSelected = (() => {
+        const current = selectedCategory;
         if (!current) return normalizedCategories[0] ?? null;
         return (
           normalizedCategories.find((category) => (category.id || (category as any)._id) === (current.id || (current as any)._id)) ??
           normalizedCategories[0] ??
           null
         );
-      });
+      })();
+      setSelectedCategory(await hydrateCategory(nextSelected));
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         clearSession();
@@ -205,9 +242,9 @@ export default function CategoriesPage() {
     }
 
     setForm({
-      name: selectedCategory.name,
-      description: selectedCategory.description,
-      slug: selectedCategory.slug,
+      name: asText(selectedCategory.name),
+      description: asText(selectedCategory.description),
+      slug: asText(selectedCategory.slug),
       visible: Boolean(selectedCategory.visible),
       file: null,
       subcategories: Array.isArray(selectedCategory.subcategories) ? selectedCategory.subcategories.map(s => s.name || s).join(", ") : "",
@@ -353,25 +390,13 @@ export default function CategoriesPage() {
         .map((s) => s.trim())
         .filter(Boolean);
 
-      const subcategoryNames = rawSubcategoryNames.length
-        ? rawSubcategoryNames
-        : Array.isArray(selectedCategory?.subcategories)
-          ? selectedCategory.subcategories
-              .map((subcategory) =>
-                asText(
-                  typeof subcategory === "object" && subcategory !== null
-                    ? (subcategory as any).name || ""
-                    : subcategory,
-                ).trim(),
-              )
-              .filter(Boolean)
-          : [];
-
       const payload: AdminCategoryInput = {
         name,
         description,
         visible: Boolean(form.visible),
-        subcategories: subcategoryNames.map((name) => ({ name })),
+        subcategories: selectedCategory
+          ? ((selectedCategory.subcategories ?? []) as AdminCategoryInput["subcategories"])
+          : rawSubcategoryNames.map((name) => ({ name })),
         file: form.file,
       };
 
@@ -464,6 +489,7 @@ export default function CategoriesPage() {
   const openCategory = async (category: AdminCategory) => {
     if (!apiReady) {
       setSelectedCategory(category);
+      setMessage(`Viewing ${category.name || "selected"} category details.`);
       return;
     }
 
@@ -472,7 +498,9 @@ export default function CategoriesPage() {
         apiConnection.accessToken.trim(),
         category.id || (category as any)._id,
       );
-      setSelectedCategory(data);
+      const normalized = normalizeAdminCategory(data) ?? category;
+      setSelectedCategory(normalized);
+      setMessage(`Viewing ${normalized.name || "selected"} category details.`);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         clearSession();
@@ -486,6 +514,7 @@ export default function CategoriesPage() {
           : "Could not load category details.",
       );
       setSelectedCategory(category);
+      setMessage(`Viewing ${category.name || "selected"} category details.`);
     }
   };
 
