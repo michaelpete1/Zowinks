@@ -239,7 +239,7 @@ export default function Cart() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/laptops"
+                  href="/products"
                   className="rounded-full bg-[#0b1d3b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a]"
                 >
                   Continue shopping
@@ -299,10 +299,10 @@ export default function Cart() {
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
-                href="/laptops"
+                href="/products"
                 className="rounded-full bg-[#0b1d3b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a]"
               >
-                Shop laptops
+                Shop products
               </Link>
               <Link
                 href="/accessories"

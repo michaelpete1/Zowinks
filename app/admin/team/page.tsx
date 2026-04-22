@@ -6,6 +6,7 @@ import Image from "next/image";
 import { AdminBadge, AdminShell } from "../../../components/AdminShell";
 import { useAdminSession } from "../../../hooks/useAdminSession";
 import { AdminTeamMember, ApiError, zowkinsApi } from "../../../lib/zowkins-api";
+import { resolveImageSource } from "../../../lib/media";
 
 const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
 
@@ -281,7 +282,7 @@ export default function TeamPage() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-slate-200">
-                      <Image src={member.avatar?.url || "/desktop.jpg"} alt={`${member.firstName} ${member.lastName}`} fill className="object-cover" />
+                      <Image src={resolveImageSource(member.avatar, "/desktop.jpg")} alt={`${member.firstName} ${member.lastName}`} fill className="object-cover" />
                     </div>
                     <div>
                       <h3 className="text-base font-bold text-slate-900">{member.firstName} {member.lastName}</h3>

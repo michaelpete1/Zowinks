@@ -33,8 +33,11 @@ export default function Navbar() {
             <Link href="/about" className="text-slate-900">
               About
             </Link>
+            <Link href="/categories" className="text-slate-900">
+              Categories
+            </Link>
             <Link href="/accessories">Accessories</Link>
-            <Link href="/laptops">Laptops</Link>
+            <Link href="/products">Products</Link>
             <Link href="/support">Support</Link>
           </div>
         </div>
@@ -69,9 +72,9 @@ export default function Navbar() {
           <a
             href="/full-quote-bill"
             className="rounded-full bg-emerald-700 px-3 py-2 text-xs text-white shadow-lg transition hover:bg-emerald-600 lg:px-4 lg:py-2 lg:text-sm"
-            aria-label="Request a full quote and bill"
+            aria-label="Request a bulk quote"
           >
-            Request a Full Quote/Bill
+            Request Bulk Quote
           </a>
         </div>
 
@@ -170,11 +173,18 @@ export default function Navbar() {
                   About
                 </Link>
                 <Link
-                  href="/laptops"
+                  href="/categories"
                   className="block rounded-lg px-4 py-3 text-center font-medium text-slate-900 hover:bg-slate-50"
                   onClick={() => setIsOpen(false)}
                 >
-                  Laptops
+                  Categories
+                </Link>
+                <Link
+                  href="/products"
+                  className="block rounded-lg px-4 py-3 text-center font-medium text-slate-900 hover:bg-slate-50"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Products
                 </Link>
                 <Link
                   href="/accessories"
@@ -199,10 +209,10 @@ export default function Navbar() {
                 <a
                   href="/full-quote-bill"
                   className="block w-full rounded-full bg-emerald-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-600"
-                  aria-label="Request a full quote and bill"
+                  aria-label="Request a bulk quote"
                   onClick={() => setIsOpen(false)}
                 >
-                  Request a Full Quote/Bill
+                  Request Bulk Quote
                 </a>
               </div>
             </div>

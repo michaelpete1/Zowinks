@@ -145,12 +145,12 @@ export default async function Home() {
       title: cat.name,
       body: cat.description,
       href: `/categories/${cat.slug}`,
-      img: resolveImageSource(cat.image),
+      img: resolveImageSource(cat.image, "/desktop.jpg"),
     }));
 
     allProducts = apiCats.map((cat) => ({
       title: cat.name,
-      image: resolveImageSource(cat.image),
+      image: resolveImageSource(cat.image, "/desktop.jpg"),
       href: `/categories/${cat.slug}`,
     }));
   } catch (error) {

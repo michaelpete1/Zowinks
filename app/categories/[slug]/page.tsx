@@ -93,7 +93,7 @@ export default async function CategoryPage({
 
           <div className="relative min-h-[320px] bg-[#081224]">
             <FallbackImage
-              src={resolveImageSource(category.image)}
+              src={resolveImageSource(category.image, "/desktop.jpg")}
               alt={category.name}
               className="absolute inset-0 h-full w-full object-cover"
             />
@@ -153,7 +153,7 @@ export default async function CategoryPage({
               >
                 <div className="relative h-48 bg-slate-900">
                   <FallbackImage
-                    src={resolveImageSource(product.image)}
+                    src={resolveImageSource(product.image, "/desktop.jpg")}
                     alt={product.name}
                     className="absolute inset-0 h-full w-full object-cover"
                   />
@@ -193,7 +193,7 @@ export default async function CategoryPage({
                         (typeof product.category === "object"
                           ? (product.category as any).name
                           : product.category),
-                      image: resolveImageSource(product.image),
+                      image: resolveImageSource(product.image, "/desktop.jpg"),
                     }}
                     className="w-full rounded-full bg-[#0b1d3b] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a]"
                   >

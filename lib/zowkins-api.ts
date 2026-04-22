@@ -125,7 +125,7 @@ export type AdminCategoryInput = {
   description: string;
   slug?: string;
   visible: boolean;
-  subcategories: { name: string }[];
+  subcategories: { name: string; _id?: string }[];
   file: File | null;
 };
 

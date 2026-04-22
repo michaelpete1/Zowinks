@@ -53,7 +53,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     throw error;
   }
 
-  const imageUrl = resolveImageSource(product.image);
+  const imageUrl = resolveImageSource(product.image, "/desktop.jpg");
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">

@@ -8,6 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/services",
     "/contact",
     "/cart",
+    "/products",
     "/laptops",
     "/laptops/hp",
     "/laptops/dell",

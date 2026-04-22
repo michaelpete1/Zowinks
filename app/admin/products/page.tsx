@@ -14,6 +14,7 @@ import {
   ApiError,
   zowkinsApi,
 } from "../../../lib/zowkins-api";
+import { resolveImageSource } from "../../../lib/media";
 
 const STANDARD_CATEGORIES = [
   { name: "Laptops", subcategories: ["HP", "Dell", "Lenovo", "Apple", "Asus"] },
@@ -72,11 +73,26 @@ const formatCurrency = (value: number) =>
 const asString = (value: unknown) =>
   typeof value === "string" ? value : value == null ? "" : String(value);
 
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/svg+xml",
+]);
+
+const safeJson = (value: unknown) => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+};
+
 function ProductPreview({ src, alt }: { src?: string | null; alt: string }) {
   return (
     <div className="overflow-hidden rounded-[1.2rem] bg-slate-100 ring-1 ring-slate-200">
       <img
-        src={src || "/desktop.jpg"}
+        src={resolveImageSource(src, "/desktop.jpg")}
         alt={alt}
         onError={(e) => {
           (e.target as HTMLImageElement).src = "/desktop.jpg";
@@ -110,6 +126,7 @@ export default function ProductsPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState("");
   const [message, setMessage] = useState("");
+  const [imageDebug, setImageDebug] = useState("");
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
 
@@ -277,7 +294,15 @@ export default function ProductsPage() {
       inStock: Boolean(selectedProduct.inStock),
       file: null,
     });
-    setPreview(selectedProduct.image?.url ?? "");
+    const resolvedImage = resolveImageSource(selectedProduct.image, "/desktop.jpg");
+    setPreview(resolvedImage);
+    setImageDebug(
+      [
+        `raw: ${safeJson(selectedProduct.image)}`,
+        `resolved: ${resolvedImage}`,
+        `fallback: ${resolvedImage === "/desktop.jpg" ? "yes" : "no"}`,
+      ].join("\n"),
+    );
   }, [selectedProduct]);
 
   const filteredProducts = useMemo(() => {
@@ -343,6 +368,13 @@ export default function ProductsPage() {
 
     if (isCreating && !form.file) {
       setError("Upload a product image before creating a product.");
+      return;
+    }
+
+    if (form.file && !ALLOWED_IMAGE_MIME_TYPES.has(form.file.type)) {
+      setError(
+        "Upload a PNG, JPEG, WebP, or SVG image for the product.",
+      );
       return;
     }
 
@@ -414,7 +446,15 @@ export default function ProductsPage() {
           : "Product created successfully.",
       );
       setSelectedProduct(saved);
-      setPreview(saved.image?.url ?? "");
+      const resolvedSavedImage = resolveImageSource(saved.image, "/desktop.jpg");
+      setPreview(resolvedSavedImage);
+      setImageDebug(
+        [
+          `saved raw: ${safeJson(saved.image)}`,
+          `saved resolved: ${resolvedSavedImage}`,
+          `saved fallback: ${resolvedSavedImage === "/desktop.jpg" ? "yes" : "no"}`,
+        ].join("\n"),
+      );
       await loadProducts();
       setSelectedProduct(saved);
     } catch (err) {
@@ -580,7 +620,7 @@ export default function ProductsPage() {
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200">
                               <img
-                                src={product.image?.url || "/desktop.jpg"}
+                                src={resolveImageSource(product.image, "/desktop.jpg")}
                                 alt={product.name}
                                 className="h-full w-full object-cover"
                               />
@@ -861,16 +901,26 @@ export default function ProductsPage() {
               <div className="grid gap-4 rounded-[1.5rem] bg-slate-50 p-4 md:col-span-2">
                 <ProductPreview
                   src={
-                    preview || form.file ? preview : selectedProduct?.image?.url
+                    preview || form.file
+                      ? preview
+                      : resolveImageSource(selectedProduct?.image, "/desktop.jpg")
                   }
                   alt={form.name || "Product preview"}
                 />
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-[11px] leading-5 text-slate-600">
+                  <p className="mb-2 font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    Image debug
+                  </p>
+                  <pre className="whitespace-pre-wrap break-words font-mono">
+                    {imageDebug || "No product selected yet."}
+                  </pre>
+                </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
                     <span>Image file</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
                       onChange={handleImageUpload}
                       className="w-full rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:border-[#0a2a78]"
                     />

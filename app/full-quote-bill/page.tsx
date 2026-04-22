@@ -6,9 +6,9 @@ import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { getAppSettings } from "../../lib/app-settings";
 
 export const metadata: Metadata = {
-  title: "Request a Full Quote/Bill",
+  title: "Request Bulk Quote",
   description:
-    "Request a full quote or bill for laptops, desktops, accessories, and bulk IT orders from Zowkins Enterprise.",
+    "Request a bulk quote for laptops, desktops, accessories, and bulk IT orders from Zowkins Enterprise.",
 };
 
 export default async function FullQuoteBillPage() {
@@ -37,10 +37,10 @@ export default async function FullQuoteBillPage() {
               <div className="relative space-y-8">
                 <div className="max-w-2xl space-y-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200">
-                    Full quote / bill
+                    Bulk quote
                   </p>
                   <h1 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-                    Build a full quote or bill for your order.
+                    Build a bulk quote for your order.
                   </h1>
                   <p className="max-w-2xl text-sm leading-7 text-slate-200 md:text-base lg:max-w-xl">
                     Use this page when you need invoice-style pricing, multiple
@@ -55,7 +55,7 @@ export default async function FullQuoteBillPage() {
                       Scope
                     </p>
                     <p className="mt-2 text-sm font-semibold text-white">
-                      Single item or full bill
+                      Single item or bulk order
                     </p>
                     <p className="mt-1 text-sm text-slate-300">
                       Include everything you want priced together.
@@ -89,11 +89,11 @@ export default async function FullQuoteBillPage() {
 
             <div className="bg-[#050b16] px-4 py-6 text-slate-100 md:px-6 md:py-8 lg:px-8 lg:py-10">
               <QuoteRequestForm
-                eyebrow="Full quote / bill"
-                title="Request a Full Quote/Bill"
+                eyebrow="Bulk quote"
+                title="Request Bulk Quote"
                 description={`Use this form when you want complete pricing for laptops, desktops, accessories, and bulk orders. We can send it by email or WhatsApp at ${app.whatsAppNumber}.`}
-                submitLabel="Send full quote by email"
-                whatsappLabel="Request full quote via WhatsApp"
+                submitLabel="Send bulk quote by email"
+                whatsappLabel="Request bulk quote via WhatsApp"
               />
               <div className="mt-4 flex flex-wrap gap-3 px-1 text-xs text-slate-400">
                 <Link
@@ -103,10 +103,10 @@ export default async function FullQuoteBillPage() {
                   Request a quote instead
                 </Link>
                 <Link
-                  href="/laptops"
+                  href="/products"
                   className="transition-colors hover:text-[#5ab214]"
                 >
-                  Browse laptops
+                  Browse products
                 </Link>
               </div>
             </div>

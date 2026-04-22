@@ -10,6 +10,7 @@ import {
   ApiError,
   zowkinsApi,
 } from "../../../lib/zowkins-api";
+import { resolveImageSource } from "../../../lib/media";
 
 const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
 
@@ -66,10 +67,30 @@ const normalizeAdminCategories = (response: unknown): AdminCategory[] => {
   return [];
 };
 
+const asText = (value: unknown) => (typeof value === "string" ? value : "");
+
+const getCategoryId = (category?: AdminCategory | null) =>
+  category ? asText(category.id || (category as any)._id).trim() : "";
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/svg+xml",
+]);
+
+const safeJson = (value: unknown) => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+};
+
 function CategoryPreview({ src, alt }: { src?: string | null; alt: string }) {
   return (
     <img
-      src={src || "/desktop.jpg"}
+      src={resolveImageSource(src, "/desktop.jpg")}
       alt={alt}
       className="h-40 w-full object-cover md:h-48"
     />
@@ -94,6 +115,7 @@ export default function CategoriesPage() {
   const [message, setMessage] = useState("");
   const [connectionMessage, setConnectionMessage] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const [imageDebug, setImageDebug] = useState("");
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
 
@@ -186,11 +208,19 @@ export default function CategoriesPage() {
       name: selectedCategory.name,
       description: selectedCategory.description,
       slug: selectedCategory.slug,
-      visible: selectedCategory.visible,
+      visible: Boolean(selectedCategory.visible),
       file: null,
       subcategories: Array.isArray(selectedCategory.subcategories) ? selectedCategory.subcategories.map(s => s.name || s).join(", ") : "",
     });
-    setPreview(selectedCategory.image?.url ?? "");
+    const resolvedImage = resolveImageSource(selectedCategory.image, "/desktop.jpg");
+    setPreview(resolvedImage);
+    setImageDebug(
+      [
+        `raw: ${safeJson(selectedCategory.image)}`,
+        `resolved: ${resolvedImage}`,
+        `fallback: ${resolvedImage === "/desktop.jpg" ? "yes" : "no"}`,
+      ].join("\n"),
+    );
   }, [selectedCategory]);
 
   useEffect(() => {
@@ -280,9 +310,9 @@ export default function CategoriesPage() {
       return;
     }
 
-    const name = form.name.trim().replace(/\s+/g, " ");
-    const description = form.description.trim().replace(/\s+/g, " ");
-    const slug = form.slug.trim().toLowerCase();
+    const name = asText(form.name).trim().replace(/\s+/g, " ");
+    const description = asText(form.description).trim().replace(/\s+/g, " ");
+    const slug = asText(form.slug).trim().toLowerCase();
 
     if (name.length < 3 || name.length > 80) {
       setError("Category name must be between 3 and 80 characters.");
@@ -301,8 +331,10 @@ export default function CategoriesPage() {
       return;
     }
 
-    if (form.file && !form.file.type.startsWith("image/")) {
-      setError("Upload a valid image file for the category.");
+    if (form.file && !ALLOWED_IMAGE_MIME_TYPES.has(form.file.type)) {
+      setError(
+        "Upload a PNG, JPEG, WebP, or SVG image for the category.",
+      );
       return;
     }
 
@@ -316,22 +348,44 @@ export default function CategoriesPage() {
     setMessage("");
 
     try {
+      const rawSubcategoryNames = asText(form.subcategories)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const subcategoryNames = rawSubcategoryNames.length
+        ? rawSubcategoryNames
+        : Array.isArray(selectedCategory?.subcategories)
+          ? selectedCategory.subcategories
+              .map((subcategory) =>
+                asText(
+                  typeof subcategory === "object" && subcategory !== null
+                    ? (subcategory as any).name || ""
+                    : subcategory,
+                ).trim(),
+              )
+              .filter(Boolean)
+          : [];
+
       const payload: AdminCategoryInput = {
         name,
         description,
-        visible: form.visible,
-        subcategories: form.subcategories
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .map((name) => ({ name })),
+        visible: Boolean(form.visible),
+        subcategories: subcategoryNames.map((name) => ({ name })),
         file: form.file,
       };
+
+      const categoryId = getCategoryId(selectedCategory);
+      if (selectedCategory && !categoryId) {
+        setError("Selected category is missing an id. Refresh categories and try again.");
+        setSaving(false);
+        return;
+      }
 
       const saved = selectedCategory
         ? await zowkinsApi.updateAdminCategory(
             apiConnection.accessToken.trim(),
-            selectedCategory.id || (selectedCategory as any)._id,
+            categoryId,
             payload,
           )
         : await zowkinsApi.createAdminCategory(
@@ -340,6 +394,14 @@ export default function CategoriesPage() {
           );
 
       setSelectedCategory(saved);
+      const resolvedSavedImage = resolveImageSource(saved.image, "/desktop.jpg");
+      setImageDebug(
+        [
+          `saved raw: ${safeJson(saved.image)}`,
+          `saved resolved: ${resolvedSavedImage}`,
+          `saved fallback: ${resolvedSavedImage === "/desktop.jpg" ? "yes" : "no"}`,
+        ].join("\n"),
+      );
       const nextMessage = selectedCategory
         ? "Category updated successfully."
         : "Category created successfully.";
@@ -682,15 +744,23 @@ export default function CategoriesPage() {
             <form onSubmit={submitCategory} className="mt-6 grid gap-4">
               <div className="grid gap-4 rounded-[1.5rem] bg-slate-50 p-4">
                 <CategoryPreview
-                  src={preview || selectedCategory?.image?.url}
+                  src={preview || resolveImageSource(selectedCategory?.image, "/desktop.jpg")}
                   alt={form.name || "Category preview"}
                 />
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-[11px] leading-5 text-slate-600">
+                  <p className="mb-2 font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    Image debug
+                  </p>
+                  <pre className="whitespace-pre-wrap break-words font-mono">
+                    {imageDebug || "No category selected yet."}
+                  </pre>
+                </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
                     <span>Image file</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
                       onChange={handleImageUpload}
                       className="w-full rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:border-[#0a2a78]"
                     />

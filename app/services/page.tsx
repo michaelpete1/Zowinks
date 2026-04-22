@@ -71,7 +71,7 @@ export default function ServicesPage() {
                   Request a Quote
                 </Link>
                 <Link
-                  href="/laptops"
+                  href="/products"
                   className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
                 >
                   Browse products

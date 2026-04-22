@@ -17,7 +17,8 @@ export default function Navbar() {
   const links = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About Us" },
-    { href: "/laptops", label: "Products" },
+    { href: "/categories", label: "Categories" },
+    { href: "/products", label: "Products" },
     { href: "/services", label: "Services" },
   ];
 
@@ -72,7 +73,7 @@ export default function Navbar() {
             href="/full-quote-bill"
             className="rounded-full bg-[#f3c74d] px-5 py-2 text-sm font-semibold text-[#050b16] shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e4b935]"
           >
-            Request a Full Quote/Bill
+            Request Bulk Quote
           </Link>
         </div>
 
@@ -161,7 +162,7 @@ export default function Navbar() {
                   className="block rounded-full bg-[#f3c74d] px-4 py-3 text-center text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
                   onClick={() => setOpen(false)}
                 >
-                  Request a Full Quote/Bill
+                  Request Bulk Quote
                 </Link>
               </div>
             </div>

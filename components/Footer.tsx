@@ -31,7 +31,7 @@ export default function Footer() {
 
           <nav className="flex flex-wrap items-center gap-5 text-sm text-slate-300 md:justify-center">
             <Link href="/" className="transition-colors hover:text-[#f3c74d]">Home</Link>
-            <Link href="/laptops" className="transition-colors hover:text-[#5ab214]">Laptops</Link>
+            <Link href="/products" className="transition-colors hover:text-[#5ab214]">Products</Link>
             <Link href="/desktops" className="transition-colors hover:text-[#f3c74d]">Desktops</Link>
             <Link href="/accessories" className="transition-colors hover:text-[#5ab214]">Accessories</Link>
             <Link href="/about" className="transition-colors hover:text-[#f3c74d]">About</Link>

@@ -53,7 +53,7 @@ export default async function DesktopsPage() {
     return {
       title: sub.name,
       description: `Robust ${sub.name} desktop systems for business environments and professional workflows.`,
-      href: `/categories/${activeCategory?.slug || "desktops"}/${sub.slug}`,
+      href: `/desktops/${sub.slug}`,
       image: resolveImageSource(sub.image, image),
     };
   });
@@ -129,4 +129,3 @@ export default async function DesktopsPage() {
     </div>
   );
 }
-

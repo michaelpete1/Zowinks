@@ -10,6 +10,7 @@ import {
   ApiError,
   zowkinsApi,
 } from "../../../lib/zowkins-api";
+import { resolveImageSource } from "../../../lib/media";
 
 const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
 
@@ -340,7 +341,7 @@ export default function AdminSettingsPage() {
 
             <div className="relative min-h-[280px] overflow-hidden bg-slate-900/40 md:min-h-[320px]">
               <Image
-                src={preview || "/desktop.jpg"}
+                src={resolveImageSource(preview || "/desktop.jpg")}
                 alt="Admin avatar preview"
                 fill
                 className="object-cover opacity-90"

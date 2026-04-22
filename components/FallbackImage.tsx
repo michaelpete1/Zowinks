@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type FallbackImageProps = {
   src: string;
@@ -16,6 +16,10 @@ export default function FallbackImage({
   className,
 }: FallbackImageProps) {
   const [currentSrc, setCurrentSrc] = useState(src || fallbackSrc);
+
+  useEffect(() => {
+    setCurrentSrc(src || fallbackSrc);
+  }, [src, fallbackSrc]);
 
   return (
     <img

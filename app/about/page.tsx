@@ -160,8 +160,8 @@ export default async function About() {
               <Link href="/contact" className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]">
                 Request a Quote
               </Link>
-              <Link href="/laptops" className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10">
-                Browse laptops
+              <Link href="/products" className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10">
+                Browse products
               </Link>
             </div>
           </div>

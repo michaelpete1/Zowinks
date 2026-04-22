@@ -66,14 +66,14 @@ export default async function Laptops() {
       badge = "Premium Choice";
     }
 
-    return {
-      name: sub.name,
-      slug: sub.slug,
-      href: `/categories/${activeCategory?.slug || "laptops"}/${sub.slug}`,
-      description: `Explore the latest ${sub.name} laptop models and configurations.`,
-      badge,
-      tone,
-      image: resolveImageSource(sub.image),
+      return {
+        name: sub.name,
+        slug: sub.slug,
+        href: `/laptops/${sub.slug}`,
+        description: `Explore the latest ${sub.name} laptop models and configurations.`,
+        badge,
+        tone,
+        image: resolveImageSource(sub.image),
     };
   });
 
@@ -173,4 +173,3 @@ export default async function Laptops() {
     </div>
   );
 }
-

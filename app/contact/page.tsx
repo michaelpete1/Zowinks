@@ -71,8 +71,8 @@ export default async function Contact() {
                 whatsappLabel="Request via WhatsApp"
               />
               <div className="mt-4 flex flex-wrap gap-3 px-1 text-xs text-slate-400">
-                <Link href="/laptops" className="transition-colors hover:text-[#f3c74d]">
-                  Browse laptops
+                <Link href="/products" className="transition-colors hover:text-[#f3c74d]">
+                  Browse products
                 </Link>
                 <Link href="/accessories" className="transition-colors hover:text-[#5ab214]">
                   Browse accessories
