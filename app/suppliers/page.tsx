@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Navbar from "../../components/NewNavbar";
+import Carousel from "../../components/Carousel";
 
 export const metadata: Metadata = {
   title: "Trusted Suppliers",
@@ -39,33 +39,38 @@ export default function SuppliersPage() {
               </p>
             </div>
 
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {suppliers.map((supplier) => (
+            <div className="mt-8 grid gap-3 text-center sm:grid-cols-3">
+              {[
+                { label: "Partner brands", value: String(suppliers.length) },
+                { label: "Product categories", value: "3" },
+                { label: "Always updated", value: "Live" },
+              ].map((item) => (
                 <div
-                  key={supplier.title}
-                  className="group rounded-[1.5rem] border border-white/10 bg-[#0f172a] p-5 shadow-[0_10px_28px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.22)]"
+                  key={item.label}
+                  className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.12)] backdrop-blur"
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white p-3">
-                      <Image
-                        src={supplier.img}
-                        alt={supplier.title}
-                        width={120}
-                        height={60}
-                        className="h-12 w-auto object-contain transition duration-300"
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1 text-right">
-                      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
-                        {supplier.category}
-                      </p>
-                      <h2 className="mt-1 font-display text-xl font-bold text-white">
-                        {supplier.title}
-                      </h2>
-                    </div>
-                  </div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/50">
+                    {item.label}
+                  </p>
+                  <p className="mt-2 font-display text-2xl font-bold text-white">
+                    {item.value}
+                  </p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-10 rounded-[2rem] border border-white/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(255,255,255,0.95))] px-4 py-6 text-slate-900 shadow-[0_18px_50px_rgba(0,0,0,0.18)] sm:px-6 sm:py-8">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#0a2a78]">
+                  Our trusted network
+                </p>
+                <p className="text-xs font-medium tracking-[0.22em] text-slate-500">
+                  Swipe to browse
+                </p>
+              </div>
+              <div className="mt-4">
+                <Carousel variant="logo" slides={suppliers} />
+              </div>
             </div>
           </div>
         </section>

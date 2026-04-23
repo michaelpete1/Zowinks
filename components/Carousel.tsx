@@ -17,6 +17,15 @@ interface CarouselProps {
   titleClassName?: string;
 }
 
+const logoTones = [
+  "border-[#dbeafe] bg-[linear-gradient(180deg,#ffffff_0%,#eff6ff_100%)]",
+  "border-[#dcfce7] bg-[linear-gradient(180deg,#ffffff_0%,#f0fdf4_100%)]",
+  "border-[#fce7f3] bg-[linear-gradient(180deg,#ffffff_0%,#fdf2f8_100%)]",
+  "border-[#fef3c7] bg-[linear-gradient(180deg,#ffffff_0%,#fffbeb_100%)]",
+  "border-[#ede9fe] bg-[linear-gradient(180deg,#ffffff_0%,#f5f3ff_100%)]",
+  "border-[#cffafe] bg-[linear-gradient(180deg,#ffffff_0%,#ecfeff_100%)]",
+];
+
 export default function Carousel({ slides, title, variant = "photo", titleClassName = "text-slate-900" }: CarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
@@ -59,13 +68,13 @@ export default function Carousel({ slides, title, variant = "photo", titleClassN
               <div
                 className={
                 variant === "logo"
-                    ? "group flex h-44 cursor-pointer flex-col justify-between rounded-[1.5rem] border border-[#d4a11d]/18 bg-[#faf7ee]/95 p-3 shadow-[0_14px_32px_rgba(15,23,42,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:h-48"
+                    ? `group flex h-44 cursor-pointer flex-col justify-between rounded-[1.5rem] border p-3 shadow-[0_14px_32px_rgba(15,23,42,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:h-48 ${logoTones[index % logoTones.length]}`
                     : "group relative h-64 cursor-pointer overflow-hidden rounded-[1.75rem] border border-slate-100 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(15,23,42,0.16)] sm:h-72 lg:h-80"
                 }
               >
                 {variant === "logo" ? (
                   <>
-                    <div className="grid flex-1 place-items-center overflow-hidden rounded-[1.25rem] border border-slate-100 bg-white px-4 py-5">
+                    <div className="grid flex-1 place-items-center overflow-hidden rounded-[1.25rem] border border-white/70 bg-white px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
                       <Image
                         src={slide.img}
                         alt={slide.title}
@@ -74,13 +83,10 @@ export default function Carousel({ slides, title, variant = "photo", titleClassN
                         className="h-14 w-auto max-w-full object-contain transition-transform duration-700 group-hover:scale-105 sm:h-20"
                       />
                     </div>
-                    <div className="flex items-center justify-between gap-3 pt-3">
+                    <div className="flex items-center justify-center gap-3 pt-3">
                       <h3 className="font-display text-base font-bold text-slate-900 sm:text-lg">
                         {slide.title}
                       </h3>
-                      <span className="inline-flex items-center gap-2 text-xs font-semibold text-[#5ab214] sm:text-sm">
-                        Explore <span aria-hidden="true">&rarr;</span>
-                      </span>
                     </div>
                   </>
                 ) : (

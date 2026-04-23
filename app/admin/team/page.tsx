@@ -75,13 +75,19 @@ export default function TeamPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!session?.accessToken || typeof window === "undefined") return;
 
-    setApiConnection({
-      accessToken: window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "",
-    });
+    const nextToken = session.accessToken.trim();
+    const storedToken = window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "";
+
+    setApiConnection({ accessToken: nextToken });
+
+    if (nextToken && nextToken !== storedToken) {
+      window.localStorage.setItem(ADMIN_API_TOKEN_KEY, nextToken);
+    }
+
     setReady(true);
-  }, []);
+  }, [session?.accessToken]);
 
   const apiReady = Boolean(apiConnection.accessToken.trim());
 

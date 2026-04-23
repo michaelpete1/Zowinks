@@ -83,14 +83,23 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const sessionToken = normalizeToken(session?.accessToken ?? "");
+    const storedToken = normalizeToken(
+      window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "",
+    );
+    const nextToken = sessionToken || storedToken;
+
     setApiConnection({
       userId: session?.id ?? "",
-      accessToken: normalizeToken(
-        window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "",
-      ),
+      accessToken: nextToken,
     });
+
+    if (sessionToken && sessionToken !== storedToken) {
+      window.localStorage.setItem(ADMIN_API_TOKEN_KEY, sessionToken);
+    }
+
     setReady(true);
-  }, [session?.id]);
+  }, [session?.accessToken, session?.id]);
 
   useEffect(() => {
     return () => {

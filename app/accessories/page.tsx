@@ -21,22 +21,14 @@ export default async function Accessories() {
   let activeCategory: any = null;
 
   try {
-    // 1. Try fetching by standard slug first
-    try {
-      activeCategory = await zowkinsApi.getCategoryBySlug("accessories");
-    } catch (err) {
-      // 2. Fallback: Search category list for name match
-      const response = await zowkinsApi.listCategories({ limit: 100 });
-      activeCategory = response.categories.find(
-        (c) =>
-          c.slug === "accessories" ||
-          c.name.toLowerCase() === "accessories" ||
-          c.name.toLowerCase().includes("accessory") ||
-          c.name.toLowerCase().includes("accessories"),
-      );
-
-      if (!activeCategory) throw err;
-    }
+    const response = await zowkinsApi.listCategories({ limit: 100 });
+    activeCategory = response.categories.find(
+      (c) =>
+        c.slug === "accessories" ||
+        c.name.toLowerCase() === "accessories" ||
+        c.name.toLowerCase().includes("accessory") ||
+        c.name.toLowerCase().includes("accessories"),
+    );
 
     if (activeCategory) {
       categoryName = activeCategory.name;
@@ -184,6 +176,5 @@ export default async function Accessories() {
     </div>
   );
 }
-
 
 
