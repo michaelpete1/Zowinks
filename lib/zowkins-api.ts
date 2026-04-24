@@ -774,10 +774,8 @@ export const zowkinsApi = {
     });
   },
   listAdminNonReferralCustomers(token: string) {
-    return apiRequest<AdminCustomer[]>("/admin/customers/non-referral-partners", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    return this.listAdminCustomers(token, {
+      isReferralPartner: false,
     });
   },
   getAdminCustomer(token: string, userId: string) {

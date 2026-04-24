@@ -22,6 +22,25 @@ function formatPrice(value: number) {
   });
 }
 
+function getDisplayLabel(value: unknown, fallback = "N/A") {
+  if (typeof value === "string") {
+    return value || fallback;
+  }
+
+  if (typeof value === "object" && value !== null) {
+    const record = value as { name?: unknown; title?: unknown; slug?: unknown };
+    if (typeof record.name === "string" && record.name.trim()) return record.name;
+    if (typeof record.title === "string" && record.title.trim()) return record.title;
+    if (typeof record.slug === "string" && record.slug.trim()) return record.slug;
+  }
+
+  return fallback;
+}
+
+function getProductId(product: { id?: string; _id?: string }) {
+  return product.id || product._id || "";
+}
+
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
@@ -54,6 +73,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const imageUrl = resolveImageSource(product.image, "/desktop.jpg");
+  const categoryLabel = getDisplayLabel(product.category, "Unknown");
+  const subcategoryLabel = getDisplayLabel(product.subcategory, "");
+  const cartSpec = subcategoryLabel || categoryLabel;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
@@ -76,7 +98,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="space-y-6 px-6 py-10 md:px-10 md:py-14 lg:px-12 lg:py-16">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-                {product.category}
+                {categoryLabel}
               </p>
               <h1 className="mt-2 font-display text-4xl font-bold leading-tight text-white md:text-5xl">
                 {product.name}
@@ -108,11 +130,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="flex flex-wrap gap-3">
               <AddToCartButton
                 item={{
-                  id: product.slug,
+                  id: getProductId(product) || product.slug,
                   slug: product.slug,
                   title: product.name,
                   price: formatPrice(product.price),
-                  spec: product.subcategory || product.category,
+                  spec: cartSpec,
                   image: imageUrl,
                 }}
                 className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
@@ -139,7 +161,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   Subcategory
                 </p>
                 <p className="mt-1 font-medium text-white">
-                  {product.subcategory || "N/A"}
+                  {subcategoryLabel || "N/A"}
                 </p>
               </div>
               <div>

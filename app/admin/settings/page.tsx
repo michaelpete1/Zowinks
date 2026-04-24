@@ -375,52 +375,17 @@ export default function AdminSettingsPage() {
               API connection
             </p>
             <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
-              Load admin profile from the API
+              Admin session
             </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              The admin session now carries a real user ID and bearer token,
-              which lets us talk to `/admin/users/me` and
-              `/admin/users/me/password`.
-            </p>
-
-            <form onSubmit={handleConnectionSubmit} className="mt-6 space-y-4">
-              <input
-                value={apiConnection.userId}
-                onChange={(event) =>
-                  setApiConnection((current) => ({
-                    ...current,
-                    userId: event.target.value,
-                  }))
-                }
-                placeholder="Admin user ID"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
-              <textarea
-                value={apiConnection.accessToken}
-                onChange={(event) =>
-                  setApiConnection((current) => ({
-                    ...current,
-                    accessToken: event.target.value,
-                  }))
-                }
-                placeholder="Bearer access token"
-                rows={4}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
-              <button
-                type="submit"
-                disabled={connectionSaving}
-                className="rounded-2xl bg-[#0a2a78] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {connectionSaving ? "Saving..." : "Save API connection"}
-              </button>
-            </form>
-
-            {connectionMessage ? (
-              <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {connectionMessage}
+            <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+              <p>
+                The signed-in admin session is used automatically for profile and
+                password updates.
               </p>
-            ) : null}
+              <p className="mt-2 font-semibold text-slate-900">
+                Status: {session?.accessToken ? "Connected" : "Not connected"}
+              </p>
+            </div>
           </section>
 
           <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">

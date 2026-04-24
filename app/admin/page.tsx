@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminBadge, AdminIcon, AdminShell } from "../../components/AdminShell";
 import { useAdminSession } from "../../hooks/useAdminSession";
-import { ApiError, zowkinsApi } from "../../lib/zowkins-api";
+import { ApiError, ProductDetails, CategoryListItem, zowkinsApi } from "../../lib/zowkins-api";
 
 const shortcuts = [
   { label: "Products", href: "/admin/products", description: "Add, edit, hide, or remove products.", icon: "layers" as const },
@@ -14,6 +14,23 @@ const shortcuts = [
   { label: "Delivery", href: "/admin/delivery-methods", description: "Manage shipping methods and fees.", icon: "truck" as const },
   { label: "Settings", href: "/admin/settings", description: "Manage admin profile and credentials.", icon: "settings" as const },
 ];
+
+const extractArray = <T,>(response: unknown, keys: string[]): T[] => {
+  if (Array.isArray(response)) return response;
+  if (response && typeof response === "object") {
+    for (const key of keys) {
+      if (Array.isArray((response as Record<string, unknown>)[key])) {
+        return (response as Record<string, unknown>)[key] as T[];
+      }
+    }
+
+    if (Array.isArray((response as { data?: unknown }).data)) {
+      return (response as { data: T[] }).data;
+    }
+  }
+
+  return [];
+};
 
 export default function AdminDashboardPage() {
   const { session } = useAdminSession();
@@ -25,6 +42,7 @@ export default function AdminDashboardPage() {
   const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
 
   const accessToken = session?.accessToken ?? (typeof window !== "undefined" ? window.localStorage.getItem("zowkins-admin-access-token") : null);
 
@@ -34,30 +52,69 @@ export default function AdminDashboardPage() {
     let cancelled = false;
     setLoading(true);
     setError("");
+    setWarning("");
 
-    Promise.all([
-      zowkinsApi.listAdminProducts(accessToken),
-      zowkinsApi.listAdminCategories(accessToken),
-      zowkinsApi.getAdminOrderStats(accessToken),
-      zowkinsApi.getAdminCustomerStats(accessToken),
-    ])
-      .then(([products, categories, orderStats, customerStats]) => {
-        if (cancelled) return;
+    const loadDashboard = async () => {
+      const failures: string[] = [];
 
+      const [productsResult, categoriesResult, orderStatsResult, customerStatsResult] = await Promise.allSettled([
+        zowkinsApi.listAdminProducts(accessToken),
+        zowkinsApi.listAdminCategories(accessToken),
+        zowkinsApi.getAdminOrderStats(accessToken),
+        zowkinsApi.getAdminCustomerStats(accessToken),
+      ]);
+
+      if (cancelled) return;
+
+      if (productsResult.status === "fulfilled") {
+        const products = extractArray<ProductDetails>(productsResult.value, ["products"]);
         setProductCount(products.length);
         setVisibleProductCount(products.filter((product) => product.visible).length);
+      } else {
+        failures.push("products");
+      }
+
+      if (categoriesResult.status === "fulfilled") {
+        const categories = extractArray<CategoryListItem>(categoriesResult.value, ["categories"]);
         setCategoryCount(categories.length);
-        setOrderCount(orderStats.stats.totalOrders);
-        setProcessingOrderCount(orderStats.stats.processing);
-        setCustomerCount(customerStats.stats.totalUsers);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(err instanceof ApiError ? err.message : "Could not load dashboard data.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+      } else {
+        failures.push("categories");
+      }
+
+      if (orderStatsResult.status === "fulfilled") {
+        setOrderCount(orderStatsResult.value.stats.totalOrders);
+        setProcessingOrderCount(orderStatsResult.value.stats.processing);
+      } else {
+        failures.push("orders");
+      }
+
+      if (customerStatsResult.status === "fulfilled") {
+        setCustomerCount(customerStatsResult.value.stats.totalUsers);
+      } else {
+        failures.push("customers");
+      }
+
+      if (failures.length > 0) {
+        const authFailure = [productsResult, categoriesResult, orderStatsResult, customerStatsResult].some(
+          (result) => result.status === "rejected" && result.reason instanceof ApiError && result.reason.status === 401,
+        );
+
+        setError(
+          authFailure
+            ? "Your admin session has expired. Please sign in again."
+            : `Could not load: ${failures.join(", ")}.`,
+        );
+        setWarning(
+          authFailure
+            ? ""
+            : "Some dashboard cards could not load, but the rest of the admin area is still available.",
+        );
+      }
+    };
+
+    void loadDashboard().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
 
     return () => {
       cancelled = true;
@@ -98,6 +155,7 @@ export default function AdminDashboardPage() {
   return (
     <AdminShell title="Admin overview" subtitle="Live summary cards and route shortcuts for the admin backend.">
       {error ? <p className="mb-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+      {warning ? <p className="mb-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{warning}</p> : null}
       {loading ? <p className="mb-6 text-sm text-slate-500">Loading dashboard data...</p> : null}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
