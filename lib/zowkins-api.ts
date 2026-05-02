@@ -1,4 +1,4 @@
-export const ZOWKINS_API_BASE = "https://zowkins-api.onrender.com/v1";
+export const ZOWKINS_API_BASE = process.env.NEXT_PUBLIC_ZOWKINS_API_BASE || "/api/zowkins/v1";
 
 export type ApiImage = {
   url: string;
@@ -47,6 +47,7 @@ export type AdminProductInput = {
 
 export type DeliveryMethod = {
   id: string;
+  _id?: string;
   name: string;
   fee: number;
   estimatedDeliveryTime: string;
@@ -278,6 +279,23 @@ export type PortalOrder = {
   updatedAt: string;
 };
 
+export type PortalOrderCustomerInput = {
+  firstName: string;
+  lastName: string;
+  gender: "male" | "female";
+  email: string;
+  phoneNumber: string;
+};
+
+export type PortalOrderDeliveryAddressInput = {
+  phoneNumber: string;
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+};
+
 export type PortalOrderStats = {
   totalOrders: number;
   processing: number;
@@ -303,10 +321,77 @@ export type PortalOrderStatsResponse = {
 };
 
 export type CreatePortalOrderInput = {
-  customer: string;
+  customer: PortalOrderCustomerInput;
+  from?: {
+    email: string;
+  };
+  argument?: {
+    from?: {
+      email: string;
+    };
+  };
   items: Array<{ productId: string; quantity: number }>;
-  deliveryAddress: string;
+  deliveryAddress: PortalOrderDeliveryAddressInput;
   deliveryMethod: string;
+};
+
+export function normalizeOrderGender(value: string | null | undefined): "male" | "female" {
+  return String(value || "")
+    .trim()
+    .toLowerCase() === "female"
+    ? "female"
+    : "male";
+}
+
+// Portal Quote Types
+export type PortalQuoteItem = {
+  name: string;
+  quantity: number;
+};
+
+export type PortalQuoteDetails = {
+  items: PortalQuoteItem[];
+  note?: string;
+  file?: {
+    url: string;
+    key: string;
+  };
+};
+
+export type PortalOrderQuote = {
+  id: string;
+  orderNumber: string;
+  customer: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+  };
+  products: Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+    price: number;
+    amount: number;
+  }>;
+  quoteDetails: PortalQuoteDetails;
+  transaction: {
+    deliveryFee: number;
+    totalAmount: number;
+    subTotal: number;
+  };
+  deliveryAddress: DeliveryAddress;
+  deliveryMethod: DeliveryMethod;
+  orderStatus: string;
+  paymentStatus: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PortalOrderQuoteResponse = {
+  success: true;
+  order: PortalOrderQuote;
 };
 
 export type AdminOrder = PortalOrder;
@@ -339,7 +424,12 @@ export type AdminOrderStatsResponse = {
   stats: AdminOrderStats;
 };
 
-export type AdminOrderCreateInput = CreatePortalOrderInput;
+export type AdminOrderCreateInput = {
+  customer: string;
+  items: Array<{ productId: string; quantity: number }>;
+  deliveryAddress: string;
+  deliveryMethod: string;
+};
 
 export type AdminOrderUpdateInput = {
   orderStatus?: AdminOrderStatus;
@@ -426,6 +516,74 @@ export type AdminSetNewPasswordInput = {
   password: string;
 };
 
+// App Settings Types
+export type App = {
+  name: string;
+  address: string;
+  phoneNumber: string;
+  whatsAppNumber: string;
+  email: string;
+  status: {
+    portal: string;
+  };
+  description: string;
+  ratings: number;
+  images: string[];
+  branding: {
+    logo: string;
+    logoLight: string;
+    logomark: string;
+    logomarkLight: string;
+  };
+};
+
+export type AppInput = {
+  name: string;
+  address: string;
+  phoneNumber: string;
+  whatsAppNumber: string;
+  email: string;
+  status: {
+    portal: string;
+  };
+  description: string;
+  ratings: number;
+  images: string[];
+  branding: {
+    logo: string;
+    logoLight: string;
+    logomark: string;
+    logomarkLight: string;
+  };
+};
+
+export type AppUpdate = Partial<{
+  name: string;
+  address: string;
+  phoneNumber: string;
+  whatsAppNumber: string;
+  email: string;
+  status: {
+    portal: string;
+  };
+  description: string;
+  ratings: number;
+  images: string[];
+  branding: {
+    logo: string;
+    logoLight: string;
+    logomark: string;
+    logomarkLight: string;
+  };
+}>;
+
+export type AppContactUpdate = {
+  address?: string;
+  phoneNumber?: string;
+  whatsAppNumber?: string;
+  email?: string;
+};
+
 export class ApiError extends Error {
   status: number;
 
@@ -453,6 +611,27 @@ const makeHeaders = (headers?: HeadersInit) => {
   return next;
 };
 
+const MONGO_OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/;
+
+const normalizeDeliveryMethod = (method: DeliveryMethod): DeliveryMethod => ({
+  ...method,
+  id: MONGO_OBJECT_ID_PATTERN.test(method._id || "") ? method._id! : MONGO_OBJECT_ID_PATTERN.test(method.id) ? method.id : "",
+});
+
+const normalizeDeliveryMethods = (methods: DeliveryMethod[]) =>
+  methods
+    .map(normalizeDeliveryMethod)
+    .filter((method) => Boolean(method.id));
+
+const getApiRequestUrl = (path: string) => {
+  if (typeof window !== "undefined") {
+    return `${ZOWKINS_API_BASE}${path}`;
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  return new URL(`${ZOWKINS_API_BASE}${path}`, siteUrl).toString();
+};
+
 async function readApiError(response: Response) {
   const text = await response.text().catch(() => "");
   let payload = null;
@@ -472,7 +651,7 @@ async function readApiError(response: Response) {
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${ZOWKINS_API_BASE}${path}`, {
+  const response = await fetch(getApiRequestUrl(path), {
     ...init,
     credentials: "include",
     headers: makeHeaders(init?.headers),
@@ -928,7 +1107,7 @@ export const zowkinsApi = {
     });
   },
   listDeliveryMethods() {
-    return apiRequest<DeliveryMethod[]>("/delivery-methods");
+    return apiRequest<DeliveryMethod[]>("/delivery-methods").then(normalizeDeliveryMethods);
   },
   listCategories(query?: { page?: number; limit?: number }) {
     const params = new URLSearchParams();
@@ -1036,14 +1215,38 @@ export const zowkinsApi = {
       body: JSON.stringify(payload),
     });
   },
-  createPortalOrder(token: string, payload: CreatePortalOrderInput) {
+  createPortalOrder(token: string | null | undefined, payload: CreatePortalOrderInput) {
+    const body = new URLSearchParams();
+    body.set("customer[firstName]", payload.customer.firstName);
+    body.set("customer[lastName]", payload.customer.lastName);
+    body.set("customer[gender]", payload.customer.gender);
+    body.set("customer[email]", payload.customer.email);
+    body.set("customer[phoneNumber]", payload.customer.phoneNumber);
+    body.set("from[email]", payload.from?.email || payload.argument?.from?.email || payload.customer.email);
+    body.set("argument[from][email]", payload.argument?.from?.email || payload.from?.email || payload.customer.email);
+
+    payload.items.forEach((item, index) => {
+      body.set(`items[${index}][productId]`, item.productId);
+      body.set(`items[${index}][quantity]`, String(item.quantity));
+    });
+
+    body.set("deliveryAddress[phoneNumber]", payload.deliveryAddress.phoneNumber);
+    body.set("deliveryAddress[street]", payload.deliveryAddress.street);
+    body.set("deliveryAddress[city]", payload.deliveryAddress.city);
+    body.set("deliveryAddress[state]", payload.deliveryAddress.state);
+    body.set("deliveryAddress[country]", payload.deliveryAddress.country);
+    body.set("deliveryAddress[postalCode]", payload.deliveryAddress.postalCode);
+    body.set("deliveryMethod", payload.deliveryMethod);
+
+    const headers: HeadersInit = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     return apiRequest<{ success: true; order: PortalOrder }>("/portal/orders", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+      headers,
+      body,
     });
   },
   listPortalOrders(token: string, query?: { sortBy?: string; limit?: number; page?: number }) {
@@ -1135,5 +1338,102 @@ export const zowkinsApi = {
         },
       },
     );
+  },
+
+// Portal Quote
+  requestPortalQuote(
+    token: string | null | undefined,
+    payload:
+      | {
+          data: string;
+          file?: File;
+        }
+      | {
+          customer: {
+            firstName: string;
+            lastName: string;
+            email: string;
+            phoneNumber: string;
+          };
+          items: Array<{ name: string; quantity: number }>;
+          deliveryAddress: {
+            phoneNumber: string;
+            street: string;
+            city: string;
+            state: string;
+            country: string;
+            postalCode: string;
+          };
+          note?: string;
+          file?: File;
+        },
+  ) {
+    const formData = new FormData();
+
+    if ("data" in payload) {
+      formData.set("data", payload.data);
+    } else {
+      const data = {
+        customer: payload.customer,
+        items: payload.items,
+        deliveryAddress: payload.deliveryAddress,
+        note: payload.note,
+      };
+
+      formData.set("data", JSON.stringify(data));
+    }
+
+    if (payload.file) {
+      formData.set("file", payload.file);
+    }
+
+    const headers: HeadersInit = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return apiRequest<PortalOrderQuoteResponse>("/portal/orders/quote", {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+  },
+
+  // App Settings
+  getApp() {
+    return apiRequest<{ app: App }>("/app");
+  },
+
+  createApp(token: string, payload: AppInput) {
+    return apiRequest<{ app: App }>("/app", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateApp(token: string, payload: AppUpdate) {
+    return apiRequest<{ app: App }>("/app", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateAppContact(token: string, payload: AppContactUpdate) {
+    return apiRequest<{ app: App }>("/app/contact", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
   },
 };

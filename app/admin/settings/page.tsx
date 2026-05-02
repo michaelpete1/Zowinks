@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { AdminShell } from "../../../components/AdminShell";
 import { useAdminSession } from "../../../hooks/useAdminSession";
 import {
@@ -346,6 +347,15 @@ export default function AdminSettingsPage() {
                   </p>
                 </div>
               </div>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/admin/team"
+                  className="inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                >
+                  Invite admin team member
+                </Link>
+              </div>
             </div>
 
             <div className="relative min-h-[280px] overflow-hidden bg-slate-900/40 md:min-h-[320px]">
@@ -379,8 +389,8 @@ export default function AdminSettingsPage() {
             </h2>
             <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
               <p>
-                The signed-in admin session is used automatically for profile and
-                password updates.
+                The signed-in admin session is used automatically for profile
+                and password updates.
               </p>
               <p className="mt-2 font-semibold text-slate-900">
                 Status: {session?.accessToken ? "Connected" : "Not connected"}

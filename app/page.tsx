@@ -2,18 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "../components/NewNavbar";
 import HeroCarousel from "../components/HeroCarousel";
-import Carousel from "../components/Carousel";
-import FallbackImage from "../components/FallbackImage";
+import HomepageCategoriesSection from "../components/HomepageCategoriesSection";
 import FeaturedProductsSection from "../components/FeaturedProductsSection";
 import { getAppSettings } from "../lib/app-settings";
 import { zowkinsApi } from "../lib/zowkins-api";
-import { resolveImageSource } from "../lib/media";
 
 export const metadata: Metadata = {
   title: "Zowkins Enterprise",
   description:
     "Business laptops, desktops, accessories, and trusted supplier brands for modern teams.",
 };
+
+export const dynamic = "force-dynamic";
 
 const organizationJsonLd = {
   "@context": "https://schema.org",
@@ -134,29 +134,6 @@ function getValueTone(title: string) {
 export default async function Home() {
   const { app } = await getAppSettings();
 
-  let categories: any[] = [];
-  let allProducts: any[] = [];
-
-  try {
-    const response = await zowkinsApi.listCategories({ page: 1, limit: 20 });
-    const apiCats = response?.categories || [];
-
-    categories = apiCats.map((cat) => ({
-      title: cat.name,
-      body: cat.description,
-      href: `/categories/${cat.slug}`,
-      img: resolveImageSource(cat.image, "/desktop.jpg"),
-    }));
-
-    allProducts = apiCats.map((cat) => ({
-      title: cat.name,
-      image: resolveImageSource(cat.image, "/desktop.jpg"),
-      href: `/categories/${cat.slug}`,
-    }));
-  } catch (error) {
-    console.error("Error fetching homepage categories:", error);
-  }
-
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <script
@@ -174,60 +151,7 @@ export default async function Home() {
 
       <HeroCarousel />
 
-      <section className="mx-auto max-w-6xl px-4 py-12 md:px-8 md:py-16">
-        <div className="md:hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(11,29,59,0.98),rgba(7,12,24,0.96)_55%,rgba(5,11,22,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] sm:p-6">
-          <div className="space-y-8">
-            <Carousel
-              title="Our Products"
-              variant="photo"
-              titleClassName="text-white"
-              slides={categories.map((card) => ({
-                img: card.img,
-                title: card.title,
-                href: card.href,
-              }))}
-            />
-          </div>
-        </div>
-        <div className="hidden md:block">
-          <div className="text-center">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-              Our Products
-            </p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-              High-Quality Technology for Your Business
-            </h2>
-          </div>
-          <div className="mx-auto mt-8 grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {categories.map((card) => (
-              <Link
-                key={card.title}
-                href={card.href}
-                className="group mx-auto w-full max-w-[22rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)]"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                  <FallbackImage
-                    src={card.img}
-                    alt={card.title}
-                    className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-5 text-center">
-                  <h3 className="font-display text-lg font-bold text-white">
-                    {card.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
-                    {card.body}
-                  </p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#f3c74d]">
-                    View More <span aria-hidden="true">&rarr;</span>
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HomepageCategoriesSection />
 
       <section className="bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)]">
         <div className="mx-auto max-w-6xl px-4 py-14 md:px-8 md:py-16">
@@ -381,71 +305,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white">
-        <div className="mx-auto max-w-6xl px-4 py-14 md:px-8 md:py-16">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="space-y-3">
-              <p className="text-xs uppercase tracking-[0.35em] text-white/75">
-                All products
-              </p>
-              <h2 className="font-display text-3xl font-bold md:text-4xl">
-                Explore our product range
-              </h2>
-              <p className="max-w-2xl text-sm leading-6 text-white/85 md:text-base">
-                Browse the main product categories we supply, from laptops and
-                desktops to accessories and brand-specific options.
-              </p>
-            </div>
-            <Link
-              href="/contact"
-              className="rounded-full bg-[#f3c74d] px-5 py-3 text-sm font-semibold text-[#050b16] shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e4b935]"
-            >
-              Request a Quote
-            </Link>
-          </div>
-
-          <div className="md:hidden mt-8 rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(11,29,59,0.98),rgba(7,12,24,0.96)_55%,rgba(5,11,22,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] sm:p-6">
-            <Carousel
-              title="All Products"
-              variant="photo"
-              titleClassName="text-white"
-              slides={allProducts.map((product) => ({
-                img: product.image,
-                title: product.title,
-                href: product.href,
-              }))}
-            />
-          </div>
-          <div className="hidden md:block">
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {allProducts.map((product) => (
-              <Link
-                key={product.title}
-                href={product.href}
-                className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition hover:-translate-y-1"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <FallbackImage
-                    src={product.image}
-                    alt={product.title}
-                    className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.08)_0%,rgba(5,11,22,0.68)_100%)]" />
-                </div>
-                  <div className="p-5">
-                    <h3 className="font-display text-lg font-bold text-white">
-                      {product.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-slate-300">
-                      View products in this category.
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

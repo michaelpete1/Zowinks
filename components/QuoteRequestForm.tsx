@@ -1,14 +1,21 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
+import { zowkinsApi } from "../lib/zowkins-api";
 
 type QuoteFormState = {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  phone: string;
-  location: string;
-  message: string;
+  phoneNumber: string;
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  note: string;
   products: Array<{
+    id: string;
     name: string;
     quantity: string;
   }>;
@@ -23,35 +30,49 @@ type QuoteRequestFormProps = {
   whatsappLabel?: string;
 };
 
-const ORDER_EMAIL = "info@zowkins.com";
 const WHATSAPP_NUMBER = "971543895126";
 
+function createProductRow() {
+  return {
+    id:
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `row_${Math.random().toString(36).slice(2, 10)}`,
+    name: "",
+    quantity: "",
+  };
+}
+
 const emptyFormState: QuoteFormState = {
-  name: "",
+  firstName: "",
+  lastName: "",
   email: "",
-  phone: "",
-  location: "",
-  message: "",
-  products: [
-    {
-      name: "",
-      quantity: "",
-    },
-  ],
+  phoneNumber: "",
+  street: "",
+  city: "",
+  state: "",
+  country: "",
+  postalCode: "",
+  note: "",
+  products: [createProductRow()],
 };
 
 function buildQuoteLines(formData: QuoteFormState) {
   return [
     "New quote request",
-    `Name: ${formData.name}`,
+    `Name: ${formData.firstName} ${formData.lastName}`,
     `Email: ${formData.email}`,
-    `Phone: ${formData.phone}`,
-    `Location: ${formData.location || "Not provided"}`,
+    `Phone: ${formData.phoneNumber}`,
+    `Street: ${formData.street}`,
+    `City: ${formData.city}`,
+    `State: ${formData.state}`,
+    `Country: ${formData.country}`,
+    `Postal code: ${formData.postalCode}`,
     "",
     "Products:",
     ...formData.products.map((product, index) => `- ${index + 1}. ${product.name || "Not provided"} x${product.quantity || "1"}`),
     "",
-    `Message: ${formData.message || "N/A"}`,
+    `Note: ${formData.note || "N/A"}`,
   ];
 }
 
@@ -60,23 +81,30 @@ export default function QuoteRequestForm({
   eyebrow = "Quote request",
   title = "Request a Quote",
   description = "Tell us what you need and we will reply with pricing, delivery, and availability.",
-  submitLabel = "Send quote by email",
+  submitLabel = "Submit quote request",
   whatsappLabel = "Request via WhatsApp",
 }: QuoteRequestFormProps) {
   const [formData, setFormData] = useState<QuoteFormState>(emptyFormState);
   const [status, setStatus] = useState<"idle" | "sent">("idle");
   const [error, setError] = useState("");
-
-  const quoteSubject = useMemo(() => {
-    const firstProduct = formData.products.find((product) => product.name.trim());
-    return `Zowkins quote request - ${firstProduct?.name || "new inquiry"}`;
-  }, [formData.products]);
+  const [submitting, setSubmitting] = useState(false);
 
   const validate = () => {
     const hasProduct = formData.products.some((product) => product.name.trim() && product.quantity.trim());
 
-    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim() || !hasProduct) {
-      setError("Fill in your name, email, phone, and at least one product with quantity.");
+    if (
+      !formData.firstName.trim() ||
+      !formData.lastName.trim() ||
+      !formData.email.trim() ||
+      !formData.phoneNumber.trim() ||
+      !formData.street.trim() ||
+      !formData.city.trim() ||
+      !formData.state.trim() ||
+      !formData.country.trim() ||
+      !formData.postalCode.trim() ||
+      !hasProduct
+    ) {
+      setError("Fill in your name, contact details, delivery address, and at least one product with quantity.");
       return false;
     }
 
@@ -87,7 +115,7 @@ export default function QuoteRequestForm({
   const addProductRow = () => {
     setFormData((current) => ({
       ...current,
-      products: [...current.products, { name: "", quantity: "" }],
+      products: [...current.products, createProductRow()],
     }));
   };
 
@@ -109,26 +137,54 @@ export default function QuoteRequestForm({
     }));
   };
 
-  const openEmailDraft = () => {
-    const body = buildQuoteLines(formData).join("\n");
-    const mailto = `mailto:${ORDER_EMAIL}?subject=${encodeURIComponent(quoteSubject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailto, "_blank", "noopener,noreferrer");
-  };
-
   const openWhatsApp = () => {
     const body = buildQuoteLines(formData).join("\n");
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(body)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
-  const handleEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleApiSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!validate()) return;
 
-    openEmailDraft();
-    setStatus("sent");
-    window.setTimeout(() => setStatus("idle"), 2500);
-    setFormData(emptyFormState);
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const validItems = formData.products
+        .filter((product) => product.name.trim() && product.quantity.trim())
+        .map((product) => ({
+          name: product.name.trim(),
+          quantity: Number(product.quantity),
+        }));
+
+      await zowkinsApi.requestPortalQuote(null, {
+        customer: {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          phoneNumber: formData.phoneNumber.trim(),
+        },
+        items: validItems,
+        deliveryAddress: {
+          phoneNumber: formData.phoneNumber.trim(),
+          street: formData.street.trim(),
+          city: formData.city.trim(),
+          state: formData.state.trim(),
+          country: formData.country.trim(),
+          postalCode: formData.postalCode.trim(),
+        },
+        note: formData.note.trim() || undefined,
+      });
+
+      setStatus("sent");
+      window.setTimeout(() => setStatus("idle"), 2500);
+      setFormData(emptyFormState);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit quote request");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleWhatsApp = () => {
@@ -157,38 +213,48 @@ export default function QuoteRequestForm({
             <div>
               <p className="font-display text-lg font-bold text-white">Quote request opened</p>
               <p className="mt-1 text-sm leading-6 text-emerald-50/80">
-                Your request has been prepared. You can send it by email or continue on WhatsApp.
+                Your request has been sent to the backend. You can still continue on WhatsApp if you want.
               </p>
             </div>
           </div>
         </div>
       ) : null}
 
-      <form onSubmit={handleEmailSubmit} className="mt-6 grid gap-4">
+      <form onSubmit={handleApiSubmit} className="mt-6 grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="sr-only" htmlFor="quote-name">
-            Full name
+          <label className="sr-only" htmlFor="quote-first-name">
+            First name
           </label>
           <input
-            id="quote-name"
+            id="quote-first-name"
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
-            placeholder="Full name"
-            value={formData.name}
-            onChange={(event) => setFormData({ ...formData, name: event.target.value })}
+            placeholder="First name"
+            value={formData.firstName}
+            onChange={(event) => setFormData({ ...formData, firstName: event.target.value })}
           />
-          <label className="sr-only" htmlFor="quote-email">
-            Work email
+          <label className="sr-only" htmlFor="quote-last-name">
+            Last name
           </label>
           <input
-            id="quote-email"
+            id="quote-last-name"
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
-            placeholder="Work email"
-            value={formData.email}
-            onChange={(event) => setFormData({ ...formData, email: event.target.value })}
+            placeholder="Last name"
+            value={formData.lastName}
+            onChange={(event) => setFormData({ ...formData, lastName: event.target.value })}
           />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
+          <label className="sr-only" htmlFor="quote-email">
+            Email address
+          </label>
+          <input
+            id="quote-email"
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
+            placeholder="Email address"
+            value={formData.email}
+            onChange={(event) => setFormData({ ...formData, email: event.target.value })}
+          />
           <label className="sr-only" htmlFor="quote-phone">
             Phone number
           </label>
@@ -196,18 +262,41 @@ export default function QuoteRequestForm({
             id="quote-phone"
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
             placeholder="Phone number"
-            value={formData.phone}
-            onChange={(event) => setFormData({ ...formData, phone: event.target.value })}
+            value={formData.phoneNumber}
+            onChange={(event) => setFormData({ ...formData, phoneNumber: event.target.value })}
           />
-          <label className="sr-only" htmlFor="quote-location">
-            City, state, or delivery area
-          </label>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
           <input
-            id="quote-location"
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20 md:col-span-2"
+            placeholder="Street address"
+            value={formData.street}
+            onChange={(event) => setFormData({ ...formData, street: event.target.value })}
+          />
+          <input
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
-            placeholder="City / state / delivery area"
-            value={formData.location}
-            onChange={(event) => setFormData({ ...formData, location: event.target.value })}
+            placeholder="City"
+            value={formData.city}
+            onChange={(event) => setFormData({ ...formData, city: event.target.value })}
+          />
+          <input
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
+            placeholder="State"
+            value={formData.state}
+            onChange={(event) => setFormData({ ...formData, state: event.target.value })}
+          />
+          <input
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
+            placeholder="Country"
+            value={formData.country}
+            onChange={(event) => setFormData({ ...formData, country: event.target.value })}
+          />
+          <input
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
+            placeholder="Postal code"
+            value={formData.postalCode}
+            onChange={(event) => setFormData({ ...formData, postalCode: event.target.value })}
           />
         </div>
 
@@ -228,7 +317,7 @@ export default function QuoteRequestForm({
 
           <div className="mt-4 space-y-3">
             {formData.products.map((product, index) => (
-              <div key={`${index}-${product.name}`} className="grid gap-3 md:grid-cols-[1fr_160px_auto]">
+              <div key={product.id} className="grid gap-3 md:grid-cols-[1fr_160px_auto]">
                 <label className="sr-only" htmlFor={`quote-product-${index}`}>
                   Product {index + 1}
                 </label>
@@ -268,9 +357,9 @@ export default function QuoteRequestForm({
           aria-label="Additional quote details"
           rows={5}
           className="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 focus:ring-2 focus:ring-[#f3c74d]/20"
-          placeholder="Tell us what you need, the quantity, and any delivery details..."
-          value={formData.message}
-          onChange={(event) => setFormData({ ...formData, message: event.target.value })}
+          placeholder="Tell us what you need, the quantity, and any extra notes..."
+          value={formData.note}
+          onChange={(event) => setFormData({ ...formData, note: event.target.value })}
         />
 
         {error ? <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
@@ -278,9 +367,10 @@ export default function QuoteRequestForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <button
             type="submit"
+            disabled={submitting}
             className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
           >
-            {submitLabel}
+            {submitting ? "Submitting..." : submitLabel}
           </button>
           <button
             type="button"

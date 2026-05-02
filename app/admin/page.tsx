@@ -12,7 +12,8 @@ const shortcuts = [
   { label: "Orders", href: "/admin/orders", description: "Track delivered and pending orders.", icon: "orders" as const },
   { label: "Customers", href: "/admin/customers", description: "Review customer records and contact details.", icon: "contacts" as const },
   { label: "Delivery", href: "/admin/delivery-methods", description: "Manage shipping methods and fees.", icon: "truck" as const },
-  { label: "Settings", href: "/admin/settings", description: "Manage admin profile and credentials.", icon: "settings" as const },
+  { label: "App Settings", href: "/admin/settings/app", description: "Manage application configuration and branding.", icon: "settings" as const },
+  { label: "Profile", href: "/admin/settings", description: "Manage admin profile and credentials.", icon: "user" as const },
 ];
 
 const extractArray = <T,>(response: unknown, keys: string[]): T[] => {

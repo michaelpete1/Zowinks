@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     "Browse visible categories and open a category to view its products.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function CategoriesPage() {
   let categoriesList: any[] = [];
   try {

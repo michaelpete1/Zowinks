@@ -1,6 +1,12 @@
 import { ZOWKINS_API_BASE, ApiImage } from "./zowkins-api";
 
-const API_ORIGIN = new URL(ZOWKINS_API_BASE).origin;
+const API_ORIGIN = (() => {
+  try {
+    return new URL(ZOWKINS_API_BASE, "http://localhost").origin;
+  } catch {
+    return "https://zowkins-api.onrender.com";
+  }
+})();
 const IMAGE_ORIGIN = "https://pub-8c6bb3ce4d88417e9f57a8967cf9363d.r2.dev";
 
 function extractMediaValue(value: unknown): string {

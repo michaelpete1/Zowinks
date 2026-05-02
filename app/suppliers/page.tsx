@@ -16,7 +16,7 @@ const suppliers = [
   { title: "Canon", img: "/canonlogo.jpg", href: "/accessories", category: "Accessories" },
   { title: "Premax", img: "/premaxlogo.png", href: "/accessories", category: "Accessories" },
   { title: "Apple", img: "/applelogo.jpg", href: "/laptops/apple", category: "Laptops" },
-  { title: "Microsoft", img: "/microsoft%20logo.jpg", href: "/contact", category: "Services" },
+  { title: "Microsoft", img: "/microsoft%20logo.jpg", href: "/request-quote", category: "Services" },
 ];
 
 export default function SuppliersPage() {

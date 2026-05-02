@@ -41,6 +41,8 @@ function getProductId(product: { id?: string; _id?: string }) {
   return product.id || product._id || "";
 }
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {

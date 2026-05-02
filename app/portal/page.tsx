@@ -1,10 +1,10 @@
 import Link from "next/link";
-import Navbar from "../../components/NewNavbar";
+import PortalNavbar from "../../components/PortalNavbar";
 
 export default function PortalPage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-      <Navbar />
+      <PortalNavbar />
       <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
         <section className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.22)] md:p-12">
           <p className="text-xs uppercase tracking-[0.35em] text-white/55">Portal</p>

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const hiddenPaths = ["/admin", "/signin"];
+const hiddenPaths = ["/admin"];
 
 export default function Footer() {
   const pathname = usePathname();
@@ -30,18 +30,60 @@ export default function Footer() {
           </div>
 
           <nav className="flex flex-wrap items-center gap-5 text-sm text-slate-300 md:justify-center">
-            <Link href="/" className="transition-colors hover:text-[#f3c74d]">Home</Link>
-            <Link href="/products" className="transition-colors hover:text-[#5ab214]">Products</Link>
-            <Link href="/desktops" className="transition-colors hover:text-[#f3c74d]">Desktops</Link>
-            <Link href="/accessories" className="transition-colors hover:text-[#5ab214]">Accessories</Link>
-            <Link href="/about" className="transition-colors hover:text-[#f3c74d]">About</Link>
-            <Link href="/contact" className="transition-colors hover:text-[#5ab214]">Request a Quote</Link>
+            <Link href="/" className="transition-colors hover:text-[#f3c74d]">
+              Home
+            </Link>
+            <Link
+              href="/products"
+              className="transition-colors hover:text-[#5ab214]"
+            >
+              Products
+            </Link>
+            <Link
+              href="/desktops"
+              className="transition-colors hover:text-[#f3c74d]"
+            >
+              Desktops
+            </Link>
+            <Link
+              href="/accessories"
+              className="transition-colors hover:text-[#5ab214]"
+            >
+              Accessories
+            </Link>
+            <Link
+              href="/about"
+              className="transition-colors hover:text-[#f3c74d]"
+            >
+              About
+            </Link>
+            <Link
+              href="/request-quote"
+              className="transition-colors hover:text-[#5ab214]"
+            >
+              Request a Quote
+            </Link>
           </nav>
 
           <div className="flex flex-col items-start gap-2 text-xs text-slate-400 md:items-end">
-            <Link href="/signin" className="transition-colors hover:text-[#f3c74d]">Admin Sign In</Link>
-            <Link href="/privacy" className="transition-colors hover:text-[#f3c74d]">Privacy Policy</Link>
-            <Link href="/terms" className="transition-colors hover:text-[#5ab214]">Terms and Conditions</Link>
+            <Link
+              href="/admin/auth"
+              className="transition-colors hover:text-[#f3c74d]"
+            >
+              Admin Sign In
+            </Link>
+            <Link
+              href="/privacy"
+              className="transition-colors hover:text-[#f3c74d]"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/terms"
+              className="transition-colors hover:text-[#5ab214]"
+            >
+              Terms and Conditions
+            </Link>
           </div>
         </div>
       </div>

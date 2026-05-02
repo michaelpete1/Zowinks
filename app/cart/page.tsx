@@ -12,10 +12,12 @@ import {
   type PortalLoginInput,
   type CreatePortalOrderInput,
   type PortalOrder,
+  normalizeOrderGender,
 } from "../../lib/zowkins-api";
 
-type OrderStage = "form" | "payment" | "processing" | "success";
-type PaymentMethod = "pay_now" | "pay_on_delivery";
+type OrderStage = "form" | "processing" | "success";
+
+const MONGO_OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/;
 
 type OrderFormState = {
   name: string;
@@ -23,20 +25,14 @@ type OrderFormState = {
   phone: string;
   city: string;
   state: string;
+  country: string;
+  postalCode: string;
+  gender: "male" | "female";
   deliveryAddress: string;
   pickupPoint: string;
   note: string;
-  paymentMethod: PaymentMethod;
   deliveryMethod: string;
 };
-
-const PAYMENT_DETAILS = {
-  accountName: "Zowkins Enterprise LTD",
-  bankName: "Add your bank name",
-  accountNumber: "Add your account number",
-};
-
-const ORDER_EMAIL = "info@zowkins.com";
 
 const emptyFormState: OrderFormState = {
   name: "",
@@ -44,10 +40,12 @@ const emptyFormState: OrderFormState = {
   phone: "",
   city: "",
   state: "",
+  country: "Nigeria",
+  postalCode: "",
+  gender: "male",
   deliveryAddress: "",
   pickupPoint: "",
   note: "",
-  paymentMethod: "pay_now",
   deliveryMethod: "",
 };
 
@@ -68,6 +66,8 @@ export default function Cart() {
   const [stage, setStage] = useState<OrderStage>("form");
   const [orderReference, setOrderReference] = useState("");
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+  const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>([]);
+  const [loadingDeliveryMethods, setLoadingDeliveryMethods] = useState(false);
   const [submittedOrder, setSubmittedOrder] = useState<{
     items: CartItem[];
     subtotal: number;
@@ -75,6 +75,7 @@ export default function Cart() {
     total: number;
   } | null>(null);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const subtotal = useMemo(
     () => items.reduce((sum, item) => sum + item.price * item.qty, 0),
@@ -98,6 +99,51 @@ export default function Cart() {
       current.filter((id) => items.some((item) => item.id === id)),
     );
   }, [items]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDeliveryMethods = async () => {
+      setLoadingDeliveryMethods(true);
+      try {
+        const methods: DeliveryMethod[] = await zowkinsApi.listDeliveryMethods();
+        if (cancelled) return;
+
+        const availableMethods = methods.filter(
+          (method) =>
+            method.isActive &&
+            method.visibility &&
+            MONGO_OBJECT_ID_PATTERN.test(method.id),
+        );
+        setDeliveryMethods(availableMethods);
+
+        setFormData((current) => {
+          if (current.deliveryMethod || !availableMethods.length) {
+            return current;
+          }
+
+          return {
+            ...current,
+            deliveryMethod: availableMethods[0].id,
+          };
+        });
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load delivery methods");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingDeliveryMethods(false);
+        }
+      }
+    };
+
+    loadDeliveryMethods();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const selectedItemCount = selectedItemIds.length;
 
@@ -123,42 +169,66 @@ export default function Cart() {
     setSelectedItemIds([]);
   };
 
-  const sendOrderEmail = (reference = orderReference) => {
-    const lines = [
-      `Order reference: ${reference}`,
-      `Customer name: ${formData.name}`,
-      `Email: ${formData.email}`,
-      `Phone: ${formData.phone}`,
-      `City: ${formData.city}`,
-      `State: ${formData.state}`,
-      `Delivery address: ${formData.deliveryAddress || "N/A"}`,
-      `Pickup point: ${formData.pickupPoint || "N/A"}`,
-      `Preferred location: ${selectedLocation}`,
-      `Payment method: ${formData.paymentMethod === "pay_now" ? "Pay now" : "Pay on delivery"}`,
-      `Note: ${formData.note || "N/A"}`,
-      "",
-      "Products:",
-      ...summaryItems.map(
-        (item) =>
-          `- ${item.title} x${item.qty} | ${currency(item.price * item.qty)}${item.spec ? ` | ${item.spec}` : ""}`,
-      ),
-      "",
-      `Subtotal: ${currency(summarySubtotal)}`,
-      `Shipping: ${shipping === 0 ? "Free" : currency(shipping)}`,
-      `Tax: ${currency(summaryTax)}`,
-      `Total: ${currency(summaryTotal)}`,
-    ];
+  const submitOrder = async () => {
+    const nameParts = formData.name.trim().split(/\s+/).filter(Boolean);
+    const firstName = nameParts[0] || formData.name.trim();
+    const lastName = nameParts.slice(1).join(" ") || "";
+    const street = formData.deliveryAddress.trim() || formData.pickupPoint.trim();
 
-    const subject = `New Zowkins order ${reference}`;
-    const body = lines.join("\n");
-    const mailto = `mailto:${ORDER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailto, "_blank", "noopener,noreferrer");
+    if (!street) {
+      throw new Error("Add either a delivery address or a pick-up point.");
+    }
+
+    const selectedDeliveryMethod = formData.deliveryMethod.trim();
+
+    if (!selectedDeliveryMethod) {
+      throw new Error("Select a delivery method before placing your order.");
+    }
+
+    if (!MONGO_OBJECT_ID_PATTERN.test(selectedDeliveryMethod)) {
+      throw new Error("Select a valid delivery method.");
+    }
+
+    const payload: CreatePortalOrderInput = {
+      customer: {
+        firstName,
+        lastName,
+        gender: normalizeOrderGender(formData.gender),
+        email: formData.email.trim(),
+        phoneNumber: formData.phone.trim(),
+      },
+      from: {
+        email: formData.email.trim(),
+      },
+      argument: {
+        from: {
+          email: formData.email.trim(),
+        },
+      },
+      items: summaryItems.map((item) => ({
+        productId: item.id,
+        quantity: item.qty,
+      })),
+      deliveryAddress: {
+        phoneNumber: formData.phone.trim(),
+        street,
+        city: formData.city.trim(),
+        state: formData.state.trim(),
+        country: formData.country.trim() || "Nigeria",
+        postalCode: formData.postalCode.trim(),
+      },
+      deliveryMethod: selectedDeliveryMethod,
+    };
+
+    const response = await zowkinsApi.createPortalOrder(
+      localStorage.getItem("portalToken"),
+      payload,
+    );
+
+    return response.order;
   };
 
-  const createReference = () =>
-    `ZWK-${Math.floor(100000 + Math.random() * 900000)}`;
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
@@ -183,30 +253,26 @@ export default function Cart() {
       return;
     }
 
-    const nextReference = createReference();
-    setOrderReference(nextReference);
     setSubmittedOrder({
       items,
       subtotal,
       tax,
       total,
     });
-    setError("");
+    setSubmitting(true);
 
-    if (formData.paymentMethod === "pay_now") {
-      setStage("payment");
-      return;
+    try {
+      setStage("processing");
+      const order = await submitOrder();
+      setOrderReference(order.orderNumber || order.id);
+      setStage("success");
+      clearCart();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to place order");
+      setStage("form");
+    } finally {
+      setSubmitting(false);
     }
-
-    setStage("processing");
-    sendOrderEmail(nextReference);
-    clearCart();
-  };
-
-  const handlePaymentConfirm = () => {
-    sendOrderEmail();
-    clearCart();
-    setStage("success");
   };
 
   const resetFlow = () => {
@@ -366,6 +432,27 @@ export default function Cart() {
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-white">
+                          Gender
+                        </label>
+                        <select
+                          value={formData.gender}
+                          onChange={(event) =>
+                            setFormData({
+                              ...formData,
+                              gender: event.target.value === "female" ? "female" : "male",
+                            })
+                          }
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-[#f3c74d]/60 focus:bg-white/10"
+                        >
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-white">
                           Phone
                         </label>
                         <input
@@ -412,44 +499,63 @@ export default function Cart() {
                             })
                           }
                           className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
-                          placeholder="State"
-                        />
+                            placeholder="State"
+                          />
+                        </div>
                       </div>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                          <label className="mb-2 block text-sm font-semibold text-white">
+                            Country
+                          </label>
+                          <input
+                            value={formData.country}
+                            onChange={(event) =>
+                              setFormData({
+                                ...formData,
+                                country: event.target.value,
+                              })
+                            }
+                            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                            placeholder="Country"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-semibold text-white">
+                            Postal code
+                          </label>
+                          <input
+                            value={formData.postalCode}
+                            onChange={(event) =>
+                              setFormData({
+                                ...formData,
+                                postalCode: event.target.value,
+                              })
+                            }
+                            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                            placeholder="Postal code"
+                          />
+                        </div>
+                      </div>
+
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-white">
-                          Pick-up point
+                          Delivery address
                         </label>
-                        <input
-                          value={formData.pickupPoint}
+                        <textarea
+                          rows={4}
+                          value={formData.deliveryAddress}
                           onChange={(event) =>
                             setFormData({
                               ...formData,
-                              pickupPoint: event.target.value,
+                              deliveryAddress: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
-                          placeholder="Store, office, or pickup location"
+                          className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                          placeholder="House number, street, landmark, and any delivery notes"
                         />
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-white">
-                        Delivery address
-                      </label>
-                      <textarea
-                        rows={4}
-                        value={formData.deliveryAddress}
-                        onChange={(event) =>
-                          setFormData({
-                            ...formData,
-                            deliveryAddress: event.target.value,
-                          })
-                        }
-                        className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
-                        placeholder="House number, street, landmark, and any delivery notes"
-                      />
-                    </div>
 
                     <div>
                       <label className="mb-2 block text-sm font-semibold text-white">
@@ -466,144 +572,53 @@ export default function Cart() {
                       />
                     </div>
 
-                    <div className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                      <p className="text-sm font-semibold text-white">
-                        Payment method
-                      </p>
-                      <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-[#0a1020] px-4 py-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="pay_now"
-                          checked={formData.paymentMethod === "pay_now"}
-                          onChange={() =>
-                            setFormData({
-                              ...formData,
-                              paymentMethod: "pay_now",
-                            })
-                          }
-                          className="mt-1"
-                        />
-                        <span>
-                          <span className="block text-sm font-semibold text-white">
-                            Pay now
-                          </span>
-                          <span className="block text-sm text-slate-300">
-                            See the payment gateway with account details after
-                            you submit.
-                          </span>
-                        </span>
+                      <div className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                      <label className="block text-sm font-semibold text-white">
+                        Delivery method
                       </label>
-                      <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-[#0a1020] px-4 py-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="pay_on_delivery"
-                          checked={formData.paymentMethod === "pay_on_delivery"}
-                          onChange={() =>
-                            setFormData({
-                              ...formData,
-                              paymentMethod: "pay_on_delivery",
-                            })
-                          }
-                          className="mt-1"
-                        />
-                        <span>
-                          <span className="block text-sm font-semibold text-white">
-                            Pay on delivery
-                          </span>
-                          <span className="block text-sm text-slate-300">
-                            Your order will be marked as processing and sent by
-                            email.
-                          </span>
-                        </span>
-                      </label>
-                    </div>
+                      <select
+                        value={formData.deliveryMethod}
+                        onChange={(event) =>
+                          setFormData({
+                            ...formData,
+                            deliveryMethod: event.target.value,
+                          })
+                        }
+                        className="w-full rounded-2xl border border-white/10 bg-[#0a1020] px-4 py-3 text-sm text-white outline-none transition focus:border-[#f3c74d]/60"
+                        disabled={loadingDeliveryMethods}
+                      >
+                        <option value="">
+                          {loadingDeliveryMethods
+                            ? "Loading delivery methods..."
+                            : "Choose a delivery method"}
+                        </option>
+                        {deliveryMethods.map((method) => (
+                          <option key={method.id} value={method.id}>
+                            {method.name} - {currency(method.fee)}
+                          </option>
+                        ))}
+                      </select>
+                      {deliveryMethods.length === 0 && !loadingDeliveryMethods ? (
+                        <p className="text-xs text-slate-300">
+                          Delivery methods are not available right now. Please try again later.
+                        </p>
+                      ) : null}
+                      </div>
 
-                    {error ? (
-                      <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                        {error}
-                      </p>
-                    ) : null}
+                      {error ? (
+                        <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                          {error}
+                        </p>
+                      ) : null}
 
-                    <button
-                      type="submit"
-                      className="w-full rounded-full bg-[#0b1d3b] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#0b1d3b]/20 transition hover:bg-[#12386a]"
-                    >
-                      {formData.paymentMethod === "pay_now"
-                        ? "Proceed to payment gateway"
-                        : "Place order"}
-                    </button>
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full rounded-full bg-[#0b1d3b] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#0b1d3b]/20 transition hover:bg-[#12386a]"
+                      >
+                        {submitting ? "Submitting..." : "Place order"}
+                      </button>
                   </form>
-                </div>
-              )}
-
-              {stage === "payment" && (
-                <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-8">
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                    Payment gateway
-                  </p>
-                  <h2 className="mt-2 font-display text-2xl font-semibold text-white">
-                    Transfer to our account details
-                  </h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-300">
-                    Use the details below, then click the confirmation button so
-                    we can email your order information.
-                  </p>
-
-                  <div className="mt-6 grid gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-                    <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3">
-                      <span className="text-sm font-semibold text-slate-300">
-                        Account name
-                      </span>
-                      <span className="text-sm font-bold text-white">
-                        {PAYMENT_DETAILS.accountName}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3">
-                      <span className="text-sm font-semibold text-slate-300">
-                        Bank name
-                      </span>
-                      <span className="text-sm font-bold text-white">
-                        {PAYMENT_DETAILS.bankName}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-semibold text-slate-300">
-                        Account number
-                      </span>
-                      <span className="text-sm font-bold text-white">
-                        {PAYMENT_DETAILS.accountNumber}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 rounded-[1.5rem] bg-[#0b1d3b] p-5 text-white">
-                    <p className="text-xs uppercase tracking-[0.3em] text-white/70">
-                      Reference
-                    </p>
-                    <p className="mt-2 text-2xl font-bold">{orderReference}</p>
-                    <p className="mt-2 text-sm text-white/80">
-                      Total due: {totalLabel}
-                    </p>
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={handlePaymentConfirm}
-                      className="rounded-full bg-[#5ab214] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#4b9810]"
-                    >
-                      I have paid
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStage("form")}
-                      className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
-                    >
-                      Back to form
-                    </button>
-                  </div>
                 </div>
               )}
 
@@ -628,8 +643,8 @@ export default function Cart() {
                     Your order is being processed
                   </h2>
                   <p className="mt-3 text-sm leading-6 text-slate-300">
-                    We have prepared your order and opened an email draft with
-                    the details. Our team can now follow up.
+                    We have created your order in the backend. Our team can now
+                    follow up.
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <Link
@@ -673,8 +688,8 @@ export default function Cart() {
                     Order sent
                   </h2>
                   <p className="mt-3 text-sm leading-6 text-emerald-50/80">
-                    Your order details have been prepared for email and the
-                    selected products are ready for processing.
+                    Your order has been submitted successfully and the selected
+                    products are ready for processing.
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <Link
@@ -823,9 +838,8 @@ export default function Cart() {
                   </p>
                   <p className="mt-2 font-semibold">
                     {stage === "form" && "Fill the form"}
-                    {stage === "payment" && "Confirm payment"}
                     {stage === "processing" && "Processing your order"}
-                    {stage === "success" && "Email draft sent"}
+                    {stage === "success" && "Order created"}
                   </p>
                 </div>
               </div>

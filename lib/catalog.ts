@@ -91,7 +91,7 @@ export async function fetchAllProducts(): Promise<CatalogItem[]> {
   try {
     const categoriesResponse = await zowkinsApi.listCategories({
       page: 1,
-      limit: 100,
+      limit: 12,
     });
     const categories: CategoryListItem[] = Array.isArray(
       categoriesResponse?.categories,
@@ -143,4 +143,3 @@ export async function searchCatalog(query: string): Promise<CatalogItem[]> {
     );
   });
 }
-

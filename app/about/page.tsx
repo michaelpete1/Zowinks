@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Learn about Zowkins Enterprise LTD and our business IT procurement approach.",
 };
 
+export const dynamic = "force-dynamic";
+
 const metrics = [
   { label: "Authorized supply", value: "Genuine stock" },
   { label: "Response time", value: "Within 24h" },
@@ -157,7 +159,7 @@ export default async function About() {
               practical, and easy to approve internally.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/contact" className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]">
+              <Link href="/request-quote" className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]">
                 Request a Quote
               </Link>
               <Link href="/products" className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10">

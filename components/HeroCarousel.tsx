@@ -25,7 +25,7 @@ const heroSlides: HeroSlide[] = [
     cta1: "Explore Products",
     cta1Href: "/products",
     cta2: "Request a Quote",
-    cta2Href: "/contact",
+    cta2Href: "/request-quote",
   },
   {
     img: "/heroimage2.jpg",
@@ -43,7 +43,7 @@ const heroSlides: HeroSlide[] = [
     cta1: "Shop Now",
     cta1Href: "/products",
     cta2: "Contact Us",
-    cta2Href: "/contact",
+    cta2Href: "/request-quote",
   },
 ];
 

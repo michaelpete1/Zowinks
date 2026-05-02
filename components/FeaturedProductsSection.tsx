@@ -1,11 +1,41 @@
-import AddToCartButton from "./AddToCartButton";
+"use client";
+
+import { useEffect, useState } from "react";
 import Carousel from "./Carousel";
 import FallbackImage from "./FallbackImage";
-import { fetchAllProducts } from "../lib/catalog";
+import AddToCartButton from "./AddToCartButton";
+import { fetchAllProducts, type CatalogItem } from "../lib/catalog";
 
-export default async function FeaturedProductsSection() {
-  const allProducts = await fetchAllProducts();
-  const featured = allProducts.slice(0, 6);
+export default function FeaturedProductsSection() {
+  const [featured, setFeatured] = useState<CatalogItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadProducts = async () => {
+      try {
+        const allProducts = await fetchAllProducts();
+        if (!cancelled) {
+          setFeatured(allProducts.slice(0, 6));
+        }
+      } catch {
+        if (!cancelled) {
+          setFeatured([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-16">
@@ -21,7 +51,11 @@ export default async function FeaturedProductsSection() {
         </p>
       </div>
 
-      {featured.length > 0 ? (
+      {loading ? (
+        <div className="mx-auto mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300">
+          Loading products...
+        </div>
+      ) : featured.length > 0 ? (
         <>
           <div className="mx-auto mt-8 md:hidden">
             <div className="rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(11,29,59,0.98),rgba(7,12,24,0.96)_55%,rgba(5,11,22,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] sm:p-5">

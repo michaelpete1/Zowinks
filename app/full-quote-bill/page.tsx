@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     "Request a bulk quote for laptops, desktops, accessories, and bulk IT orders from Zowkins Enterprise.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function FullQuoteBillPage() {
   const { app } = await getAppSettings();
   const quoteHeroImage = "/desktop 2.jpg";
@@ -91,13 +93,13 @@ export default async function FullQuoteBillPage() {
               <QuoteRequestForm
                 eyebrow="Bulk quote"
                 title="Request Bulk Quote"
-                description={`Use this form when you want complete pricing for laptops, desktops, accessories, and bulk orders. We can send it by email or WhatsApp at ${app.whatsAppNumber}.`}
-                submitLabel="Send bulk quote by email"
+                description={`Use this form when you want complete pricing for laptops, desktops, accessories, and bulk orders. Your request will be sent to the team, and you can still continue on WhatsApp at ${app.whatsAppNumber}.`}
+                submitLabel="Submit bulk quote request"
                 whatsappLabel="Request bulk quote via WhatsApp"
               />
               <div className="mt-4 flex flex-wrap gap-3 px-1 text-xs text-slate-400">
                 <Link
-                  href="/contact"
+                  href="/request-quote"
                   className="transition-colors hover:text-[#f3c74d]"
                 >
                   Request a quote instead

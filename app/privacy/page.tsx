@@ -75,7 +75,7 @@ export default function PrivacyPage() {
               <p>Location: Nigeria</p>
             </div>
             <Link
-              href="/contact"
+              href="/request-quote"
               className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
             >
               Contact us

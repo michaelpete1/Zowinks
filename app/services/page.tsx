@@ -65,7 +65,7 @@ export default function ServicesPage() {
 
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/contact"
+                  href="/request-quote"
                   className="rounded-full bg-[#f3c74d] px-5 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
                 >
                   Request a Quote
