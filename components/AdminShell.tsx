@@ -365,7 +365,7 @@ export function AdminShell({
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#eef2f7_0%,#f7f9fc_100%)] text-slate-900">
       <div className="flex min-h-screen">
-        <aside className="hidden w-80 shrink-0 border-r border-slate-200 bg-white/95 px-5 py-6 shadow-[0_16px_40px_rgba(15,23,42,0.06)] lg:flex lg:flex-col">
+        <aside className="hidden w-72 max-w-[18rem] shrink-0 border-r border-slate-200 bg-white/95 px-4 py-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] lg:flex lg:flex-col">
           <Link
             href="/admin"
             className="flex items-center gap-3 rounded-[1.4rem] bg-slate-50 px-4 py-3"

@@ -4,8 +4,10 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { useCart } from "../hooks/useCart";
 
 export default function Navbar() {
+  const items = useCart((state) => state.items);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const pathname = usePathname();
@@ -67,6 +69,31 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 lg:flex">
+          <Link
+            href="/cart"
+            className="relative rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+            aria-label="View cart"
+            title="View cart"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.6}
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+              />
+            </svg>
+            {items.length > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#f3c74d] text-[10px] font-bold text-[#050b16]">
+                {items.length}
+              </span>
+            )}
+          </Link>
           <Link
             href="/full-quote-bill"
             className="rounded-full bg-[#f3c74d] px-5 py-2 text-sm font-semibold text-[#050b16] shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e4b935]"
@@ -181,7 +208,27 @@ export default function Navbar() {
                 ))}
               </div>
 
-              <div className="space-y-3 border-t border-slate-200 pt-4">
+              <div className="space-y-3 border-t border-white/10 pt-4">
+                <Link
+                  href="/cart"
+                  className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                  onClick={() => setOpen(false)}
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.6}
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                    />
+                  </svg>
+                  Cart {items.length > 0 && `(${items.length})`}
+                </Link>
                 <Link
                   href="/full-quote-bill"
                   className="block rounded-full bg-[#f3c74d] px-4 py-3 text-center text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"

@@ -233,12 +233,10 @@ export default function ProductsPage() {
     setError("");
 
     try {
-      const productList = await zowkinsApi.listAdminProducts(
-        apiConnection.accessToken.trim(),
-      );
-      const statsResponse = await zowkinsApi.getAdminProductStats(
-        apiConnection.accessToken.trim(),
-      );
+      const [productList, statsResponse] = await Promise.all([
+        zowkinsApi.listAdminProducts(apiConnection.accessToken.trim()),
+        zowkinsApi.getAdminProductStats(apiConnection.accessToken.trim()),
+      ]);
       const normalizedProducts: ProductDetails[] = Array.isArray(productList)
         ? productList
         : Array.isArray((productList as any)?.products)
@@ -294,7 +292,10 @@ export default function ProductsPage() {
       inStock: Boolean(selectedProduct.inStock),
       file: null,
     });
-    const resolvedImage = resolveImageSource(selectedProduct.image, "/desktop.jpg");
+    const resolvedImage = resolveImageSource(
+      selectedProduct.image,
+      "/desktop.jpg",
+    );
     setPreview(resolvedImage);
     setImageDebug(
       [
@@ -372,9 +373,7 @@ export default function ProductsPage() {
     }
 
     if (form.file && !ALLOWED_IMAGE_MIME_TYPES.has(form.file.type)) {
-      setError(
-        "Upload a PNG, JPEG, WebP, or SVG image for the product.",
-      );
+      setError("Upload a PNG, JPEG, WebP, or SVG image for the product.");
       return;
     }
 
@@ -446,7 +445,10 @@ export default function ProductsPage() {
           : "Product created successfully.",
       );
       setSelectedProduct(saved);
-      const resolvedSavedImage = resolveImageSource(saved.image, "/desktop.jpg");
+      const resolvedSavedImage = resolveImageSource(
+        saved.image,
+        "/desktop.jpg",
+      );
       setPreview(resolvedSavedImage);
       setImageDebug(
         [
@@ -500,7 +502,7 @@ export default function ProductsPage() {
       onSearchChange={setQuery}
       searchPlaceholder="Search products..."
     >
-      <div className="grid gap-6 min-w-0 lg:grid-cols-[1.25fr_0.9fr] xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-6 min-w-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.95fr)] xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)]">
         <section className="min-w-0 rounded-[2rem] bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:p-6 md:p-8">
           <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
@@ -620,7 +622,10 @@ export default function ProductsPage() {
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200">
                               <img
-                                src={resolveImageSource(product.image, "/desktop.jpg")}
+                                src={resolveImageSource(
+                                  product.image,
+                                  "/desktop.jpg",
+                                )}
                                 alt={product.name}
                                 className="h-full w-full object-cover"
                               />
@@ -903,7 +908,10 @@ export default function ProductsPage() {
                   src={
                     preview || form.file
                       ? preview
-                      : resolveImageSource(selectedProduct?.image, "/desktop.jpg")
+                      : resolveImageSource(
+                          selectedProduct?.image,
+                          "/desktop.jpg",
+                        )
                   }
                   alt={form.name || "Product preview"}
                 />
@@ -915,7 +923,7 @@ export default function ProductsPage() {
                     {imageDebug || "No product selected yet."}
                   </pre>
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className="grid gap-3">
                   <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
                     <span>Image file</span>
                     <input

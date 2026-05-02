@@ -189,40 +189,60 @@ export default function OrdersPage() {
     setError("");
 
     try {
-      const [ordersResponse, nextPageResponse, statsResponse, productsResponse, methodsResponse, customersResponse] =
-        await Promise.all([
-          zowkinsApi.listAdminOrders(apiConnection.accessToken.trim(), {
-            orderStatus: filterOrderStatus || undefined,
-            paymentStatus: filterPaymentStatus || undefined,
-            sortBy: "createdAt:desc",
-            limit: pageSize,
-            page,
-          }),
-          zowkinsApi.listAdminOrders(apiConnection.accessToken.trim(), {
-            orderStatus: filterOrderStatus || undefined,
-            paymentStatus: filterPaymentStatus || undefined,
-            sortBy: "createdAt:desc",
-            limit: 1,
-            page: page + 1,
-          }),
-          zowkinsApi.getAdminOrderStats(apiConnection.accessToken.trim()),
-          zowkinsApi.listAdminProducts(apiConnection.accessToken.trim()),
-          zowkinsApi.listDeliveryMethods(),
-          zowkinsApi.listAdminCustomers(apiConnection.accessToken.trim()),
-        ]);
+      const [
+        ordersResponse,
+        nextPageResponse,
+        statsResponse,
+        productsResponse,
+        methodsResponse,
+        customersResponse,
+      ] = await Promise.all([
+        zowkinsApi.listAdminOrders(apiConnection.accessToken.trim(), {
+          orderStatus: filterOrderStatus || undefined,
+          paymentStatus: filterPaymentStatus || undefined,
+          sortBy: "createdAt:desc",
+          limit: pageSize,
+          page,
+        }),
+        zowkinsApi.listAdminOrders(apiConnection.accessToken.trim(), {
+          orderStatus: filterOrderStatus || undefined,
+          paymentStatus: filterPaymentStatus || undefined,
+          sortBy: "createdAt:desc",
+          limit: 1,
+          page: page + 1,
+        }),
+        zowkinsApi.getAdminOrderStats(apiConnection.accessToken.trim()),
+        zowkinsApi.listAdminProducts(apiConnection.accessToken.trim()),
+        zowkinsApi.listDeliveryMethods(),
+        zowkinsApi.listAdminCustomers(apiConnection.accessToken.trim()),
+      ]);
 
       setOrders(ordersResponse.orders || []);
-      setStats(statsResponse.stats || {
-        totalOrders: 0,
-        processing: 0,
-        delivered: 0,
-        cancelled: 0,
-        inTransit: 0,
-        totalRevenue: 0,
-      });
+      setStats(
+        statsResponse.stats || {
+          totalOrders: 0,
+          processing: 0,
+          delivered: 0,
+          cancelled: 0,
+          inTransit: 0,
+          totalRevenue: 0,
+        },
+      );
       setProducts(extractArray<ProductDetails>(productsResponse, ["products"]));
-      setDeliveryMethods(extractArray<DeliveryMethod>(methodsResponse, ["deliveryMethods", "methods", "data"]));
-      setCustomers(extractArray<AdminCustomer>(customersResponse, ["customers", "users", "data"]));
+      setDeliveryMethods(
+        extractArray<DeliveryMethod>(methodsResponse, [
+          "deliveryMethods",
+          "methods",
+          "data",
+        ]),
+      );
+      setCustomers(
+        extractArray<AdminCustomer>(customersResponse, [
+          "customers",
+          "users",
+          "data",
+        ]),
+      );
       setHasNextPage(nextPageResponse.orders.length > 0);
       setSelectedOrder((current) => {
         if (!current) return ordersResponse.orders[0] ?? null;
@@ -422,7 +442,9 @@ export default function OrdersPage() {
         );
 
       if (!productsPayload.length) {
-        setError("Add at least one valid product with a quantity greater than zero.");
+        setError(
+          "Add at least one valid product with a quantity greater than zero.",
+        );
         return;
       }
 
@@ -478,7 +500,7 @@ export default function OrdersPage() {
       onSearchChange={setQuery}
       searchPlaceholder="Search orders..."
     >
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
@@ -557,14 +579,14 @@ export default function OrdersPage() {
           <div className="mt-6 flex flex-wrap gap-3">
             <label className="sr-only">
               Order status
-                <select
-                  value={filterOrderStatus}
-                  onChange={(event) => {
-                    setPage(1);
-                    setFilterOrderStatus(event.target.value);
-                  }}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                >
+              <select
+                value={filterOrderStatus}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilterOrderStatus(event.target.value);
+                }}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+              >
                 <option value="">All order statuses</option>
                 {orderStatusOptions.map((status) => (
                   <option key={status} value={status}>
@@ -575,14 +597,14 @@ export default function OrdersPage() {
             </label>
             <label className="sr-only">
               Payment status
-                <select
-                  value={filterPaymentStatus}
-                  onChange={(event) => {
-                    setPage(1);
-                    setFilterPaymentStatus(event.target.value);
-                  }}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                >
+              <select
+                value={filterPaymentStatus}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilterPaymentStatus(event.target.value);
+                }}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+              >
                 <option value="">All payment statuses</option>
                 {paymentStatusOptions.map((status) => (
                   <option key={status} value={status}>
@@ -749,8 +771,12 @@ export default function OrdersPage() {
               Admin session
             </h2>
             <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-              <p>Your signed-in admin session is used automatically for orders.</p>
-              <p className="mt-2 font-semibold text-slate-900">Status: {apiReady ? "Connected" : "Not connected"}</p>
+              <p>
+                Your signed-in admin session is used automatically for orders.
+              </p>
+              <p className="mt-2 font-semibold text-slate-900">
+                Status: {apiReady ? "Connected" : "Not connected"}
+              </p>
             </div>
           </section>
 
@@ -821,10 +847,10 @@ export default function OrdersPage() {
                 {createForm.items.map((item, index) => (
                   <div
                     key={index}
-                    className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[1fr_120px_auto]"
+                    className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[minmax(0,1fr)_120px_minmax(0,auto)]"
                   >
                     <label className="grid gap-2 text-sm font-medium text-slate-700">
-                <span>Product</span>
+                      <span>Product</span>
                       <select
                         value={item.productId}
                         onChange={(event) =>
@@ -968,7 +994,8 @@ export default function OrdersPage() {
                       onChange={(event) =>
                         setUpdateForm((current) => ({
                           ...current,
-                          paymentStatus: event.target.value as AdminPaymentStatus,
+                          paymentStatus: event.target
+                            .value as AdminPaymentStatus,
                         }))
                       }
                       className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
@@ -997,10 +1024,10 @@ export default function OrdersPage() {
                     {updateItems.map((item, index) => (
                       <div
                         key={index}
-                        className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[1fr_120px_auto]"
+                        className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[minmax(0,1fr)_120px_minmax(0,auto)]"
                       >
                         <label className="grid gap-2 text-sm font-medium text-slate-700">
-                <span>Product</span>
+                          <span>Product</span>
                           <select
                             value={item.productId}
                             onChange={(event) =>

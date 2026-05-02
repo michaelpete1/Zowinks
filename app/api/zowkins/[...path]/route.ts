@@ -10,19 +10,22 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
   const headers = new Headers(request.headers);
   headers.delete("host");
   headers.delete("content-length");
+  headers.delete("accept-encoding");
+  headers.delete("origin");
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
   const init: RequestInit = {
     method: request.method,
     headers,
     redirect: "follow",
     signal: controller.signal,
+    duplex: request.body ? "half" : undefined,
   };
 
-  if (!["GET", "HEAD"].includes(request.method)) {
-    init.body = await request.arrayBuffer();
+  if (!["GET", "HEAD"].includes(request.method) && request.body) {
+    init.body = request.body;
   }
 
   try {
@@ -45,19 +48,54 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
       responseHeaders.set("set-cookie", setCookie);
     }
 
-    return new Response(await upstreamResponse.text(), {
+    const bodyText = await upstreamResponse.text();
+    if (
+      upstreamResponse.status >= 500 &&
+      contentType?.includes("html")
+    ) {
+      return new Response(
+        JSON.stringify({
+          error: "Upstream API error",
+          details: "Upstream returned an HTML error page.",
+          upstreamStatus: upstreamResponse.status,
+          upstreamBody: bodyText.slice(0, 512),
+        }),
+        {
+          status: upstreamResponse.status,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    }
+
+    return new Response(bodyText, {
       status: upstreamResponse.status,
       headers: responseHeaders,
     });
   } catch (error) {
     clearTimeout(timeoutId);
     console.error("Proxy error:", error);
-    return new Response(JSON.stringify({ error: "Upstream API error", details: error.message }), {
-      status: 500,
-      headers: { "content-type": "application/json" },
-    });
+
+    const isAbort =
+      error instanceof Error &&
+      (error.name === "AbortError" || error.message === "The user aborted a request.");
+
+    return new Response(
+      JSON.stringify({
+        error: "Upstream API error",
+        details: isAbort
+          ? "The request timed out while waiting for the upstream API."
+          : error instanceof Error
+          ? error.message
+          : String(error),
+      }),
+      {
+        status: isAbort ? 504 : 500,
+        headers: { "content-type": "application/json" },
+      },
+    );
   }
 }
+
 
 export async function GET(request: NextRequest, context: { params: { path: string[] } }) {
   const { path } = context.params;

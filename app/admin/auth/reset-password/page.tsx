@@ -18,7 +18,12 @@ function persistAuth(
     window.localStorage.setItem(ADMIN_API_TOKEN_KEY, accessToken);
   }
 
-  sessionTools.signInAdmin(`${user.firstName} ${user.lastName}`.trim() || "Admin", user.email, accessToken, user.id);
+  sessionTools.signInAdmin(
+    `${user.firstName} ${user.lastName}`.trim() || "Admin",
+    user.email,
+    accessToken,
+    user.id,
+  );
 }
 
 export default function AdminResetPasswordPage() {
@@ -55,7 +60,9 @@ export default function AdminResetPasswordPage() {
       await zowkinsApi.resetAdminPassword({ email: resetEmail.trim() });
       setMessage("Password reset email sent.");
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : "Could not send reset email.");
+      setError(
+        err instanceof ApiError ? err.message : "Could not send reset email.",
+      );
     } finally {
       setResetting(false);
     }
@@ -73,14 +80,21 @@ export default function AdminResetPasswordPage() {
 
     setSettingPassword(true);
     try {
-      const response = await zowkinsApi.setNewAdminPassword(newPasswordToken.trim(), {
-        password: newPassword,
-      });
+      const response = await zowkinsApi.setNewAdminPassword(
+        newPasswordToken.trim(),
+        {
+          password: newPassword,
+        },
+      );
       persistAuth(sessionTools, response.accessToken, response.user);
       setMessage("Password reset successful.");
       router.push("/admin");
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : "Could not set the new password.");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Could not set the new password.",
+      );
     } finally {
       setSettingPassword(false);
     }
@@ -89,7 +103,11 @@ export default function AdminResetPasswordPage() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(244,114,182,0.12),_transparent_28%),linear-gradient(180deg,_#f8fafc,_#eef2ff)] text-slate-900">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
-        <Link href="/signin" className="flex items-center" aria-label="Back to sign in">
+        <Link
+          href="/signin"
+          className="flex items-center"
+          aria-label="Back to sign in"
+        >
           <Image
             src="/Backup_of_ZOWKINS%20LOGO%20BY%20ME.png"
             alt="Zowkins logo"
@@ -99,12 +117,15 @@ export default function AdminResetPasswordPage() {
             priority
           />
         </Link>
-        <Link href="/signin" className="text-sm font-semibold text-slate-700 hover:text-slate-900">
+        <Link
+          href="/signin"
+          className="text-sm font-semibold text-slate-700 hover:text-slate-900"
+        >
           Back to sign in
         </Link>
       </div>
 
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-12 pt-6 lg:grid-cols-[0.92fr_1.08fr] lg:pb-16 lg:pt-10">
+      <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-12 pt-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:pb-16 lg:pt-10">
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] lg:p-10">
           <div className="h-2 bg-[linear-gradient(90deg,#be185d_0%,#0a2a78_100%)]" />
           <div className="space-y-6 p-8 lg:p-0 lg:pt-8">
@@ -115,7 +136,8 @@ export default function AdminResetPasswordPage() {
               Reset an admin password.
             </h1>
             <p className="max-w-md text-sm leading-6 text-slate-600 md:text-base">
-              Use this page to request a reset email and to complete the reset with the token from the backend flow.
+              Use this page to request a reset email and to complete the reset
+              with the token from the backend flow.
             </p>
 
             {sessionMessage ? (
@@ -127,11 +149,15 @@ export default function AdminResetPasswordPage() {
             <div className="grid gap-3 rounded-[1.5rem] bg-slate-50 px-5 py-4 text-sm text-slate-700">
               <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
                 <span>Flow</span>
-                <span className="text-xs uppercase tracking-[0.25em] text-slate-500">Email + token</span>
+                <span className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  Email + token
+                </span>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <span>Route</span>
-                <span className="text-xs uppercase tracking-[0.25em] text-slate-500">/admin/auth/reset-password</span>
+                <span className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  /admin/auth/reset-password
+                </span>
               </div>
             </div>
           </div>
@@ -139,8 +165,12 @@ export default function AdminResetPasswordPage() {
 
         <div className="space-y-6">
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.10)] md:p-10">
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Request reset</p>
-            <h2 className="mt-4 font-display text-3xl font-bold text-slate-900">Send reset email</h2>
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
+              Request reset
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-bold text-slate-900">
+              Send reset email
+            </h2>
             <form className="mt-6 space-y-4" onSubmit={handleResetPassword}>
               <input
                 value={resetEmail}
@@ -160,8 +190,12 @@ export default function AdminResetPasswordPage() {
           </section>
 
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.10)] md:p-10">
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Complete reset</p>
-            <h2 className="mt-4 font-display text-3xl font-bold text-slate-900">Set a new password</h2>
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
+              Complete reset
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-bold text-slate-900">
+              Set a new password
+            </h2>
             <form className="mt-6 space-y-4" onSubmit={handleSetNewPassword}>
               <input
                 value={newPasswordToken}
@@ -176,8 +210,16 @@ export default function AdminResetPasswordPage() {
                 placeholder="New password"
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-pink-500 focus:bg-white"
               />
-              {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
-              {message ? <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p> : null}
+              {error ? (
+                <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  {error}
+                </p>
+              ) : null}
+              {message ? (
+                <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {message}
+                </p>
+              ) : null}
               <button
                 type="submit"
                 disabled={settingPassword}

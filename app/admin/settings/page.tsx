@@ -306,9 +306,9 @@ export default function AdminSettingsPage() {
       title="Settings"
       subtitle="Admin profile and password management."
     >
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <section className="overflow-hidden rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] text-white shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
-          <div className="grid gap-0 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-0 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
             <div className="p-6 md:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200">
                 Admin profile

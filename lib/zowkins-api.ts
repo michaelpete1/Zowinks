@@ -1216,37 +1216,24 @@ export const zowkinsApi = {
     });
   },
   createPortalOrder(token: string | null | undefined, payload: CreatePortalOrderInput) {
-    const body = new URLSearchParams();
-    body.set("customer[firstName]", payload.customer.firstName);
-    body.set("customer[lastName]", payload.customer.lastName);
-    body.set("customer[gender]", payload.customer.gender);
-    body.set("customer[email]", payload.customer.email);
-    body.set("customer[phoneNumber]", payload.customer.phoneNumber);
-    body.set("from[email]", payload.from?.email || payload.argument?.from?.email || payload.customer.email);
-    body.set("argument[from][email]", payload.argument?.from?.email || payload.from?.email || payload.customer.email);
-
-    payload.items.forEach((item, index) => {
-      body.set(`items[${index}][productId]`, item.productId);
-      body.set(`items[${index}][quantity]`, String(item.quantity));
-    });
-
-    body.set("deliveryAddress[phoneNumber]", payload.deliveryAddress.phoneNumber);
-    body.set("deliveryAddress[street]", payload.deliveryAddress.street);
-    body.set("deliveryAddress[city]", payload.deliveryAddress.city);
-    body.set("deliveryAddress[state]", payload.deliveryAddress.state);
-    body.set("deliveryAddress[country]", payload.deliveryAddress.country);
-    body.set("deliveryAddress[postalCode]", payload.deliveryAddress.postalCode);
-    body.set("deliveryMethod", payload.deliveryMethod);
-
-    const headers: HeadersInit = {};
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    // Ensure from and argument are populated if missing, as they seem to be required by some backends
+    const finalPayload = {
+      ...payload,
+      from: payload.from || { email: payload.customer.email },
+      argument: payload.argument || { from: { email: payload.customer.email } },
+    };
+
     return apiRequest<{ success: true; order: PortalOrder }>("/portal/orders", {
       method: "POST",
       headers,
-      body,
+      body: JSON.stringify(finalPayload),
     });
   },
   listPortalOrders(token: string, query?: { sortBy?: string; limit?: number; page?: number }) {

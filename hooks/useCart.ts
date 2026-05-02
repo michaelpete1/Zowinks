@@ -39,6 +39,8 @@ export const useCart = create<CartState>()(
       items: [],
       addItem: (item) =>
         set((state) => {
+          if (!item.id) return state;
+
           const cartItem: CartItem = {
             ...item,
             price: parsePrice(item.price),
@@ -79,7 +81,7 @@ export const useCart = create<CartState>()(
       },
     }),
     {
-      name: "zowkins-cart",
+      name: "zowkins-cart-v3",
       storage: createJSONStorage(() => localStorage),
     },
   ),

@@ -23,7 +23,11 @@ export default function AddToCartButton({ item, className, children }: AddToCart
     <button
       type="button"
       className={className}
-      onClick={() => {
+      disabled={added}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (added) return;
         addItem(item);
         setAdded(true);
       }}

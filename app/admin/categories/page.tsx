@@ -36,12 +36,6 @@ const emptyForm = (): CategoryForm => ({
   subcategories: "",
 });
 
-const STANDARD_CATEGORIES = [
-  { name: "Laptops", slug: "laptops", description: "Professional laptop collections for business and creative work." },
-  { name: "Desktops", slug: "desktops", description: "Powerful desktop systems for office and enterprise deployment." },
-  { name: "Accessories", slug: "accessories", description: "Essential peripherals, docks, and workspace add-ons." },
-];
-
 const normalizeToken = (value: string) =>
   value.trim().replace(/^Bearer\s+/i, "");
 
@@ -206,7 +200,11 @@ export default function CategoriesPage() {
         const current = selectedCategory;
         if (!current) return normalizedCategories[0] ?? null;
         return (
-          normalizedCategories.find((category) => (category.id || (category as any)._id) === (current.id || (current as any)._id)) ??
+          normalizedCategories.find(
+            (category) =>
+              (category.id || (category as any)._id) ===
+              (current.id || (current as any)._id),
+          ) ??
           normalizedCategories[0] ??
           null
         );
@@ -219,7 +217,7 @@ export default function CategoriesPage() {
         window.location.href = "/signin";
         return;
       }
-      
+
       setError(
         err instanceof ApiError ? err.message : "Could not load categories.",
       );
@@ -247,9 +245,14 @@ export default function CategoriesPage() {
       slug: asText(selectedCategory.slug),
       visible: Boolean(selectedCategory.visible),
       file: null,
-      subcategories: Array.isArray(selectedCategory.subcategories) ? selectedCategory.subcategories.map(s => s.name || s).join(", ") : "",
+      subcategories: Array.isArray(selectedCategory.subcategories)
+        ? selectedCategory.subcategories.map((s) => s.name || s).join(", ")
+        : "",
     });
-    const resolvedImage = resolveImageSource(selectedCategory.image, "/desktop.jpg");
+    const resolvedImage = resolveImageSource(
+      selectedCategory.image,
+      "/desktop.jpg",
+    );
     setPreview(resolvedImage);
     setImageDebug(
       [
@@ -281,25 +284,6 @@ export default function CategoriesPage() {
       ].some((value) => value.toLowerCase().includes(needle)),
     );
   }, [categories, query]);
-
-  const missingStandards = useMemo(() => {
-    return STANDARD_CATEGORIES.filter(
-      (std) => !categories.some((cat) => cat.slug === std.slug)
-    );
-  }, [categories]);
-
-  const prefillStandard = (std: (typeof STANDARD_CATEGORIES)[0]) => {
-    setSelectedCategory(null);
-    setForm({
-      ...emptyForm(),
-      name: std.name,
-      slug: std.slug,
-      description: std.description,
-    });
-    setPreview("");
-    setError("");
-    setMessage(`Form pre-filled for "${std.name}". Just upload an image and click Add Category.`);
-  };
 
   const visibleCount = useMemo(
     () => categories.filter((category) => category.visible).length,
@@ -369,9 +353,7 @@ export default function CategoriesPage() {
     }
 
     if (form.file && !ALLOWED_IMAGE_MIME_TYPES.has(form.file.type)) {
-      setError(
-        "Upload a PNG, JPEG, WebP, or SVG image for the category.",
-      );
+      setError("Upload a PNG, JPEG, WebP, or SVG image for the category.");
       return;
     }
 
@@ -395,14 +377,17 @@ export default function CategoriesPage() {
         description,
         visible: Boolean(form.visible),
         subcategories: selectedCategory
-          ? ((selectedCategory.subcategories ?? []) as AdminCategoryInput["subcategories"])
+          ? ((selectedCategory.subcategories ??
+              []) as AdminCategoryInput["subcategories"])
           : rawSubcategoryNames.map((name) => ({ name })),
         file: form.file,
       };
 
       const categoryId = getCategoryId(selectedCategory);
       if (selectedCategory && !categoryId) {
-        setError("Selected category is missing an id. Refresh categories and try again.");
+        setError(
+          "Selected category is missing an id. Refresh categories and try again.",
+        );
         setSaving(false);
         return;
       }
@@ -419,7 +404,10 @@ export default function CategoriesPage() {
           );
 
       setSelectedCategory(saved);
-      const resolvedSavedImage = resolveImageSource(saved.image, "/desktop.jpg");
+      const resolvedSavedImage = resolveImageSource(
+        saved.image,
+        "/desktop.jpg",
+      );
       setImageDebug(
         [
           `saved raw: ${safeJson(saved.image)}`,
@@ -526,7 +514,7 @@ export default function CategoriesPage() {
       onSearchChange={setQuery}
       searchPlaceholder="Search categories..."
     >
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
@@ -566,34 +554,6 @@ export default function CategoriesPage() {
               </p>
             </div>
           </div>
-
-          {missingStandards.length > 0 && (
-            <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50/50 p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-amber-900">Recommended Standards</h3>
-              </div>
-              <p className="mt-2 text-sm text-amber-700/80">
-                You are missing some standard categories. Pre-fill the form below to create them quickly:
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {missingStandards.map((std) => (
-                  <button
-                    key={std.slug}
-                    type="button"
-                    onClick={() => prefillStandard(std)}
-                    className="rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-amber-700 shadow-sm transition hover:bg-amber-100"
-                  >
-                    + Add {std.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {error ? (
             <p className="mt-5 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -653,8 +613,12 @@ export default function CategoriesPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => void deleteCategory(category.id || (category as any)._id)}
-                    disabled={deletingId === (category.id || (category as any)._id)}
+                    onClick={() =>
+                      void deleteCategory(category.id || (category as any)._id)
+                    }
+                    disabled={
+                      deletingId === (category.id || (category as any)._id)
+                    }
                     className={`rounded-full px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
                       pendingDeleteId === (category.id || (category as any)._id)
                         ? "bg-amber-600 hover:bg-amber-700"
@@ -665,7 +629,8 @@ export default function CategoriesPage() {
                       ? "Confirm delete"
                       : "Delete"}
                   </button>
-                  {pendingDeleteId === (category.id || (category as any)._id) ? (
+                  {pendingDeleteId ===
+                  (category.id || (category as any)._id) ? (
                     <button
                       type="button"
                       onClick={() => setPendingDeleteId("")}
@@ -726,7 +691,10 @@ export default function CategoriesPage() {
               Admin session
             </h2>
             <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-              <p>Category data loads automatically from your signed-in admin session.</p>
+              <p>
+                Category data loads automatically from your signed-in admin
+                session.
+              </p>
               <p className="mt-2 font-semibold text-slate-900">
                 Status: {apiReady ? "Connected" : "Not connected"}
               </p>
@@ -745,7 +713,10 @@ export default function CategoriesPage() {
             <form onSubmit={submitCategory} className="mt-6 grid gap-4">
               <div className="grid gap-4 rounded-[1.5rem] bg-slate-50 p-4">
                 <CategoryPreview
-                  src={preview || resolveImageSource(selectedCategory?.image, "/desktop.jpg")}
+                  src={
+                    preview ||
+                    resolveImageSource(selectedCategory?.image, "/desktop.jpg")
+                  }
                   alt={form.name || "Category preview"}
                 />
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-[11px] leading-5 text-slate-600">
@@ -756,7 +727,7 @@ export default function CategoriesPage() {
                     {imageDebug || "No category selected yet."}
                   </pre>
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className="grid gap-3">
                   <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
                     <span>Image file</span>
                     <input
@@ -824,7 +795,7 @@ export default function CategoriesPage() {
                 placeholder="Category description"
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
               />
-              
+
               <input
                 value={form.subcategories}
                 onChange={(event) =>
@@ -854,9 +825,13 @@ export default function CategoriesPage() {
 
               {error && (
                 <div className="mb-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  <strong className="block mb-1 font-semibold text-rose-800">Error</strong>
+                  <strong className="block mb-1 font-semibold text-rose-800">
+                    Error
+                  </strong>
                   {typeof error === "string" && error.includes("{") ? (
-                    <pre className="whitespace-pre-wrap font-mono text-[11px]">{error}</pre>
+                    <pre className="whitespace-pre-wrap font-mono text-[11px]">
+                      {error}
+                    </pre>
                   ) : (
                     error
                   )}

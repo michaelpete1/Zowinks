@@ -319,9 +319,16 @@ export default function Cart() {
                 <button
                   type="button"
                   onClick={resetFlow}
-                  className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-900"
+                  className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
                 >
                   Reset form
+                </button>
+                <button
+                  type="button"
+                  onClick={clearCart}
+                  className="rounded-full border border-rose-500/20 bg-rose-500/10 px-6 py-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20"
+                >
+                  Clear all items
                 </button>
               </div>
             </div>

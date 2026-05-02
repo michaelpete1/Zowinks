@@ -9,7 +9,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-8 px-4 py-4 md:gap-4">
+      <nav className="mx-auto flex flex-wrap max-w-6xl items-center justify-between gap-6 px-4 py-4 md:gap-4">
         <div className="flex flex-shrink-0 items-center gap-3">
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-900">
             <Image
@@ -21,7 +21,9 @@ export default function Navbar() {
             />
           </div>
           <div>
-            <p className="font-display text-lg font-semibold leading-none">Zowkins Enterprise</p>
+            <p className="font-display text-lg font-semibold leading-none">
+              Zowkins Enterprise
+            </p>
           </div>
         </div>
 
@@ -45,7 +47,9 @@ export default function Navbar() {
         <div className="hidden max-w-md flex-1 items-center lg:block xl:flex-[1]">
           <div className="relative">
             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">All</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                All
+              </span>
               <div className="h-3 w-px bg-slate-300" />
               <input
                 className="flex-1 bg-transparent pr-10 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
@@ -110,16 +114,18 @@ export default function Navbar() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-900">
-                <Image
-                  src="/zowinks-removebg-preview.png"
-                  alt="Zowkins logo"
-                  width={56}
-                  height={56}
+                    <Image
+                      src="/zowinks-removebg-preview.png"
+                      alt="Zowkins logo"
+                      width={56}
+                      height={56}
                       className="h-11 w-11 object-contain"
                     />
                   </div>
                   <div>
-                    <p className="font-display text-lg font-semibold leading-none">Zowkins Enterprise</p>
+                    <p className="font-display text-lg font-semibold leading-none">
+                      Zowkins Enterprise
+                    </p>
                   </div>
                 </div>
                 <button
@@ -149,7 +155,9 @@ export default function Navbar() {
 
             <div className="space-y-6 p-6">
               <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
-                <span className="text-xs uppercase tracking-[0.2em] text-slate-500">All</span>
+                <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                  All
+                </span>
                 <div className="h-4 w-px bg-slate-300" />
                 <input
                   className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
