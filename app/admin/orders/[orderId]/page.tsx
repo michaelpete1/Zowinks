@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { zowkinsApi, AdminOrder, AdminOrderStatus, AdminPaymentStatus, ApiError } from "../../../../lib/zowkins-api";
+import { zowkinsApi, AdminOrder, AdminOrderStatus, AdminPaymentStatus } from "../../../../lib/zowkins-api";
 import { AdminShell, AdminBadge } from "../../../../components/AdminShell";
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const orderId = params.orderId as string;
 
   const [order, setOrder] = useState<AdminOrder | null>(null);
@@ -17,27 +16,31 @@ export default function AdminOrderDetailPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  const [updateForm, setUpdateForm] = useState({
-    orderStatus: "" as AdminOrderStatus,
-    paymentStatus: "" as AdminPaymentStatus,
-  });
+  const [updateForm, setUpdateForm] = useState<{
+    orderStatus?: AdminOrderStatus;
+    paymentStatus?: AdminPaymentStatus;
+  }>({});
 
   const orderStatusOptions: AdminOrderStatus[] = [
-    "pending",
     "processing",
-    "shipped",
+    "in-transit",
     "delivered",
     "cancelled",
-    "returned",
-    "refunded",
   ];
 
   const paymentStatusOptions: AdminPaymentStatus[] = [
     "pending",
     "paid",
     "failed",
-    "refunded",
+    "abandoned",
+    "reversed",
   ];
+
+  const isAdminOrderStatus = (value: string): value is AdminOrderStatus =>
+    (orderStatusOptions as readonly string[]).includes(value);
+
+  const isAdminPaymentStatus = (value: string): value is AdminPaymentStatus =>
+    (paymentStatusOptions as readonly string[]).includes(value);
 
   useEffect(() => {
     if (orderId) {
@@ -48,8 +51,10 @@ export default function AdminOrderDetailPage() {
   useEffect(() => {
     if (order) {
       setUpdateForm({
-        orderStatus: order.orderStatus,
-        paymentStatus: order.paymentStatus,
+        orderStatus: isAdminOrderStatus(order.orderStatus) ? order.orderStatus : undefined,
+        paymentStatus: isAdminPaymentStatus(order.paymentStatus)
+          ? order.paymentStatus
+          : undefined,
       });
     }
   }, [order]);
@@ -81,7 +86,17 @@ export default function AdminOrderDetailPage() {
       const token = localStorage.getItem("zowkins-admin-access-token");
       if (!token) throw new Error("No admin token found");
 
-      const response = await zowkinsApi.updateAdminOrder(token, orderId, updateForm);
+      const payload = {
+        ...(updateForm.orderStatus ? { orderStatus: updateForm.orderStatus } : {}),
+        ...(updateForm.paymentStatus ? { paymentStatus: updateForm.paymentStatus } : {}),
+      };
+
+      if (!payload.orderStatus && !payload.paymentStatus) {
+        setMessage("No changes to update");
+        return;
+      }
+
+      const response = await zowkinsApi.updateAdminOrder(token, orderId, payload);
       setOrder(response.order);
       setMessage("Order updated successfully");
     } catch (err) {
@@ -234,10 +249,20 @@ export default function AdminOrderDetailPage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Order Status</label>
                 <select
-                  value={updateForm.orderStatus}
-                  onChange={(e) => setUpdateForm({ ...updateForm, orderStatus: e.target.value as AdminOrderStatus })}
+                  value={updateForm.orderStatus ?? ""}
+                  onChange={(e) =>
+                    setUpdateForm({
+                      ...updateForm,
+                      orderStatus: e.target.value
+                        ? (e.target.value as AdminOrderStatus)
+                        : undefined,
+                    })
+                  }
                   className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-[#f3c74d] focus:bg-white/10"
                 >
+                  <option value="" className="bg-slate-900">
+                    Keep current ({titleCase(order.orderStatus)})
+                  </option>
                   {orderStatusOptions.map(status => (
                     <option key={status} value={status} className="bg-slate-900">{titleCase(status)}</option>
                   ))}
@@ -246,10 +271,20 @@ export default function AdminOrderDetailPage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Payment Status</label>
                 <select
-                  value={updateForm.paymentStatus}
-                  onChange={(e) => setUpdateForm({ ...updateForm, paymentStatus: e.target.value as AdminPaymentStatus })}
+                  value={updateForm.paymentStatus ?? ""}
+                  onChange={(e) =>
+                    setUpdateForm({
+                      ...updateForm,
+                      paymentStatus: e.target.value
+                        ? (e.target.value as AdminPaymentStatus)
+                        : undefined,
+                    })
+                  }
                   className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-[#f3c74d] focus:bg-white/10"
                 >
+                  <option value="" className="bg-slate-900">
+                    Keep current ({titleCase(order.paymentStatus)})
+                  </option>
                   {paymentStatusOptions.map(status => (
                     <option key={status} value={status} className="bg-slate-900">{titleCase(status)}</option>
                   ))}

@@ -3,6 +3,30 @@ import { getSiteUrl } from "../../../../lib/site-url";
 
 const UPSTREAM_BASE = process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api.onrender.com/v1";
 
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const getFetchErrorCode = (error: unknown): string | undefined => {
+  if (!error || typeof error !== "object") return undefined;
+  if (!("cause" in error)) return undefined;
+
+  const cause = (error as { cause?: unknown }).cause;
+  if (!cause || typeof cause !== "object") return undefined;
+  if (!("code" in cause)) return undefined;
+
+  const code = (cause as { code?: unknown }).code;
+  return typeof code === "string" ? code : undefined;
+};
+
+const isRetriableFetchError = (error: unknown): boolean => {
+  const code = getFetchErrorCode(error);
+  return (
+    code === "UND_ERR_CONNECT_TIMEOUT" ||
+    code === "ECONNRESET" ||
+    code === "EAI_AGAIN" ||
+    code === "ENOTFOUND"
+  );
+};
+
 async function proxy(request: NextRequest, pathSegments: string[]) {
   const upstreamSegments = pathSegments[0] === "v1" ? pathSegments.slice(1) : pathSegments;
   const upstreamUrl = new URL(`${UPSTREAM_BASE.replace(/\/$/, "")}/${upstreamSegments.join("/")}`);
@@ -34,7 +58,37 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
   }
 
   try {
-    const upstreamResponse = await fetch(upstreamUrl, init);
+    const isIdempotent = ["GET", "HEAD", "OPTIONS"].includes(request.method);
+    const maxAttempts = isIdempotent ? 3 : 1;
+
+    let upstreamResponse: Response | null = null;
+    let lastError: unknown = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        upstreamResponse = await fetch(upstreamUrl, init);
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error;
+
+        if (
+          attempt < maxAttempts &&
+          !controller.signal.aborted &&
+          isRetriableFetchError(error)
+        ) {
+          await sleep(600 * attempt);
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    if (!upstreamResponse) {
+      throw lastError ?? new Error("Upstream response was not received.");
+    }
+
     clearTimeout(timeoutId);
 
     const responseHeaders = new Headers();
@@ -88,6 +142,9 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
       (error.name === "AbortError" || error.message === "The user aborted a request.");
 
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorCode = getFetchErrorCode(error);
+    const isConnectTimeout =
+      errorMessage === "fetch failed" && errorCode === "UND_ERR_CONNECT_TIMEOUT";
     let errorDetails = isAbort
       ? "The request timed out while waiting for the upstream API."
       : "An error occurred while proxying to the upstream API.";
@@ -102,9 +159,10 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
         message: errorMessage,
         details: errorDetails,
         upstreamUrl: upstreamUrl.toString(),
+        upstreamCode: errorCode,
       }),
       {
-        status: isAbort ? 504 : 500,
+        status: isAbort || isConnectTimeout ? 504 : 500,
         headers: { "content-type": "application/json" },
       },
     );
