@@ -715,13 +715,24 @@ export default function OrdersPage() {
                   <span className="text-xs uppercase tracking-[0.24em] text-slate-500">
                     Updated {new Date(order.updatedAt).toLocaleString()}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => void setSelectedOrderById(order.id)}
-                    className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
-                  >
-                    View details
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void setSelectedOrderById(order.id);
+                        document.getElementById("order-details")?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                    >
+                      Quick view
+                    </button>
+                    <Link
+                      href={`/admin/orders/${order.id}`}
+                      className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                    >
+                      View details
+                    </Link>
+                  </div>
                 </div>
               </article>
             ))}
@@ -729,7 +740,7 @@ export default function OrdersPage() {
         </section>
 
         <div className="space-y-6">
-          <section className="rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.10)] md:p-8">
+          <section className="rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">
               Admin access
             </p>
@@ -940,7 +951,7 @@ export default function OrdersPage() {
             </form>
           </section>
 
-          <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
+          <section id="order-details" className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
               Selected order
             </p>
