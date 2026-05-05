@@ -71,7 +71,7 @@ export default function PrivacyPage() {
               Contact us if you want clarification about the data we hold or how we use it.
             </p>
             <div className="mt-6 space-y-3 text-sm text-white/90">
-              <p>Email: info@zowkins.com</p>
+              <p>Email: contact@zowkins.com</p>
               <p>Location: Nigeria</p>
             </div>
             <Link

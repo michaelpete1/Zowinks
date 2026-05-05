@@ -70,7 +70,7 @@ export default function TermsPage() {
               Contact us if you need clarification before placing an order or creating an account.
             </p>
             <div className="mt-6 space-y-3 text-sm text-white/90">
-              <p>Email: info@zowkins.com</p>
+              <p>Email: contact@zowkins.com</p>
               <p>Location: Nigeria</p>
             </div>
             <Link

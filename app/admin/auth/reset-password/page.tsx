@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAdminSession } from "../../../../hooks/useAdminSession";
+import { getSiteUrl } from "../../../../lib/site-url";
 import { ApiError, zowkinsApi } from "../../../../lib/zowkins-api";
 
 const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
@@ -26,7 +27,7 @@ function persistAuth(
   );
 }
 
-export default function AdminResetPasswordPage() {
+function AdminResetPasswordPageContent() {
   const router = useRouter();
   const sessionTools = useAdminSession();
   const [resetEmail, setResetEmail] = useState("");
@@ -35,8 +36,10 @@ export default function AdminResetPasswordPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [resetting, setResetting] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
   const [settingPassword, setSettingPassword] = useState(false);
   const [sessionMessage, setSessionMessage] = useState("");
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -44,6 +47,14 @@ export default function AdminResetPasswordPage() {
     if (!storedToken) return;
     setSessionMessage("A token is already stored locally.");
   }, []);
+
+  useEffect(() => {
+    if (!searchParams) return;
+    const token = searchParams.get("token") ?? "";
+    if (token) {
+      setNewPasswordToken(token);
+    }
+  }, [searchParams]);
 
   const handleResetPassword = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -57,7 +68,12 @@ export default function AdminResetPasswordPage() {
 
     setResetting(true);
     try {
-      await zowkinsApi.resetAdminPassword({ email: resetEmail.trim() });
+      const siteUrl = getSiteUrl();
+      await zowkinsApi.resetAdminPassword({
+        email: resetEmail.trim(),
+        redirectUrl: `${siteUrl}/admin/auth/reset-password`,
+      });
+      setResetSuccess(true);
       setMessage("Password reset email sent.");
     } catch (err: unknown) {
       setError(
@@ -232,5 +248,13 @@ export default function AdminResetPasswordPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function AdminResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen grid place-items-center bg-slate-50 text-slate-600">Loading reset page...</div>}>
+      <AdminResetPasswordPageContent />
+    </Suspense>
   );
 }

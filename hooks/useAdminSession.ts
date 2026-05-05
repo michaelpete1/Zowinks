@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { zowkinsApi } from "../lib/zowkins-api";
 
 export type AdminRole = "admin";
 
@@ -84,11 +85,34 @@ export function useAdminSession() {
     persistSession(null);
   }, [persistSession]);
 
+  const refreshSession = useCallback(async () => {
+    if (!session?.accessToken) return;
+    
+    try {
+      const response = await zowkinsApi.refreshAdminTokens();
+      if (response.accessToken) {
+        persistSession({
+          ...session,
+          accessToken: response.accessToken,
+          loggedInAt: new Date().toISOString(),
+        });
+        return true;
+      }
+    } catch (err) {
+      console.error("Failed to refresh admin session:", err);
+      // If refresh fails, we might want to clear the session, 
+      // but let's be conservative and only clear if it's a 401/403
+      return false;
+    }
+    return false;
+  }, [session, persistSession]);
+
   return {
     session,
     ready,
     isAdmin: session?.role === "admin",
     signInAdmin,
     clearSession,
+    refreshSession,
   };
 }

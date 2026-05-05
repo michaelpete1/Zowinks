@@ -27,8 +27,8 @@ const contacts = [
   },
   {
     label: "Email",
-    value: "info@zowkins.com",
-    href: "mailto:info@zowkins.com",
+    value: "contact@zowkins.com",
+    href: "mailto:contact@zowkins.com",
     icon: (
       <svg
         viewBox="0 0 24 24"

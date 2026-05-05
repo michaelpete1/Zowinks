@@ -48,8 +48,10 @@ export default function PortalResetPasswordPage() {
     setMessage(null);
 
     try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zowkins.com";
       await zowkinsApi.resetPortalPassword({
         email: formData.email.trim(),
+        redirectUrl: `${siteUrl}/portal/auth/reset-password`,
       });
 
       setMessage("Password reset email sent! Please check your inbox.");

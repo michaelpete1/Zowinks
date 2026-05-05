@@ -41,7 +41,7 @@ const fallback: App = {
   address: "No. 158, Adetokunbo Ademola Cres, Kamdi Arena, Wuse, Abuja, FCT, Nigeria",
   phoneNumber: "+971 54 389 5126",
   whatsAppNumber: "+971 54 389 5126",
-  email: "info@zowkins.com",
+  email: "contact@zowkins.com",
   status: {
     portal: "online",
   },

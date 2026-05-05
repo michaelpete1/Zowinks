@@ -322,12 +322,24 @@ export function AdminShell({
 }: AdminShellProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { ready, isAdmin, session, clearSession } = useAdminSession();
+  const { ready, isAdmin, session, clearSession, refreshSession } = useAdminSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (ready && !isAdmin) router.replace("/signin");
   }, [ready, isAdmin, router]);
+
+  // Set up automatic session refresh every 45 minutes
+  useEffect(() => {
+    if (!isAdmin || !ready) return;
+
+    const refreshInterval = setInterval(() => {
+      console.log("Auto-refreshing admin session...");
+      refreshSession();
+    }, 45 * 60 * 1000); // 45 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [isAdmin, ready, refreshSession]);
 
   const activeHref = useMemo(() => {
     return (
@@ -472,7 +484,7 @@ export function AdminShell({
                       {session?.name ?? "Admin"}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {session?.email ?? "admin@zowkins.com"}
+                      {session?.email ?? "contact@zowkins.com"}
                     </p>
                   </div>
                 </div>

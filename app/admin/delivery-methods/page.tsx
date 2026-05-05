@@ -19,6 +19,35 @@ type ApiConnection = {
 
 type DeliveryMethodForm = AdminDeliveryMethodInput;
 
+const normalizeToken = (value: string) =>
+  value.trim().replace(/^Bearer\s+/i, "");
+
+const normalizeDeliveryMethods = (response: unknown): DeliveryMethod[] => {
+  if (Array.isArray(response)) return response;
+
+  if (response && typeof response === "object") {
+    const candidate = response as {
+      deliveryMethods?: unknown;
+      methods?: unknown;
+      data?: unknown;
+    };
+
+    if (Array.isArray(candidate.deliveryMethods)) {
+      return candidate.deliveryMethods as DeliveryMethod[];
+    }
+
+    if (Array.isArray(candidate.methods)) {
+      return candidate.methods as DeliveryMethod[];
+    }
+
+    if (Array.isArray(candidate.data)) {
+      return candidate.data as DeliveryMethod[];
+    }
+  }
+
+  return [];
+};
+
 const emptyForm: DeliveryMethodForm = {
   name: "",
   fee: 0,
@@ -28,7 +57,7 @@ const emptyForm: DeliveryMethodForm = {
 };
 
 export default function DeliveryMethodsPage() {
-  const { session } = useAdminSession();
+  const { session, clearSession, ready: sessionReady } = useAdminSession();
   const [apiConnection, setApiConnection] = useState<ApiConnection>({
     accessToken: "",
   });
@@ -61,19 +90,22 @@ export default function DeliveryMethodsPage() {
   }, [toastMessage]);
 
   useEffect(() => {
-    if (!session?.accessToken || typeof window === "undefined") return;
+    if (!sessionReady || typeof window === "undefined") return;
 
-    const nextToken = session.accessToken.trim();
-    const storedToken = window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "";
+    const sessionToken = normalizeToken(session?.accessToken ?? "");
+    const storedToken = normalizeToken(
+      window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "",
+    );
+    const nextToken = sessionToken || storedToken;
 
     setApiConnection({ accessToken: nextToken });
 
-    if (nextToken && nextToken !== storedToken) {
-      window.localStorage.setItem(ADMIN_API_TOKEN_KEY, nextToken);
+    if (sessionToken && sessionToken !== storedToken) {
+      window.localStorage.setItem(ADMIN_API_TOKEN_KEY, sessionToken);
     }
 
     setReady(true);
-  }, [session?.accessToken]);
+  }, [session?.accessToken, sessionReady]);
 
   const apiReady = Boolean(apiConnection.accessToken.trim());
 
@@ -84,13 +116,15 @@ export default function DeliveryMethodsPage() {
     setError("");
 
     try {
-      const data = await zowkinsApi.listAdminDeliveryMethods(
-        apiConnection.accessToken.trim(),
-        {
-          name: queryName.trim() || undefined,
-          isActive: filterActive || undefined,
-          visibility: filterVisibility || undefined,
-        },
+      const data = normalizeDeliveryMethods(
+        await zowkinsApi.listAdminDeliveryMethods(
+          apiConnection.accessToken.trim(),
+          {
+            name: queryName.trim() || undefined,
+            isActive: filterActive || undefined,
+            visibility: filterVisibility || undefined,
+          },
+        ),
       );
       setMethods(data);
       setSelectedMethod((current) => {
@@ -106,6 +140,13 @@ export default function DeliveryMethodsPage() {
         );
       });
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearSession();
+        window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
+        window.location.href = "/signin";
+        return;
+      }
+
       setError(
         err instanceof ApiError
           ? err.message
@@ -181,6 +222,13 @@ export default function DeliveryMethodsPage() {
       await loadMethods();
       setSelectedMethod(restored);
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearSession();
+        window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
+        window.location.href = "/signin";
+        return;
+      }
+
       setError(
         err instanceof ApiError
           ? err.message
@@ -263,6 +311,13 @@ export default function DeliveryMethodsPage() {
       await loadMethods();
       setSelectedMethod(saved);
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearSession();
+        window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
+        window.location.href = "/signin";
+        return;
+      }
+
       setError(
         err instanceof ApiError
           ? err.message
@@ -300,6 +355,13 @@ export default function DeliveryMethodsPage() {
       }
       await loadMethods();
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearSession();
+        window.localStorage.removeItem(ADMIN_API_TOKEN_KEY);
+        window.location.href = "/signin";
+        return;
+      }
+
       setError(
         err instanceof ApiError
           ? err.message

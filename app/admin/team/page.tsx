@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AdminBadge, AdminShell } from "../../../components/AdminShell";
 import { useAdminSession } from "../../../hooks/useAdminSession";
+import { getSiteUrl } from "../../../lib/site-url";
 import {
   AdminTeamMember,
   ApiError,
@@ -238,10 +239,11 @@ export default function TeamPage() {
     setInviteMessage("");
 
     try {
-      await zowkinsApi.inviteAdminTeamMember(
-        apiConnection.accessToken.trim(),
-        inviteForm,
-      );
+      const siteUrl = getSiteUrl();
+      await zowkinsApi.inviteAdminTeamMember(apiConnection.accessToken.trim(), {
+        ...inviteForm,
+        redirectUrl: `${siteUrl}/admin/auth/accept-invite`,
+      });
       setInviteForm(emptyInviteForm);
       setInviteMessage("Invite sent successfully.");
     } catch (err) {
@@ -287,9 +289,11 @@ export default function TeamPage() {
   const handleResend = async (memberId: string) => {
     if (!apiReady) return;
     try {
+      const siteUrl = getSiteUrl();
       await zowkinsApi.resendAdminTeamInvite(
         apiConnection.accessToken.trim(),
         memberId,
+        { redirectUrl: `${siteUrl}/admin/auth/accept-invite` },
       );
       setInviteMessage("Invitation resent successfully.");
     } catch (err) {

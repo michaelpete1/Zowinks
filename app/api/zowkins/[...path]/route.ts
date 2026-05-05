@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { getSiteUrl } from "../../../../lib/site-url";
 
 const UPSTREAM_BASE = process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api.onrender.com/v1";
 
@@ -11,18 +12,22 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
   headers.delete("host");
   headers.delete("content-length");
   headers.delete("accept-encoding");
-  headers.delete("origin");
+
+  // Help the backend identify the site URL for building email links
+  const siteUrl = getSiteUrl();
+  headers.set("Origin", siteUrl);
+  headers.set("Referer", siteUrl + "/");
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (2 minutes)
 
-  const init: RequestInit = {
+  const init = {
     method: request.method,
     headers,
     redirect: "follow",
     signal: controller.signal,
     duplex: request.body ? "half" : undefined,
-  };
+  } as RequestInit & { duplex?: "half" | "full" };
 
   if (!["GET", "HEAD"].includes(request.method) && request.body) {
     init.body = request.body;
@@ -67,10 +72,13 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
       );
     }
 
-    return new Response(bodyText, {
-      status: upstreamResponse.status,
-      headers: responseHeaders,
-    });
+    return new Response(
+      [204, 205, 304].includes(upstreamResponse.status) ? null : bodyText,
+      {
+        status: upstreamResponse.status,
+        headers: responseHeaders,
+      },
+    );
   } catch (error) {
     clearTimeout(timeoutId);
     console.error("Proxy error:", error);
@@ -79,14 +87,21 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
       error instanceof Error &&
       (error.name === "AbortError" || error.message === "The user aborted a request.");
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    let errorDetails = isAbort
+      ? "The request timed out while waiting for the upstream API."
+      : "An error occurred while proxying to the upstream API.";
+
+    if (errorMessage === "fetch failed") {
+      errorDetails = `Failed to connect to the upstream API at ${upstreamUrl.hostname}. The service may be down, sleeping (Render free tier), or unreachable from this network.`;
+    }
+
     return new Response(
       JSON.stringify({
         error: "Upstream API error",
-        details: isAbort
-          ? "The request timed out while waiting for the upstream API."
-          : error instanceof Error
-          ? error.message
-          : String(error),
+        message: errorMessage,
+        details: errorDetails,
+        upstreamUrl: upstreamUrl.toString(),
       }),
       {
         status: isAbort ? 504 : 500,

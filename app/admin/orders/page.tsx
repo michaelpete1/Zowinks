@@ -949,19 +949,146 @@ export default function OrdersPage() {
             </h2>
             {selectedOrder ? (
               <div className="mt-6 space-y-5">
+                {/* Order Header */}
                 <div className="rounded-[1.4rem] bg-slate-50 p-4">
                   <p className="text-sm font-semibold text-slate-900">
                     {getOrderTitle(selectedOrder)}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
-                    {selectedOrder.orderNumber}
+                    Order: <strong>{selectedOrder.orderNumber}</strong>
                   </p>
                   <p className="mt-2 text-sm text-slate-600">
-                    {getOrderAddress(selectedOrder)}
+                    {selectedOrder.customer.email}
                   </p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {getOrderMethod(selectedOrder)}
+                  <p className="text-sm text-slate-600">
+                    {selectedOrder.customer.phoneNumber}
                   </p>
+                </div>
+
+                {/* Dates */}
+                <div className="grid gap-3 rounded-[1.4rem] bg-slate-50 p-4 text-sm sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Created
+                    </p>
+                    <p className="mt-1 text-slate-900">
+                      {new Date(selectedOrder.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Last updated
+                    </p>
+                    <p className="mt-1 text-slate-900">
+                      {new Date(selectedOrder.updatedAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Current Status */}
+                <div className="grid gap-3 rounded-[1.4rem] bg-slate-50 p-4 text-sm sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Order Status
+                    </p>
+                    <p className="mt-1 text-slate-900 font-semibold">
+                      {titleCase(selectedOrder.orderStatus)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Payment Status
+                    </p>
+                    <p className="mt-1 text-slate-900 font-semibold">
+                      {titleCase(selectedOrder.paymentStatus)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Delivery Details */}
+                <div className="rounded-[1.4rem] bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900 mb-3">
+                    Delivery Details
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    <strong>Address:</strong> {getOrderAddress(selectedOrder)}
+                  </p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    <strong>Method:</strong> {getOrderMethod(selectedOrder)}
+                  </p>
+                  {typeof selectedOrder.deliveryMethod !== "string" && (
+                    <>
+                      <p className="mt-1 text-sm text-slate-600">
+                        <strong>Fee:</strong>{" "}
+                        {formatCurrency(selectedOrder.deliveryMethod.fee)}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        <strong>Estimated:</strong>{" "}
+                        {selectedOrder.deliveryMethod.estimatedDeliveryTime}
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* Products Summary */}
+                <div className="rounded-[1.4rem] bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900 mb-3">
+                    Order Items
+                  </p>
+                  <div className="space-y-2">
+                    {selectedOrder.products.map((product, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between text-sm border-b border-slate-200 pb-2 last:border-0"
+                      >
+                        <div>
+                          <p className="font-medium text-slate-900">
+                            {product.productName}
+                          </p>
+                          <p className="text-xs text-slate-600">
+                            Qty: {product.quantity}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-slate-900 font-medium">
+                            {formatCurrency(product.amount)}
+                          </p>
+                          <p className="text-xs text-slate-600">
+                            @ {formatCurrency(product.price)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Transaction Summary */}
+                <div className="rounded-[1.4rem] bg-blue-50 p-4 border border-blue-200">
+                  <p className="text-sm font-semibold text-slate-900 mb-3">
+                    Transaction Summary
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Subtotal:</span>
+                      <span className="text-slate-900 font-medium">
+                        {formatCurrency(selectedOrder.transaction.subTotal)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Delivery Fee:</span>
+                      <span className="text-slate-900 font-medium">
+                        {formatCurrency(selectedOrder.transaction.deliveryFee)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-t border-blue-200 pt-2 mt-2">
+                      <span className="font-semibold text-slate-900">
+                        Total:
+                      </span>
+                      <span className="text-lg font-bold text-blue-600">
+                        {formatCurrency(selectedOrder.transaction.totalAmount)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 <form

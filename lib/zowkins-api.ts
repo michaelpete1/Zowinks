@@ -623,6 +623,28 @@ const normalizeDeliveryMethods = (methods: DeliveryMethod[]) =>
     .map(normalizeDeliveryMethod)
     .filter((method) => Boolean(method.id));
 
+type ApiEntityWithId = {
+  id?: string;
+  _id?: string;
+};
+
+const normalizeEntityId = <T extends ApiEntityWithId>(entity: T): T & { id: string } => ({
+  ...entity,
+  id: MONGO_OBJECT_ID_PATTERN.test(entity._id || "")
+    ? entity._id!
+    : entity.id || "",
+});
+
+const normalizeAdminTeamMember = (
+  member: AdminTeamMember & { _id?: string },
+): AdminTeamMember => normalizeEntityId(member);
+
+const normalizeOrder = (order: PortalOrder & { _id?: string }): PortalOrder =>
+  normalizeEntityId(order);
+
+const normalizeOrders = (orders: (PortalOrder & { _id?: string })[]): PortalOrder[] =>
+  (orders || []).map(normalizeOrder).filter((order) => Boolean(order.id));
+
 const getApiRequestUrl = (path: string) => {
   if (typeof window !== "undefined") {
     return `${ZOWKINS_API_BASE}${path}`;
@@ -706,13 +728,20 @@ export const zowkinsApi = {
       method: "POST",
     });
   },
-  resetAdminPassword(payload: AdminResetPasswordInput) {
-    return apiRequest<void>("/admin/auth/reset-password", {
+  resetAdminPassword(payload: AdminResetPasswordInput & { redirectUrl?: string }) {
+    const params = new URLSearchParams();
+    if (payload.redirectUrl) params.set("redirectUrl", payload.redirectUrl);
+    const search = params.toString();
+
+    return apiRequest<void>(`/admin/auth/reset-password${search ? `?${search}` : ""}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        argument: { redirectUrl: payload.redirectUrl },
+      }),
     });
   },
   setNewAdminPassword(token: string, payload: AdminSetNewPasswordInput) {
@@ -990,7 +1019,10 @@ export const zowkinsApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    });
+    }).then((res) => ({
+      ...res,
+      order: normalizeOrder(res.order as AdminOrder & { _id?: string }),
+    }));
   },
   listAdminOrders(
     token: string,
@@ -1018,7 +1050,10 @@ export const zowkinsApi = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }).then((res) => ({
+      ...res,
+      orders: normalizeOrders(res.orders as (AdminOrder & { _id?: string })[]),
+    }));
   },
   getAdminOrderStats(token: string) {
     return apiRequest<AdminOrderStatsResponse>("/admin/orders/stats", {
@@ -1032,7 +1067,10 @@ export const zowkinsApi = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }).then((res) => ({
+      ...res,
+      order: normalizeOrder(res.order as AdminOrder & { _id?: string }),
+    }));
   },
   updateAdminOrder(token: string, orderId: string, payload: AdminOrderUpdateInput) {
     return apiRequest<AdminOrderDetailResponse>(`/admin/orders/${encodeURIComponent(orderId)}`, {
@@ -1042,7 +1080,10 @@ export const zowkinsApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    });
+    }).then((res) => ({
+      ...res,
+      order: normalizeOrder(res.order as AdminOrder & { _id?: string }),
+    }));
   },
   updateAdminOrderProducts(token: string, orderId: string, payload: AdminOrderProductsUpdateInput) {
     return apiRequest<AdminOrderDetailResponse>(`/admin/orders/${encodeURIComponent(orderId)}/products`, {
@@ -1052,23 +1093,37 @@ export const zowkinsApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    });
+    }).then((res) => ({
+      ...res,
+      order: normalizeOrder(res.order as AdminOrder & { _id?: string }),
+    }));
   },
   listAdminTeam(token: string) {
     return apiRequest<AdminTeamMember[]>("/admin/team", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }).then((members) =>
+      members
+        .map((member) => normalizeAdminTeamMember(member as AdminTeamMember & { _id?: string }))
+        .filter((member) => Boolean(member.id)),
+    );
   },
-  inviteAdminTeamMember(token: string, payload: AdminTeamInviteInput) {
-    return apiRequest<void>("/admin/team/invite-member", {
+  inviteAdminTeamMember(token: string, payload: AdminTeamInviteInput & { redirectUrl?: string }) {
+    const params = new URLSearchParams();
+    if (payload.redirectUrl) params.set("redirectUrl", payload.redirectUrl);
+    const search = params.toString();
+
+    return apiRequest<void>(`/admin/team/invite-member${search ? `?${search}` : ""}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        argument: { redirectUrl: payload.redirectUrl },
+      }),
     });
   },
   acceptAdminTeamInvite(token: string, payload: AdminTeamAcceptInviteInput) {
@@ -1078,15 +1133,34 @@ export const zowkinsApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    });
+    }).then((response) => ({
+      ...response,
+      user: normalizeAdminTeamMember(response.user as AdminTeamMember & { _id?: string }),
+    }));
   },
-  resendAdminTeamInvite(token: string, memberId: string) {
-    return apiRequest<void>(`/admin/team/resend-invite/${encodeURIComponent(memberId)}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
+  resendAdminTeamInvite(token: string, memberId: string, payload?: { redirectUrl?: string }) {
+    const params = new URLSearchParams();
+    if (payload?.redirectUrl) {
+      params.set("redirectUrl", payload.redirectUrl);
+    }
+    const search = params.toString();
+
+    return apiRequest<void>(
+      `/admin/team/resend-invite/${encodeURIComponent(memberId)}${search ? `?${search}` : ""}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: payload
+          ? JSON.stringify({
+              ...payload,
+              argument: { redirectUrl: payload.redirectUrl },
+            })
+          : undefined,
       },
-    });
+    );
   },
   updateAdminTeamMember(token: string, memberId: string, payload: AdminTeamUpdateInput) {
     return apiRequest<AdminTeamMember>(`/admin/team/${encodeURIComponent(memberId)}`, {
@@ -1096,7 +1170,7 @@ export const zowkinsApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    });
+    }).then((member) => normalizeAdminTeamMember(member as AdminTeamMember & { _id?: string }));
   },
   deleteAdminTeamMember(token: string, memberId: string) {
     return apiRequest<AdminTeamMember>(`/admin/team/${encodeURIComponent(memberId)}`, {
@@ -1164,13 +1238,20 @@ export const zowkinsApi = {
       method: "POST",
     });
   },
-  resetPortalPassword(payload: PortalResetPasswordInput) {
-    return apiRequest<void>("/portal/auth/reset-password", {
+  resetPortalPassword(payload: PortalResetPasswordInput & { redirectUrl?: string }) {
+    const params = new URLSearchParams();
+    if (payload.redirectUrl) params.set("redirectUrl", payload.redirectUrl);
+    const search = params.toString();
+
+    return apiRequest<void>(`/portal/auth/reset-password${search ? `?${search}` : ""}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        argument: { redirectUrl: payload.redirectUrl },
+      }),
     });
   },
   setNewPortalPassword(token: string, payload: PortalSetNewPasswordInput) {
@@ -1234,7 +1315,10 @@ export const zowkinsApi = {
       method: "POST",
       headers,
       body: JSON.stringify(finalPayload),
-    });
+    }).then((res) => ({
+      ...res,
+      order: normalizeOrder(res.order as PortalOrder & { _id?: string }),
+    }));
   },
   listPortalOrders(token: string, query?: { sortBy?: string; limit?: number; page?: number }) {
     const params = new URLSearchParams();
@@ -1247,21 +1331,30 @@ export const zowkinsApi = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }).then((res) => ({
+      ...res,
+      orders: normalizeOrders(res.orders as (PortalOrder & { _id?: string })[]),
+    }));
   },
   getPortalOrder(token: string, orderId: string) {
     return apiRequest<PortalOrderDetailResponse>(`/portal/orders/${encodeURIComponent(orderId)}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }).then((res) => ({
+      ...res,
+      order: normalizeOrder(res.order as PortalOrder & { _id?: string }),
+    }));
   },
   getRecentPortalOrders(token: string) {
     return apiRequest<PortalOrderListResponse>("/portal/orders/recent", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }).then((res) => ({
+      ...res,
+      orders: normalizeOrders(res.orders as (PortalOrder & { _id?: string })[]),
+    }));
   },
   getPortalOrderStats(token: string) {
     return apiRequest<PortalOrderStatsResponse>("/portal/orders/stats", {

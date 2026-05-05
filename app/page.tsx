@@ -243,7 +243,7 @@ export default async function Home() {
               </a>
 
               <a
-                href="mailto:info@zowkins.com"
+                href="mailto:contact@zowkins.com"
                 className="group flex items-center gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08]"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#12386a_0%,#5ab214_100%)] text-white shadow-[0_10px_24px_rgba(18,56,106,0.28)]">
@@ -265,7 +265,7 @@ export default async function Home() {
                     Email
                   </p>
                   <p className="mt-1 text-sm font-semibold text-white md:text-base">
-                    info@zowkins.com
+                    contact@zowkins.com
                   </p>
                 </div>
               </a>
