@@ -1,1 +1,8 @@
-# Fix Images Visible on Mobile but Not Desktop\n\n## Plan Steps\n\n### 1. Update app/page.tsx (Desktop products grid)\n- Replace plain <img> with next/image fill + sizes\n- Change container to aspect-[4/3] overflow-hidden\n\n**Status: Pending**\n\n### 2. Update components/FeaturedProductsSection.tsx (Desktop grid)\n- Replace <img> with next/image\n- Responsive aspect ratio\n\n**Status: Pending**\n\n### 3. Update app/laptops/[brand]/page.tsx (Product cards)\n- Replace plain <img> in cards\n\n**Status: Pending**\n\n### 4. Update app/desktops/[brand]/page.tsx (Product cards)\n- Add sizes to existing next/image\n\n**Status: Pending**\n\n### 5. Test & Verify\n- Run dev server\n- Test desktop/mobile\n- Check console\n\n**Status: Pending**
+# Address Update Task
+
+## Steps:
+- [x] 1. Create TODO.md
+- [x] 2. Update fallback address in lib/app-settings.ts
+- [x] 3. Verify changes propagate (check /settings, /about)
+- [ ] 4. Mark complete
+

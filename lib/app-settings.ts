@@ -38,7 +38,7 @@ export type AppSettingsResponse = {
 
 const fallback: App = {
   name: "Zowkins Enterprise",
-  address: "No. 158, Adetokunbo Ademola Cres, Kamdi Arena, Wuse, Abuja, FCT, Nigeria",
+  address: "Wuse Zone 3, No 7 Maputo Street, Abuja, FCT, Nigeria",
   phoneNumber: "+971 54 389 5126",
   whatsAppNumber: "+971 54 389 5126",
   email: "contact@zowkins.com",
@@ -93,3 +93,4 @@ export async function getAppSettings() {
 }
 
 export const defaultAppSettings = fallback;
+

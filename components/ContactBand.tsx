@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const hiddenPaths = ["/admin"];
 
 const officeMapsUrl =
-  "https://www.google.com/maps/search/?api=1&query=No.%20158%2C%20Adetokunbo%20Ademola%20Cres%2C%20Kamdi%20Arena%2C%20Wuse%2C%20Abuja%2C%20FCT%2C%20Nigeria";
+  "https://www.google.com/maps/search/?api=1&query=No%207%20Maputo%20Street%2C%20Wuse%20Zone%203%2C%20Abuja%2C%20FCT";
 
 const contacts = [
   {
@@ -44,8 +44,7 @@ const contacts = [
   },
   {
     label: "Address",
-    value:
-      "No. 158, Adetokunbo Ademola Cres, Kamdi Arena, Wuse, Abuja, FCT, Nigeria",
+    value: "No 7 Maputo Street, Wuse Zone 3, Abuja, FCT",
     href: officeMapsUrl,
     icon: (
       <svg

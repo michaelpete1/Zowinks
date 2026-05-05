@@ -294,9 +294,8 @@ export default async function Home() {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/55">
                     Address
                   </p>
-                  <p className="mt-1 text-sm font-semibold leading-6 text-white md:text-base">
-                    No. 158, Adetokunbo Ademola Cres, Kamdi Arena, Wuse, Abuja,
-                    FCT, Nigeria
+                  <p className="mt-1 text-sm font-semibold text-white md:text-base">
+                    No 7 Maputo Street, Wuse Zone 3, Abuja, FCT
                   </p>
                 </div>
               </a>
