@@ -136,15 +136,15 @@ export default function HeroCarousel() {
             key={index}
             type="button"
             onClick={() => scrollTo(index)}
-            className={`h-10 w-10 rounded-full border border-white/15 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
+            className={`h-3.5 w-3.5 rounded-full border transition focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
               selectedIndex === index
-                ? "bg-yellow-400 text-slate-950 shadow-lg shadow-yellow-400/20"
-                : "bg-white/10 text-white/80 hover:bg-white/20"
+                ? "border-yellow-400 bg-yellow-400 shadow-[0_0_18px_rgba(250,204,21,0.55)]"
+                : "border-white/25 bg-white/30 hover:bg-white/50"
             }`}
             aria-label={`Go to slide ${index + 1}`}
             aria-current={selectedIndex === index ? "true" : "false"}
           >
-            {index + 1}
+            <span className="sr-only">{`Go to slide ${index + 1}`}</span>
           </button>
         ))}
       </div>

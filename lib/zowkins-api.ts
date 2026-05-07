@@ -645,6 +645,57 @@ const normalizeOrder = (order: PortalOrder & { _id?: string }): PortalOrder =>
 const normalizeOrders = (orders: (PortalOrder & { _id?: string })[]): PortalOrder[] =>
   (orders || []).map(normalizeOrder).filter((order) => Boolean(order.id));
 
+const extractCategoryPayload = (
+  response: unknown,
+): (AdminCategory & { _id?: string }) | null => {
+  if (!response || typeof response !== "object") return null;
+
+  const candidate = response as Record<string, unknown>;
+  const nested =
+    candidate.category ??
+    candidate.data ??
+    candidate.item ??
+    candidate.result ??
+    candidate.categoryDetails ??
+    candidate.categoryDetail;
+
+  if (nested && typeof nested === "object") {
+    return nested as AdminCategory & { _id?: string };
+  }
+
+  return candidate as AdminCategory & { _id?: string };
+};
+
+const normalizeCategory = (
+  category: AdminCategory & { _id?: string },
+): AdminCategory => normalizeEntityId(category);
+
+const normalizeCategoryResponse = (response: unknown): AdminCategory | null => {
+  const category = extractCategoryPayload(response);
+  if (!category) return null;
+
+  const normalized = normalizeCategory(category);
+  return normalized.id ? normalized : null;
+};
+
+const normalizeCategories = (response: unknown): AdminCategory[] => {
+  const categories = Array.isArray(response)
+    ? response
+    : response &&
+        typeof response === "object" &&
+        Array.isArray((response as { categories?: unknown[] }).categories)
+      ? (response as { categories: unknown[] }).categories
+      : [];
+
+  return categories
+    .map((category) =>
+      category && typeof category === "object"
+        ? normalizeCategory(category as AdminCategory & { _id?: string })
+        : null,
+    )
+    .filter((category): category is AdminCategory => Boolean(category?.id));
+};
+
 const getApiRequestUrl = (path: string) => {
   if (typeof window !== "undefined") {
     return `${ZOWKINS_API_BASE}${path}`;
@@ -910,26 +961,38 @@ export const zowkinsApi = {
       formData.set("file", file);
     }
 
-    return apiRequest<AdminCategory>("/admin/categories", {
+    return apiRequest<unknown>("/admin/categories", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
       },
       body: formData,
+    }).then((response) => {
+      const category = normalizeCategoryResponse(response);
+      if (!category) {
+        throw new Error("Category response is missing an id.");
+      }
+      return category;
     });
   },
   listAdminCategories(token: string) {
-    return apiRequest<AdminCategory[]>("/admin/categories", {
+    return apiRequest<unknown>("/admin/categories", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }).then((response) => normalizeCategories(response));
   },
   getAdminCategory(token: string, id: string) {
-    return apiRequest<AdminCategory>(`/admin/categories/${encodeURIComponent(id)}`, {
+    return apiRequest<unknown>(`/admin/categories/${encodeURIComponent(id)}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    }).then((response) => {
+      const category = normalizeCategoryResponse(response);
+      if (!category) {
+        throw new Error("Category response is missing an id.");
+      }
+      return category;
     });
   },
   updateAdminCategory(token: string, id: string, payload: AdminCategoryInput) {
@@ -940,12 +1003,18 @@ export const zowkinsApi = {
       formData.set("file", file);
     }
 
-    return apiRequest<AdminCategory>(`/admin/categories/${encodeURIComponent(id)}`, {
+    return apiRequest<unknown>(`/admin/categories/${encodeURIComponent(id)}`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
       },
       body: formData,
+    }).then((response) => {
+      const category = normalizeCategoryResponse(response);
+      if (!category) {
+        throw new Error("Category response is missing an id.");
+      }
+      return category;
     });
   },
   deleteAdminCategory(token: string, id: string) {

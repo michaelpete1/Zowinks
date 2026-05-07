@@ -1,56 +1,35 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import FallbackImage from "./FallbackImage";
 import { zowkinsApi, type CategoryListItem } from "../lib/zowkins-api";
 import { resolveImageSource } from "../lib/media";
 
-export default function HomepageCategoriesSection() {
-  const [categories, setCategories] = useState<CategoryListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+export default async function HomepageCategoriesSection() {
+  let categories: CategoryListItem[] = [];
+  let errorMessage = "";
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadCategories = async () => {
-      try {
-        const response = await zowkinsApi.listCategories({ page: 1, limit: 12 });
-        if (!cancelled) {
-          setCategories(response?.categories ?? []);
-        }
-      } catch {
-        if (!cancelled) {
-          setCategories([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadCategories();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  try {
+    const response = await zowkinsApi.listCategories({ page: 1, limit: 12 });
+    categories = response?.categories ?? [];
+  } catch (error) {
+    console.error("Failed to load homepage categories:", error);
+    errorMessage =
+      "We could not load categories right now. Please try again shortly.";
+  }
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-12 md:px-8 md:py-16">
       <div className="text-center">
         <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-          Our Products
+          Categories
         </p>
         <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-          High-Quality Technology for Your Business
+          Browse by category
         </h2>
       </div>
 
-      {loading ? (
-        <div className="mx-auto mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300">
-          Loading categories...
+      {errorMessage ? (
+        <div className="mx-auto mt-8 rounded-[1.5rem] border border-amber-200/20 bg-amber-950/30 p-8 text-center text-sm text-amber-100">
+          {errorMessage}
         </div>
       ) : categories.length > 0 ? (
         <div className="mx-auto mt-8 grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">

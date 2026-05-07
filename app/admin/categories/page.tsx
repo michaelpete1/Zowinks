@@ -196,19 +196,18 @@ export default function CategoriesPage() {
       );
       const normalizedCategories = normalizeAdminCategories(data);
       setCategories(normalizedCategories);
-      const nextSelected = (() => {
-        const current = selectedCategory;
-        if (!current) return normalizedCategories[0] ?? null;
-        return (
-          normalizedCategories.find(
-            (category) =>
-              (category.id || (category as any)._id) ===
-              (current.id || (current as any)._id),
-          ) ??
-          normalizedCategories[0] ??
-          null
-        );
-      })();
+      const current = selectedCategory;
+      if (!current) {
+        setSelectedCategory(null);
+        return;
+      }
+
+      const nextSelected =
+        normalizedCategories.find(
+          (category) =>
+            (category.id || (category as any)._id) ===
+            (current.id || (current as any)._id),
+        ) ?? null;
       setSelectedCategory(await hydrateCategory(nextSelected));
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -421,7 +420,15 @@ export default function CategoriesPage() {
       setMessage(nextMessage);
       setToastMessage(nextMessage);
       await loadCategories();
-      setSelectedCategory(saved);
+      if (selectedCategory) {
+        setSelectedCategory(saved);
+      } else {
+        setSelectedCategory(null);
+        setForm(emptyForm());
+        setPreview("");
+        setImageDebug("");
+        setPendingDeleteId("");
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         clearSession();
@@ -702,14 +709,25 @@ export default function CategoriesPage() {
           </section>
 
           <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-              {selectedCategory ? "Edit category" : "Create category"}
-            </p>
-            <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
-              {selectedCategory
-                ? "Update selected category"
-                : "Add a new category"}
-            </h2>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                  {selectedCategory ? "Edit category" : "Create category"}
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
+                  {selectedCategory
+                    ? "Update selected category"
+                    : "Add a new category"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={clearForm}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                New category
+              </button>
+            </div>
             <form onSubmit={submitCategory} className="mt-6 grid gap-4">
               <div className="grid gap-4 rounded-[1.5rem] bg-slate-50 p-4">
                 <CategoryPreview
