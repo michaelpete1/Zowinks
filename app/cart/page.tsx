@@ -288,17 +288,17 @@ export default function Cart() {
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-4 py-10 md:py-16">
+      <main className="mx-auto max-w-6xl px-3 py-8 sm:px-4 sm:py-10 md:py-16">
         <section className="mb-10 overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
-          <div className="grid gap-8 px-6 py-10 md:px-10 lg:grid-cols-[1.1fr_0.9fr] lg:px-14">
-            <div className="space-y-5">
+          <div className="grid gap-8 px-4 py-8 sm:px-6 sm:py-10 md:px-10 lg:grid-cols-[1.1fr_0.9fr] lg:px-14">
+            <div className="space-y-4 sm:space-y-5">
               <p className="text-xs uppercase tracking-[0.35em] text-[#5ab214]">
                 Order form
               </p>
-              <h1 className="font-display text-4xl font-bold leading-tight md:text-5xl">
+              <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
                 Fill in your order details and choose how you want to pay.
               </h1>
-              <p className="max-w-2xl text-lg text-slate-600">
+              <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
                 The items you selected are listed below with their price and
                 quantity. Complete the form, then continue to payment or pay on
                 delivery.
@@ -306,27 +306,27 @@ export default function Cart() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/products"
-                  className="rounded-full bg-[#0b1d3b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a]"
+                  className="w-full rounded-full bg-[#0b1d3b] px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#12386a] sm:w-auto"
                 >
                   Continue shopping
                 </Link>
                 <Link
                   href="/delivery-methods"
-                  className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                  className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10 sm:w-auto"
                 >
                   Delivery methods
                 </Link>
                 <button
                   type="button"
                   onClick={resetFlow}
-                  className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                  className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10 sm:w-auto"
                 >
                   Reset form
                 </button>
                 <button
                   type="button"
                   onClick={clearCart}
-                  className="rounded-full border border-rose-500/20 bg-rose-500/10 px-6 py-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20"
+                  className="w-full rounded-full border border-rose-500/20 bg-rose-500/10 px-6 py-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20 sm:w-auto"
                 >
                   Clear all items
                 </button>
@@ -389,7 +389,7 @@ export default function Cart() {
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <section className="space-y-5">
               {stage === "form" && (
-                <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-8">
+                <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-5 shadow-[0_16px_40px_rgba(0,0,0,0.18)] sm:p-6 md:p-8">
                   <div className="mb-6 border-b border-white/10 pb-5">
                     <p className="text-xs uppercase tracking-[0.3em] text-white/55">
                       Checkout details
@@ -413,7 +413,7 @@ export default function Cart() {
                               name: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                           placeholder="Your full name"
                         />
                       </div>
@@ -430,7 +430,7 @@ export default function Cart() {
                               email: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                           placeholder="you@example.com"
                         />
                       </div>
@@ -449,7 +449,7 @@ export default function Cart() {
                               gender: event.target.value === "female" ? "female" : "male",
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-[#f3c74d]/60 focus:bg-white/10"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                         >
                           <option value="male">Male</option>
                           <option value="female">Female</option>
@@ -470,7 +470,7 @@ export default function Cart() {
                               phone: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                           placeholder="+234..."
                         />
                       </div>
@@ -486,7 +486,7 @@ export default function Cart() {
                               city: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                           placeholder="City"
                         />
                       </div>
@@ -505,7 +505,7 @@ export default function Cart() {
                               state: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                             placeholder="State"
                           />
                         </div>
@@ -524,7 +524,7 @@ export default function Cart() {
                                 country: event.target.value,
                               })
                             }
-                            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                             placeholder="Country"
                           />
                         </div>
@@ -540,7 +540,7 @@ export default function Cart() {
                                 postalCode: event.target.value,
                               })
                             }
-                            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                             placeholder="Postal code"
                           />
                         </div>
@@ -559,7 +559,7 @@ export default function Cart() {
                               deliveryAddress: event.target.value,
                             })
                           }
-                          className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                          className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                           placeholder="House number, street, landmark, and any delivery notes"
                         />
                       </div>
@@ -574,7 +574,7 @@ export default function Cart() {
                         onChange={(event) =>
                           setFormData({ ...formData, note: event.target.value })
                         }
-                        className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10"
+                        className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
                         placeholder="Any extra instructions for the order"
                       />
                     </div>
@@ -591,7 +591,7 @@ export default function Cart() {
                             deliveryMethod: event.target.value,
                           })
                         }
-                        className="w-full rounded-2xl border border-white/10 bg-[#0a1020] px-4 py-3 text-sm text-white outline-none transition focus:border-[#f3c74d]/60"
+                        className="w-full rounded-2xl border border-white/10 bg-[#0a1020] px-4 py-3 text-base text-white outline-none transition focus:border-[#f3c74d]/60 sm:text-sm"
                         disabled={loadingDeliveryMethods}
                       >
                         <option value="">
@@ -727,11 +727,11 @@ export default function Cart() {
                 </h2>
 
                 {stage === "form" && summaryItems.length > 0 ? (
-                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                     <button
                       type="button"
                       onClick={toggleSelectAll}
-                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                      className="w-full rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10 sm:w-auto"
                     >
                       {selectedItemCount === summaryItems.length
                         ? "Deselect all"
@@ -741,7 +741,7 @@ export default function Cart() {
                       type="button"
                       onClick={removeSelectedItems}
                       disabled={!selectedItemCount}
-                      className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="w-full rounded-full bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
                       Cancel selected ({selectedItemCount})
                     </button>
@@ -780,16 +780,16 @@ export default function Cart() {
                               />
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-white truncate">
+                              <p className="text-sm font-semibold text-white sm:text-base truncate">
                                 {item.title}
                               </p>
-                              <p className="mt-1 text-xs text-slate-400">
+                              <p className="mt-1 text-sm text-slate-400 sm:text-xs">
                                 {item.spec}
                               </p>
                             </div>
                           </div>
                         </div>
-                        <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white shrink-0">
+                        <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white shrink-0 sm:text-xs">
                           Qty {item.qty}
                         </span>
                       </div>

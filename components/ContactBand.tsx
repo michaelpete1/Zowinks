@@ -70,7 +70,7 @@ export default function ContactBand() {
 
   return (
     <section className="border-t border-[#d4a11d]/20 bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white">
-      <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-12">
+      <div className="mx-auto max-w-6xl px-3 py-10 sm:px-4 md:px-8 md:py-12">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">
@@ -89,13 +89,13 @@ export default function ContactBand() {
               href={item.href}
               target={item.label === "Phone" ? undefined : "_blank"}
               rel={item.label === "Phone" ? undefined : "noopener noreferrer"}
-              className="flex items-start gap-3 rounded-[1.35rem] bg-white/6 p-5 transition hover:bg-white/10"
+              className="flex items-start gap-3 rounded-[1.35rem] bg-white/6 p-4 transition hover:bg-white/10 sm:p-5"
             >
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/15 text-white">
                 {item.icon}
               </span>
               <span className="min-w-0">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.28em] text-white/70">
+                <span className="block text-xs font-semibold uppercase tracking-[0.22em] text-white/70 sm:text-[11px] sm:tracking-[0.28em]">
                   {item.label}
                 </span>
                 <span className="mt-1 block text-sm font-semibold leading-6 text-white">

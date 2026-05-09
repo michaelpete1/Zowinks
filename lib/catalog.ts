@@ -1,8 +1,8 @@
 import {
   zowkinsApi,
   ProductDetails,
-  CategoryProductsResponse,
   CategoryListItem,
+  CategoryProductsResponse,
 } from "./zowkins-api";
 import { resolveImageSource } from "./media";
 
@@ -51,7 +51,6 @@ function productToCatalogItem(product: ProductDetails): CatalogItem {
   };
 }
 
-
 const emptyProductsResponse: CategoryProductsResponse = {
   products: [],
   meta: {
@@ -63,6 +62,47 @@ const emptyProductsResponse: CategoryProductsResponse = {
   },
   maxPrice: 0,
 };
+
+async function fetchProductsByCategoryCrawl(limit = 6): Promise<CatalogItem[]> {
+  const categoriesResponse = await zowkinsApi.listCategories({
+    page: 1,
+    limit: 12,
+  });
+
+  const categories: CategoryListItem[] = Array.isArray(
+    categoriesResponse?.categories,
+  )
+    ? categoriesResponse.categories
+    : [];
+
+  if (categories.length === 0) return [];
+
+  const results = await Promise.all(
+    categories.map((cat) =>
+      zowkinsApi
+        .listCategoryProducts(cat.slug, { page: 1, limit: 50 })
+        .catch(() => emptyProductsResponse),
+    ),
+  );
+
+  const items: CatalogItem[] = [];
+  for (const result of results) {
+    if (!result?.products) continue;
+
+    for (const product of result.products) {
+      if (product && product.visible !== false) {
+        items.push(productToCatalogItem(product));
+      }
+
+      if (items.length >= limit) {
+        return items.slice(0, limit);
+      }
+    }
+  }
+
+  return items.slice(0, limit);
+}
+
 
 /**
  * Fetch visible products for a specific category slug,
@@ -89,40 +129,35 @@ export async function fetchProductsForCategory(
  */
 export async function fetchAllProducts(): Promise<CatalogItem[]> {
   try {
-    const categoriesResponse = await zowkinsApi.listCategories({
-      page: 1,
-      limit: 12,
-    });
-    const categories: CategoryListItem[] = Array.isArray(
-      categoriesResponse?.categories,
-    )
-      ? categoriesResponse.categories
-      : [];
-
-    if (categories.length === 0) return [];
-
-    const results = await Promise.all(
-      categories.map((cat) =>
-        zowkinsApi
-          .listCategoryProducts(cat.slug, { page: 1, limit: 100 })
-          .catch(() => emptyProductsResponse),
-      ),
-    );
-
-    const allProducts: CatalogItem[] = [];
-    for (const result of results) {
-      if (!result?.products) continue;
-      for (const product of result.products) {
-        if (product && product.visible !== false) {
-          allProducts.push(productToCatalogItem(product));
-        }
-      }
+    const products = await zowkinsApi.listProducts();
+    if (!products.length) {
+      return fetchProductsByCategoryCrawl(999);
     }
-
-    return allProducts;
+    return products
+      .filter((product) => product && product.visible !== false)
+      .map(productToCatalogItem);
   } catch (error) {
     console.error("Error fetching all products:", error);
-    return [];
+    return fetchProductsByCategoryCrawl(999);
+  }
+}
+
+/**
+ * Fetch a small, fast set of featured products for the homepage.
+ */
+export async function fetchFeaturedProducts(limit = 6): Promise<CatalogItem[]> {
+  try {
+    const products = await zowkinsApi.listProducts();
+    if (!products.length) {
+      return fetchProductsByCategoryCrawl(limit);
+    }
+    return products
+      .filter((product) => product && product.visible !== false)
+      .slice(0, limit)
+      .map(productToCatalogItem);
+  } catch (error) {
+    console.error("Error fetching featured products:", error);
+    return fetchProductsByCategoryCrawl(limit);
   }
 }
 

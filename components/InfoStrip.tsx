@@ -22,7 +22,7 @@ export default function InfoStrip({ items, className = "", variant = "light" }: 
       <div className={`grid gap-4 md:grid-cols-3 ${isDark ? "md:divide-white/10" : "md:divide-slate-200"} md:divide-x`}>
         {items.map((item, index) => (
           <div key={item.label} className={index > 0 ? "md:pl-4" : ""}>
-            <p className={`text-[11px] uppercase tracking-[0.28em] ${isDark ? "text-white/55" : "text-slate-500"}`}>{item.label}</p>
+            <p className={`text-xs uppercase tracking-[0.22em] sm:text-[11px] sm:tracking-[0.28em] ${isDark ? "text-white/55" : "text-slate-500"}`}>{item.label}</p>
             <p className={`mt-2 text-sm font-medium md:text-base ${isDark ? "text-white" : "text-slate-800"}`}>{item.value}</p>
           </div>
         ))}

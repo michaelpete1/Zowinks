@@ -1,4 +1,6 @@
 export const ZOWKINS_API_BASE = process.env.NEXT_PUBLIC_ZOWKINS_API_BASE || "/api/zowkins/v1";
+const SERVER_ZOWKINS_API_BASE =
+  process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api.onrender.com/v1";
 
 export type ApiImage = {
   url: string;
@@ -645,6 +647,29 @@ const normalizeOrder = (order: PortalOrder & { _id?: string }): PortalOrder =>
 const normalizeOrders = (orders: (PortalOrder & { _id?: string })[]): PortalOrder[] =>
   (orders || []).map(normalizeOrder).filter((order) => Boolean(order.id));
 
+const normalizeProduct = (product: ProductDetails & { _id?: string }): ProductDetails =>
+  normalizeEntityId(product);
+
+const normalizeProducts = (
+  response: unknown,
+): ProductDetails[] => {
+  const products = Array.isArray(response)
+    ? response
+    : response &&
+        typeof response === "object" &&
+        Array.isArray((response as { products?: unknown[] }).products)
+      ? (response as { products: unknown[] }).products
+      : [];
+
+  return products
+    .map((product) =>
+      product && typeof product === "object"
+        ? normalizeProduct(product as ProductDetails & { _id?: string })
+        : null,
+    )
+    .filter((product): product is ProductDetails => Boolean(product?.id));
+};
+
 const extractCategoryPayload = (
   response: unknown,
 ): (AdminCategory & { _id?: string }) | null => {
@@ -701,8 +726,10 @@ const getApiRequestUrl = (path: string) => {
     return `${ZOWKINS_API_BASE}${path}`;
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  return new URL(`${ZOWKINS_API_BASE}${path}`, siteUrl).toString();
+  const base = ZOWKINS_API_BASE.startsWith("http")
+    ? ZOWKINS_API_BASE
+    : SERVER_ZOWKINS_API_BASE;
+  return new URL(`${base}${path}`, base).toString();
 };
 
 async function readApiError(response: Response) {
@@ -843,6 +870,9 @@ export const zowkinsApi = {
         Authorization: `Bearer ${token}`,
       },
     });
+  },
+  listProducts() {
+    return apiRequest<unknown>("/products").then((response) => normalizeProducts(response));
   },
   getAdminProductStats(token: string) {
     return apiRequest<AdminProductStatsResponse>("/admin/products/stats", {

@@ -1,5 +1,8 @@
 import { ZOWKINS_API_BASE, ApiError } from "./zowkins-api";
 
+const SERVER_ZOWKINS_API_BASE =
+  process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api.onrender.com/v1";
+
 export type App = {
   id?: string;
   slug?: string;
@@ -74,7 +77,11 @@ function normalizeApp(input: Partial<App> | null | undefined): App {
 
 export async function getAppSettings() {
   try {
-    const response = await fetch(`${ZOWKINS_API_BASE}/app`, {
+    const base = ZOWKINS_API_BASE.startsWith("http")
+      ? ZOWKINS_API_BASE
+      : SERVER_ZOWKINS_API_BASE;
+
+    const response = await fetch(`${base}/app`, {
       headers: {
         Accept: "application/json",
       },
@@ -93,4 +100,3 @@ export async function getAppSettings() {
 }
 
 export const defaultAppSettings = fallback;
-

@@ -233,7 +233,7 @@ export default async function Home() {
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/55">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55 sm:tracking-[0.28em]">
                     Phone
                   </p>
                   <p className="mt-1 text-sm font-semibold text-white md:text-base">
@@ -261,7 +261,7 @@ export default async function Home() {
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/55">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55 sm:tracking-[0.28em]">
                     Email
                   </p>
                   <p className="mt-1 text-sm font-semibold text-white md:text-base">
@@ -291,7 +291,7 @@ export default async function Home() {
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/55">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55 sm:tracking-[0.28em]">
                     Address
                   </p>
                   <p className="mt-1 text-sm font-semibold text-white md:text-base">
@@ -303,7 +303,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }
