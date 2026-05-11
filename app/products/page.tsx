@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
+import AddToCartButton from "../../components/AddToCartButton";
 import FallbackImage from "../../components/FallbackImage";
 import { fetchAllProducts } from "../../lib/catalog";
 import { zowkinsApi } from "../../lib/zowkins-api";
@@ -143,20 +144,22 @@ export default async function ProductsPage() {
 
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {items.map((item) => (
-                  <Link
+                  <article
                     key={item.id}
-                    href={item.href}
                     className="group overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_40px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.24)]"
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
-                      <FallbackImage
-                        src={item.image}
-                        alt={item.title}
-                        className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.06)_0%,rgba(5,11,22,0.72)_100%)]" />
-                    </div>
-                    <div className="space-y-3 p-5">
+                    <Link href={item.href} className="block">
+                      <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
+                        <FallbackImage
+                          src={item.image}
+                          alt={item.title}
+                          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.06)_0%,rgba(5,11,22,0.72)_100%)]" />
+                      </div>
+                    </Link>
+
+                    <div className="space-y-4 p-5">
                       <div className="flex items-center justify-between gap-3">
                         <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
                           {item.brand}
@@ -165,16 +168,41 @@ export default async function ProductsPage() {
                           {item.price}
                         </span>
                       </div>
+
                       <div>
-                        <h4 className="font-display text-lg font-bold text-white">
-                          {item.title}
-                        </h4>
+                        <Link href={item.href} className="block">
+                          <h4 className="font-display text-lg font-bold text-white transition group-hover:text-[#f3c74d]">
+                            {item.title}
+                          </h4>
+                        </Link>
                         <p className="mt-2 text-sm leading-6 text-slate-300">
                           {item.description}
                         </p>
                       </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <AddToCartButton
+                          item={{
+                            id: item.id,
+                            slug: item.slug,
+                            title: item.title,
+                            price: item.price,
+                            spec: item.brand,
+                            image: item.image,
+                          }}
+                          className="rounded-full bg-[#f3c74d] px-4 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
+                        >
+                          Add to cart
+                        </AddToCartButton>
+                        <Link
+                          href={item.href}
+                          className="rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                        >
+                          More details
+                        </Link>
+                      </div>
                     </div>
-                  </Link>
+                  </article>
                 ))}
               </div>
             </div>

@@ -32,8 +32,8 @@ export default function Navbar() {
   };
 
   const shellClassName = isHome
-    ? "sticky top-0 z-[60] border-b border-[#f3c74d]/15 bg-[linear-gradient(180deg,rgba(7,12,24,0.98),rgba(6,14,30,0.96))] text-slate-100 shadow-[0_14px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl"
-    : "sticky top-0 z-[60] border-b border-[#f3c74d]/15 bg-[linear-gradient(180deg,rgba(7,12,24,0.98),rgba(6,14,30,0.95))] text-slate-100 shadow-sm backdrop-blur-xl";
+    ? "sticky top-0 z-[9999] border-b border-[#f3c74d]/15 bg-[linear-gradient(180deg,rgba(7,12,24,0.98),rgba(6,14,30,0.96))] text-slate-100 shadow-[0_14px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+    : "sticky top-0 z-[9999] border-b border-[#f3c74d]/15 bg-[linear-gradient(180deg,rgba(7,12,24,0.98),rgba(6,14,30,0.95))] text-slate-100 shadow-sm backdrop-blur-xl";
 
   const navLinkClassName =
     "text-sm font-semibold tracking-[0.01em] text-slate-300 transition hover:text-white";
@@ -45,7 +45,7 @@ export default function Navbar() {
   return (
     <>
       <header className={shellClassName}>
-      <nav className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3 sm:px-4 md:px-8 md:py-3">
+        <nav className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3 sm:px-4 md:px-8 md:py-3">
         <Link
           href="/"
           className="inline-flex items-center gap-2 rounded-2xl bg-white/8 px-2.5 py-1.5 ring-1 ring-white/10 backdrop-blur-sm"
@@ -134,7 +134,7 @@ export default function Navbar() {
             <path d="M4 18h16" />
           </svg>
         </button>
-      </nav>
+        </nav>
     </header>
 
     {open ? (
@@ -144,7 +144,7 @@ export default function Navbar() {
           onClick={() => setOpen(false)}
         />
         <div
-          className={`fixed inset-x-0 top-[72px] bottom-0 z-[10001] overflow-y-auto border-t border-white/10 shadow-2xl transition-transform duration-300 ease-out lg:hidden ${isHome ? "bg-[linear-gradient(180deg,#07142a_0%,#050b16_100%)] text-slate-100" : "bg-[#050b16] text-slate-100"} animate-[rise_0.45s_ease-out]`}
+          className={`fixed inset-0 z-[10001] overflow-y-auto shadow-2xl transition-transform duration-300 ease-out lg:hidden ${isHome ? "bg-[linear-gradient(180deg,#07142a_0%,#050b16_100%)] text-slate-100" : "bg-[#050b16] text-slate-100"} animate-[rise_0.45s_ease-out]`}
         >
           <div
             className={`flex items-center justify-between border-b px-4 py-3 backdrop-blur-xl ${isHome ? "border-white/10 bg-[#07142a]/95" : "border-white/10 bg-[#050b16]/95"}`}
