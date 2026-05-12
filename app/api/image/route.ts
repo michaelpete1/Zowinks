@@ -7,6 +7,16 @@ const ALLOWED_HOSTS = new Set([
   "127.0.0.1",
 ]);
 
+const ALLOWED_HOST_SUFFIXES = [
+  ".r2.dev",
+  ".cloudflarestorage.com",
+];
+
+const isAllowedHost = (hostname: string) => {
+  if (ALLOWED_HOSTS.has(hostname)) return true;
+  return ALLOWED_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
+};
+
 export async function GET(request: NextRequest) {
   const src = request.nextUrl.searchParams.get("src");
   if (!src) {
@@ -20,7 +30,7 @@ export async function GET(request: NextRequest) {
     return new Response("Invalid src", { status: 400 });
   }
 
-  if (!["http:", "https:"].includes(url.protocol) || !ALLOWED_HOSTS.has(url.hostname)) {
+  if (!["http:", "https:"].includes(url.protocol) || !isAllowedHost(url.hostname)) {
     return new Response("Forbidden", { status: 403 });
   }
 
@@ -28,11 +38,11 @@ export async function GET(request: NextRequest) {
     headers: {
       Accept: "image/*",
     },
-  });
+  }).catch(() => null);
 
-  if (!upstream.ok || !upstream.body) {
+  if (!upstream?.ok || !upstream.body) {
     return new Response("Upstream image fetch failed", {
-      status: upstream.status || 502,
+      status: upstream?.status || 502,
     });
   }
 
@@ -41,7 +51,9 @@ export async function GET(request: NextRequest) {
   if (contentType) headers.set("content-type", contentType);
 
   const cacheControl = upstream.headers.get("cache-control");
-  headers.set("cache-control", cacheControl || "public, max-age=86400");
+  headers.set("cache-control", cacheControl || "public, max-age=3600");
+  headers.set("access-control-allow-origin", "*");
+  headers.set("vary", "Accept-Encoding");
 
   return new Response(upstream.body, {
     status: upstream.status,

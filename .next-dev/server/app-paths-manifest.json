@@ -1,7 +1,8 @@
 {
-  "/products/[slug]/page": "app/products/[slug]/page.js",
-  "/delivery-methods/page": "app/delivery-methods/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
+  "/products/page": "app/products/page.js",
+  "/api/image/route": "app/api/image/route.js",
   "/cart/page": "app/cart/page.js",
-  "/services/page": "app/services/page.js",
-  "/page": "app/page.js"
+  "/api/zowkins/[...path]/route": "app/api/zowkins/[...path]/route.js"
 }

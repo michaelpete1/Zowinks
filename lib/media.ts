@@ -9,6 +9,10 @@ const API_ORIGIN = (() => {
 })();
 const IMAGE_ORIGIN = "https://pub-8c6bb3ce4d88417e9f57a8967cf9363d.r2.dev";
 
+function toProxiedImageUrl(src: string): string {
+  return `/api/image?src=${encodeURIComponent(src)}`;
+}
+
 function extractMediaValue(value: unknown): string {
   if (!value) return "";
 
@@ -82,20 +86,31 @@ export function resolveApiMediaUrl(value?: unknown): string {
     if (pathSegments.length === 1) {
       return raw;
     }
+
+    return toProxiedImageUrl(`${API_ORIGIN}${raw}`);
   }
 
   if (raw.startsWith("data:") || raw.startsWith("blob:")) {
     return raw;
   }
 
-  if (/^(https?:)?\/\//i.test(raw)) {
-    return raw;
+  if (raw.startsWith("//")) {
+    return toProxiedImageUrl(`https:${raw}`);
   }
 
-  return raw.startsWith("/") ? `${IMAGE_ORIGIN}${raw}` : `${IMAGE_ORIGIN}/${raw}`;
+  if (/^(https?:)?\/\//i.test(raw)) {
+    return toProxiedImageUrl(raw);
+  }
+
+  if (/^[a-z0-9.-]+\.[a-z]{2,}(?::\d+)?(\/|$)/i.test(raw)) {
+    return toProxiedImageUrl(`https://${raw}`);
+  }
+
+  const resolved = raw.includes("/") ? `${IMAGE_ORIGIN}${raw.startsWith("/") ? "" : "/"}${raw}` : `${IMAGE_ORIGIN}/${raw}`;
+  return toProxiedImageUrl(resolved);
 }
 
 export function resolveImageSource(image?: string | ApiImage | Record<string, unknown> | null, fallback = "/file.svg"): string {
   const raw = resolveApiMediaUrl(image);
-  return resolveApiMediaUrl(raw) || fallback;
+  return raw || fallback;
 }

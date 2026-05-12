@@ -9,13 +9,17 @@ interface AddToCartButtonProps {
   children: ReactNode;
 }
 
-export default function AddToCartButton({ item, className, children }: AddToCartButtonProps) {
+export default function AddToCartButton({
+  item,
+  className,
+  children,
+}: AddToCartButtonProps) {
   const addItem = useCart((state) => state.addItem);
   const [added, setAdded] = useState(false);
 
   useEffect(() => {
     if (!added) return;
-    const timeout = window.setTimeout(() => setAdded(false), 1200);
+    const timeout = window.setTimeout(() => setAdded(false), 400);
     return () => window.clearTimeout(timeout);
   }, [added]);
 

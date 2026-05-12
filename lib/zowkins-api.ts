@@ -14,6 +14,7 @@ export type ProductDetails = {
   category: string | any;
   subcategory: string | any;
   image: ApiImage | null;
+  images?: ApiImage[] | null;
   price: number;
   description: string;
   visible: boolean;
@@ -647,8 +648,37 @@ const normalizeOrder = (order: PortalOrder & { _id?: string }): PortalOrder =>
 const normalizeOrders = (orders: (PortalOrder & { _id?: string })[]): PortalOrder[] =>
   (orders || []).map(normalizeOrder).filter((order) => Boolean(order.id));
 
-const normalizeProduct = (product: ProductDetails & { _id?: string }): ProductDetails =>
-  normalizeEntityId(product);
+const normalizeProductImage = (product: {
+  image?: unknown;
+  images?: unknown;
+}): ApiImage | null => {
+  const primary = product.image;
+  if (primary && typeof primary === "object" && typeof (primary as ApiImage).url === "string") {
+    return primary as ApiImage;
+  }
+
+  if (Array.isArray(product.images)) {
+    const firstImage = product.images.find(
+      (image): image is ApiImage =>
+        Boolean(image) &&
+        typeof image === "object" &&
+        typeof (image as ApiImage).url === "string" &&
+        (image as ApiImage).url.trim().length > 0,
+    );
+    return firstImage || null;
+  }
+
+  return null;
+};
+
+const normalizeProduct = (product: ProductDetails & { _id?: string }): ProductDetails => {
+  const normalized = normalizeEntityId(product);
+  return {
+    ...normalized,
+    image: normalizeProductImage(normalized),
+    images: Array.isArray(normalized.images) ? normalized.images : undefined,
+  };
+};
 
 const normalizeProducts = (
   response: unknown,
@@ -865,11 +895,11 @@ export const zowkinsApi = {
     });
   },
   listAdminProducts(token: string) {
-    return apiRequest<ProductDetails[]>("/admin/products", {
+    return apiRequest<unknown>("/admin/products", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }).then((response) => normalizeProducts(response));
   },
   listProducts() {
     return apiRequest<unknown>("/products").then((response) => normalizeProducts(response));
@@ -886,7 +916,7 @@ export const zowkinsApi = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }).then((product) => normalizeProduct(product as ProductDetails & { _id?: string }));
   },
   createAdminProduct(token: string, payload: AdminProductInput) {
     const formData = new FormData();
@@ -1307,7 +1337,10 @@ export const zowkinsApi = {
 
     return apiRequest<CategoryProductsResponse>(
       `/categories/${encodeURIComponent(slug)}/products${search ? `?${search}` : ""}`,
-    );
+    ).then((response) => ({
+      ...response,
+      products: Array.isArray(response.products) ? normalizeProducts(response.products) : [],
+    }));
   },
   createPortalAccount(payload: PortalCreateAccountInput) {
     return apiRequest<PortalAuthResponse>("/portal/auth/create-account", {
@@ -1363,7 +1396,9 @@ export const zowkinsApi = {
     });
   },
   getProductBySlug(slug: string) {
-    return apiRequest<ProductDetails>(`/products/${encodeURIComponent(slug)}`);
+    return apiRequest<ProductDetails>(`/products/${encodeURIComponent(slug)}`).then(
+      (product) => normalizeProduct(product as ProductDetails & { _id?: string }),
+    );
   },
   getPortalMe(token: string) {
     return apiRequest<PortalUser>("/portal/users/me", {

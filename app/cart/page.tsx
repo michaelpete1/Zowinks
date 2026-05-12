@@ -106,7 +106,8 @@ export default function Cart() {
     const loadDeliveryMethods = async () => {
       setLoadingDeliveryMethods(true);
       try {
-        const methods: DeliveryMethod[] = await zowkinsApi.listDeliveryMethods();
+        const methods: DeliveryMethod[] =
+          await zowkinsApi.listDeliveryMethods();
         if (cancelled) return;
 
         const availableMethods = methods.filter(
@@ -129,7 +130,11 @@ export default function Cart() {
         });
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load delivery methods");
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load delivery methods",
+          );
         }
       } finally {
         if (!cancelled) {
@@ -173,7 +178,8 @@ export default function Cart() {
     const nameParts = formData.name.trim().split(/\s+/).filter(Boolean);
     const firstName = nameParts[0] || formData.name.trim();
     const lastName = nameParts.slice(1).join(" ") || "";
-    const street = formData.deliveryAddress.trim() || formData.pickupPoint.trim();
+    const street =
+      formData.deliveryAddress.trim() || formData.pickupPoint.trim();
 
     if (!street) {
       throw new Error("Add either a delivery address or a pick-up point.");
@@ -288,17 +294,17 @@ export default function Cart() {
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-3 py-8 sm:px-4 sm:py-10 md:py-16">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 md:px-8 md:py-16">
         <section className="mb-10 overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
-          <div className="grid gap-8 px-4 py-8 sm:px-6 sm:py-10 md:px-10 lg:grid-cols-[1.1fr_0.9fr] lg:px-14">
-            <div className="space-y-4 sm:space-y-5">
+          <div className="grid gap-10 px-5 py-9 sm:px-7 sm:py-11 md:px-10 lg:px-12 xl:grid-cols-[1.08fr_0.92fr] xl:gap-12 xl:px-16">
+            <div className="space-y-5 sm:space-y-6">
               <p className="text-xs uppercase tracking-[0.35em] text-[#5ab214]">
                 Order form
               </p>
-              <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
+              <h1 className="max-w-2xl font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
                 Fill in your order details and choose how you want to pay.
               </h1>
-              <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
+              <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
                 The items you selected are listed below with their price and
                 quantity. Complete the form, then continue to payment or pay on
                 delivery.
@@ -332,8 +338,8 @@ export default function Cart() {
                 </button>
               </div>
             </div>
-            <div className="border-t border-white/10 pt-4">
-              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+            <div className="border-t border-white/10 pt-5">
+              <div className="flex flex-wrap items-center gap-3 text-sm leading-6 text-slate-300">
                 <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 font-medium text-white">
                   {items.length} selected item{items.length === 1 ? "" : "s"}
                 </span>
@@ -386,21 +392,21 @@ export default function Cart() {
             </div>
           </section>
         ) : (
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-8 xl:grid-cols-[1.08fr_0.92fr] xl:gap-10">
             <section className="space-y-5">
               {stage === "form" && (
-                <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-5 shadow-[0_16px_40px_rgba(0,0,0,0.18)] sm:p-6 md:p-8">
-                  <div className="mb-6 border-b border-white/10 pb-5">
+                <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] sm:p-7 md:p-8 lg:p-10">
+                  <div className="mb-7 border-b border-white/10 pb-5 sm:mb-8">
                     <p className="text-xs uppercase tracking-[0.3em] text-white/55">
                       Checkout details
                     </p>
-                    <h2 className="mt-2 font-display text-2xl font-semibold text-white">
+                    <h2 className="mt-2 max-w-xl font-display text-2xl font-semibold leading-tight text-white sm:text-3xl">
                       Tell us where to deliver or where to pick up
                     </h2>
                   </div>
 
-                  <form className="space-y-5" onSubmit={handleSubmit}>
-                    <div className="grid gap-4 md:grid-cols-2">
+                  <form className="space-y-6" onSubmit={handleSubmit}>
+                    <div className="grid gap-5 sm:grid-cols-2">
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-white">
                           Full name
@@ -436,7 +442,7 @@ export default function Cart() {
                       </div>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-5 sm:grid-cols-2">
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-white">
                           Gender
@@ -446,7 +452,10 @@ export default function Cart() {
                           onChange={(event) =>
                             setFormData({
                               ...formData,
-                              gender: event.target.value === "female" ? "female" : "male",
+                              gender:
+                                event.target.value === "female"
+                                  ? "female"
+                                  : "male",
                             })
                           }
                           className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
@@ -457,7 +466,7 @@ export default function Cart() {
                       </div>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-5 sm:grid-cols-2">
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-white">
                           Phone
@@ -492,7 +501,7 @@ export default function Cart() {
                       </div>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-5 sm:grid-cols-2">
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-white">
                           State
@@ -506,63 +515,63 @@ export default function Cart() {
                             })
                           }
                           className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
-                            placeholder="State"
-                          />
-                        </div>
+                          placeholder="State"
+                        />
                       </div>
+                    </div>
 
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-white">
-                            Country
-                          </label>
-                          <input
-                            value={formData.country}
-                            onChange={(event) =>
-                              setFormData({
-                                ...formData,
-                                country: event.target.value,
-                              })
-                            }
-                            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
-                            placeholder="Country"
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-white">
-                            Postal code
-                          </label>
-                          <input
-                            value={formData.postalCode}
-                            onChange={(event) =>
-                              setFormData({
-                                ...formData,
-                                postalCode: event.target.value,
-                              })
-                            }
-                            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
-                            placeholder="Postal code"
-                          />
-                        </div>
-                      </div>
-
+                    <div className="grid gap-5 sm:grid-cols-2">
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-white">
-                          Delivery address
+                          Country
                         </label>
-                        <textarea
-                          rows={4}
-                          value={formData.deliveryAddress}
+                        <input
+                          value={formData.country}
                           onChange={(event) =>
                             setFormData({
                               ...formData,
-                              deliveryAddress: event.target.value,
+                              country: event.target.value,
                             })
                           }
-                          className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
-                          placeholder="House number, street, landmark, and any delivery notes"
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
+                          placeholder="Country"
                         />
                       </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-white">
+                          Postal code
+                        </label>
+                        <input
+                          value={formData.postalCode}
+                          onChange={(event) =>
+                            setFormData({
+                              ...formData,
+                              postalCode: event.target.value,
+                            })
+                          }
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
+                          placeholder="Postal code"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-white">
+                        Delivery address
+                      </label>
+                      <textarea
+                        rows={4}
+                        value={formData.deliveryAddress}
+                        onChange={(event) =>
+                          setFormData({
+                            ...formData,
+                            deliveryAddress: event.target.value,
+                          })
+                        }
+                        className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
+                        placeholder="House number, street, landmark, and any delivery notes"
+                      />
+                    </div>
 
                     <div>
                       <label className="mb-2 block text-sm font-semibold text-white">
@@ -579,7 +588,7 @@ export default function Cart() {
                       />
                     </div>
 
-                      <div className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                    <div className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 sm:p-6">
                       <label className="block text-sm font-semibold text-white">
                         Delivery method
                       </label>
@@ -605,26 +614,28 @@ export default function Cart() {
                           </option>
                         ))}
                       </select>
-                      {deliveryMethods.length === 0 && !loadingDeliveryMethods ? (
+                      {deliveryMethods.length === 0 &&
+                      !loadingDeliveryMethods ? (
                         <p className="text-xs text-slate-300">
-                          Delivery methods are not available right now. Please try again later.
+                          Delivery methods are not available right now. Please
+                          try again later.
                         </p>
                       ) : null}
-                      </div>
+                    </div>
 
-                      {error ? (
-                        <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                          {error}
-                        </p>
-                      ) : null}
+                    {error ? (
+                      <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                        {error}
+                      </p>
+                    ) : null}
 
-                      <button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full rounded-full bg-[#0b1d3b] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#0b1d3b]/20 transition hover:bg-[#12386a]"
-                      >
-                        {submitting ? "Submitting..." : "Place order"}
-                      </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="w-full rounded-full bg-[#0b1d3b] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#0b1d3b]/20 transition hover:bg-[#12386a] sm:px-8 sm:py-4"
+                    >
+                      {submitting ? "Submitting..." : "Place order"}
+                    </button>
                   </form>
                 </div>
               )}
@@ -718,7 +729,7 @@ export default function Cart() {
             </section>
 
             <aside className="space-y-5">
-              <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-8 lg:sticky lg:top-24">
+              <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.18)] md:p-8 xl:sticky xl:top-24">
                 <p className="text-xs uppercase tracking-[0.3em] text-white/55">
                   Selected product
                 </p>
@@ -752,9 +763,9 @@ export default function Cart() {
                   {summaryItems.map((item) => (
                     <article
                       key={item.id}
-                      className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4"
+                      className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5"
                     >
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex min-w-0 items-start gap-3">
                           {stage === "form" ? (
                             <input
@@ -769,27 +780,23 @@ export default function Cart() {
                           <div className="flex items-start gap-3 min-w-0">
                             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-900">
                               <Image
-                                src={
-                                  typeof item.image === "string"
-                                    ? item.image
-                                    : (item.image as any)?.url || "/desktop.jpg"
-                                }
+                                src="/desktop.jpg"
                                 alt={item.title}
                                 fill
                                 className="object-cover"
                               />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-white sm:text-base truncate">
+                              <p className="text-sm font-semibold text-white sm:text-base">
                                 {item.title}
                               </p>
-                              <p className="mt-1 text-sm text-slate-400 sm:text-xs">
+                              <p className="mt-1 text-sm leading-6 text-slate-400 sm:text-xs">
                                 {item.spec}
                               </p>
                             </div>
                           </div>
                         </div>
-                        <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white shrink-0 sm:text-xs">
+                        <span className="inline-flex w-fit rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white sm:text-xs">
                           Qty {item.qty}
                         </span>
                       </div>

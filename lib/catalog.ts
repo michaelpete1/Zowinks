@@ -46,7 +46,8 @@ function productToCatalogItem(product: ProductDetails): CatalogItem {
     brand: String(subcategoryLabel || categoryLabel),
     price: formatPrice(product.price),
     href: `/products/${product.slug}`,
-    image: resolveImageSource(product.image),
+    // Use the product fallback image instead of the generic file placeholder.
+    image: resolveImageSource(product.image, "/desktop.jpg"),
     description: product.description,
   };
 }
@@ -147,17 +148,12 @@ export async function fetchAllProducts(): Promise<CatalogItem[]> {
  */
 export async function fetchFeaturedProducts(limit = 6): Promise<CatalogItem[]> {
   try {
-    const products = await zowkinsApi.listProducts();
-    if (!products.length) {
-      return fetchProductsByCategoryCrawl(limit);
-    }
-    return products
-      .filter((product) => product && product.visible !== false)
-      .slice(0, limit)
-      .map(productToCatalogItem);
+    // Skip the /products endpoint which may not exist on all backends
+    // Instead crawl products by category
+    return fetchProductsByCategoryCrawl(limit);
   } catch (error) {
     console.error("Error fetching featured products:", error);
-    return fetchProductsByCategoryCrawl(limit);
+    return [];
   }
 }
 
