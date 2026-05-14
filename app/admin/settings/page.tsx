@@ -61,7 +61,7 @@ export default function AdminSettingsPage() {
     gender: "",
     phoneNumber: "",
     dateOfBirth: "",
-    image: null as File | null,
+    files: [] as File[],
   });
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -141,7 +141,7 @@ export default function AdminSettingsPage() {
           gender: data.gender ?? "",
           phoneNumber: data.phoneNumber ?? "",
           dateOfBirth: "",
-          image: null,
+          files: [],
         });
         setPreview(data.avatar?.url ?? "");
       })
@@ -203,7 +203,7 @@ export default function AdminSettingsPage() {
         gender: data.gender ?? "",
         phoneNumber: data.phoneNumber ?? "",
         dateOfBirth: "",
-        image: null,
+        files: [],
       });
       setPreview(data.avatar?.url ?? "");
       setConnectionMessage("Admin profile loaded successfully.");
@@ -222,7 +222,7 @@ export default function AdminSettingsPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setProfileForm((current) => ({ ...current, image: file }));
+    setProfileForm((current) => ({ ...current, files: [file] }));
     setPreview((current) => {
       if (current.startsWith("blob:")) {
         URL.revokeObjectURL(current);
@@ -253,7 +253,7 @@ export default function AdminSettingsPage() {
           gender: profileForm.gender.trim(),
           phoneNumber: profileForm.phoneNumber.trim(),
           dateOfBirth: profileForm.dateOfBirth,
-          image: profileForm.image,
+          files: profileForm.files,
         },
       );
       setProfile(updated);

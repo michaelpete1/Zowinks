@@ -14,7 +14,9 @@ export type ProductDetails = {
   category: string | any;
   subcategory: string | any;
   image: ApiImage | null;
-  images?: ApiImage[] | null;
+  images?: Array<string | ApiImage | Record<string, unknown>> | null;
+  specs?: unknown;
+  specifications?: unknown;
   price: number;
   description: string;
   visible: boolean;
@@ -45,7 +47,8 @@ export type AdminProductInput = {
   description: string;
   visible: boolean;
   inStock: boolean;
-  file: File | null;
+  files: File[];
+  specs?: Record<string, unknown> | null;
 };
 
 export type DeliveryMethod = {
@@ -130,7 +133,7 @@ export type AdminCategoryInput = {
   slug?: string;
   visible: boolean;
   subcategories: { name: string; _id?: string }[];
-  file: File | null;
+  files: File[];
 };
 
 export type CategoryListItem = CategoryDetails;
@@ -477,7 +480,7 @@ export type AdminProfileUpdateInput = {
   gender?: string;
   phoneNumber?: string;
   dateOfBirth?: string;
-  image?: File | null;
+  files?: File[];
 };
 
 export type AdminAuthUser = AdminUserProfile;
@@ -751,6 +754,23 @@ const normalizeCategories = (response: unknown): AdminCategory[] => {
     .filter((category): category is AdminCategory => Boolean(category?.id));
 };
 
+const appendJsonPart = (formData: FormData, value: unknown) => {
+  formData.append("data", JSON.stringify(value));
+};
+
+const appendFilesPart = (
+  formData: FormData,
+  files: File[] | File | null | undefined,
+  fieldName = "files",
+) => {
+  const list = Array.isArray(files) ? files : files ? [files] : [];
+  list.forEach((file) => {
+    if (file) {
+      formData.append(fieldName, file);
+    }
+  });
+};
+
 const getApiRequestUrl = (path: string) => {
   if (typeof window !== "undefined") {
     return `${ZOWKINS_API_BASE}${path}`;
@@ -870,11 +890,9 @@ export const zowkinsApi = {
   },
   updateAdminMe(token: string, payload: AdminProfileUpdateInput) {
     const formData = new FormData();
-    const { image, ...data } = payload;
-    formData.set("data", JSON.stringify(data));
-    if (image) {
-      formData.set("image", image);
-    }
+    const { files, ...data } = payload;
+    appendJsonPart(formData, data);
+    appendFilesPart(formData, files);
 
     return apiRequest<AdminUserProfile>("/admin/users/me", {
       method: "PATCH",
@@ -920,11 +938,12 @@ export const zowkinsApi = {
   },
   createAdminProduct(token: string, payload: AdminProductInput) {
     const formData = new FormData();
-    const { file, ...data } = payload;
-    formData.set("data", JSON.stringify(data));
-    if (file) {
-      formData.set("file", file);
-    }
+    const { files, specs, ...data } = payload;
+    appendJsonPart(
+      formData,
+      specs == null ? data : { ...data, specs },
+    );
+    appendFilesPart(formData, files);
 
     return apiRequest<ProductDetails>("/admin/products", {
       method: "POST",
@@ -936,11 +955,12 @@ export const zowkinsApi = {
   },
   updateAdminProduct(token: string, id: string, payload: AdminProductInput) {
     const formData = new FormData();
-    const { file, ...data } = payload;
-    formData.set("data", JSON.stringify(data));
-    if (file) {
-      formData.set("file", file);
-    }
+    const { files, specs, ...data } = payload;
+    appendJsonPart(
+      formData,
+      specs == null ? data : { ...data, specs },
+    );
+    appendFilesPart(formData, files);
 
     return apiRequest<ProductDetails>(`/admin/products/${encodeURIComponent(id)}`, {
       method: "PATCH",
@@ -1015,11 +1035,9 @@ export const zowkinsApi = {
   },
   createAdminCategory(token: string, payload: AdminCategoryInput) {
     const formData = new FormData();
-    const { file, ...data } = payload;
-    formData.set("data", JSON.stringify(data));
-    if (file) {
-      formData.set("file", file);
-    }
+    const { files, ...data } = payload;
+    appendJsonPart(formData, data);
+    appendFilesPart(formData, files);
 
     return apiRequest<unknown>("/admin/categories", {
       method: "POST",
@@ -1057,11 +1075,9 @@ export const zowkinsApi = {
   },
   updateAdminCategory(token: string, id: string, payload: AdminCategoryInput) {
     const formData = new FormData();
-    const { file, ...data } = payload;
-    formData.set("data", JSON.stringify(data));
-    if (file) {
-      formData.set("file", file);
-    }
+    const { files, ...data } = payload;
+    appendJsonPart(formData, data);
+    appendFilesPart(formData, files);
 
     return apiRequest<unknown>(`/admin/categories/${encodeURIComponent(id)}`, {
       method: "PATCH",
@@ -1560,7 +1576,7 @@ export const zowkinsApi = {
     payload:
       | {
           data: string;
-          file?: File;
+          files?: File[] | File | null;
         }
       | {
           customer: {
@@ -1579,13 +1595,13 @@ export const zowkinsApi = {
             postalCode: string;
           };
           note?: string;
-          file?: File;
+          files?: File[] | File | null;
         },
   ) {
     const formData = new FormData();
 
     if ("data" in payload) {
-      formData.set("data", payload.data);
+      formData.append("data", payload.data);
     } else {
       const data = {
         customer: payload.customer,
@@ -1594,12 +1610,10 @@ export const zowkinsApi = {
         note: payload.note,
       };
 
-      formData.set("data", JSON.stringify(data));
+      formData.append("data", JSON.stringify(data));
     }
 
-    if (payload.file) {
-      formData.set("file", payload.file);
-    }
+    appendFilesPart(formData, payload.files);
 
     const headers: HeadersInit = {};
     if (token) {

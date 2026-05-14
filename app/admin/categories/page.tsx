@@ -23,7 +23,7 @@ type CategoryForm = {
   description: string;
   slug: string;
   visible: boolean;
-  file: File | null;
+  files: File[];
   subcategories: string;
 };
 
@@ -32,7 +32,7 @@ const emptyForm = (): CategoryForm => ({
   description: "",
   slug: "",
   visible: true,
-  file: null,
+  files: [],
   subcategories: "",
 });
 
@@ -243,7 +243,7 @@ export default function CategoriesPage() {
       description: asText(selectedCategory.description),
       slug: asText(selectedCategory.slug),
       visible: Boolean(selectedCategory.visible),
-      file: null,
+      files: [],
       subcategories: Array.isArray(selectedCategory.subcategories)
         ? selectedCategory.subcategories.map((s) => s.name || s).join(", ")
         : "",
@@ -314,7 +314,7 @@ export default function CategoriesPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setForm((current) => ({ ...current, file }));
+    setForm((current) => ({ ...current, files: [file] }));
     setPreview((current) => {
       if (current.startsWith("blob:")) {
         URL.revokeObjectURL(current);
@@ -351,12 +351,14 @@ export default function CategoriesPage() {
       return;
     }
 
-    if (form.file && !ALLOWED_IMAGE_MIME_TYPES.has(form.file.type)) {
+    const file = form.files[0] ?? null;
+
+    if (file && !ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
       setError("Upload a PNG, JPEG, WebP, or SVG image for the category.");
       return;
     }
 
-    if (!selectedCategory && !form.file) {
+    if (!selectedCategory && !file) {
       setError("Add a category image before creating a new category.");
       return;
     }
@@ -379,7 +381,7 @@ export default function CategoriesPage() {
           ? ((selectedCategory.subcategories ??
               []) as AdminCategoryInput["subcategories"])
           : rawSubcategoryNames.map((name) => ({ name })),
-        file: form.file,
+        files: form.files,
       };
 
       const categoryId = getCategoryId(selectedCategory);

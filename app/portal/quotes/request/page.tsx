@@ -154,7 +154,7 @@ export default function PortalQuoteRequestPage() {
           },
           note: note.trim() || undefined,
         }),
-        file: quoteFile || undefined,
+        files: quoteFile ? [quoteFile] : undefined,
       };
 
       const response = await zowkinsApi.requestPortalQuote(user.token, payload);

@@ -38,9 +38,10 @@ type ProductForm = {
   subcategory: string;
   price: string;
   description: string;
+  specRows: { key: string; value: string }[];
   visible: boolean;
   inStock: boolean;
-  file: File | null;
+  files: (File | null)[];
 };
 
 const emptyForm = (category = "", subcategory = ""): ProductForm => ({
@@ -50,9 +51,10 @@ const emptyForm = (category = "", subcategory = ""): ProductForm => ({
   subcategory,
   price: "",
   description: "",
+  specRows: [{ key: "", value: "" }],
   visible: true,
   inStock: true,
-  file: null,
+  files: [null],
 });
 
 const slugify = (value: string = "") =>
@@ -80,12 +82,48 @@ const ALLOWED_IMAGE_MIME_TYPES = new Set([
   "image/svg+xml",
 ]);
 
+const MAX_PRODUCT_IMAGES = 6;
+
 const safeJson = (value: unknown) => {
   try {
     return JSON.stringify(value, null, 2);
   } catch {
     return String(value);
   }
+};
+
+const createSpecRow = () => ({ key: "", value: "" });
+
+const normalizeSpecRows = (specs: unknown): { key: string; value: string }[] => {
+  if (!specs || typeof specs !== "object" || Array.isArray(specs)) {
+    return [createSpecRow()];
+  }
+
+  const entries = Object.entries(specs as Record<string, unknown>).map(
+    ([key, value]) => ({
+      key,
+      value:
+        typeof value === "string"
+          ? value
+          : value == null
+            ? ""
+            : typeof value === "object"
+              ? JSON.stringify(value)
+              : String(value),
+    }),
+  );
+
+  return entries.length ? entries : [createSpecRow()];
+};
+
+const buildSpecsObject = (rows: { key: string; value: string }[]) => {
+  const specEntries = rows
+    .map(({ key, value }) => [key.trim(), value.trim()] as const)
+    .filter(([key, value]) => key && value);
+
+  if (!specEntries.length) return null;
+
+  return Object.fromEntries(specEntries) as Record<string, unknown>;
 };
 
 function ProductPreview({ src, alt }: { src?: string | null; alt: string }) {
@@ -101,6 +139,14 @@ function ProductPreview({ src, alt }: { src?: string | null; alt: string }) {
       />
     </div>
   );
+}
+
+function getPrimaryProductImage(product: ProductDetails | null) {
+  return product?.images?.[0] ?? product?.image ?? null;
+}
+
+function getImageLabel(index: number) {
+  return index === 0 ? "Main image" : `Image ${index + 1}`;
 }
 
 export default function ProductsPage() {
@@ -288,23 +334,47 @@ export default function ProductsPage() {
           ? String(selectedProduct.price)
           : "",
       description: asString(selectedProduct.description),
+      specRows: normalizeSpecRows(selectedProduct.specs),
       visible: Boolean(selectedProduct.visible),
       inStock: Boolean(selectedProduct.inStock),
-      file: null,
+      files: [null],
     });
     const resolvedImage = resolveImageSource(
-      selectedProduct.image,
+      getPrimaryProductImage(selectedProduct),
       "/desktop.jpg",
     );
     setPreview(resolvedImage);
     setImageDebug(
       [
-        `raw: ${safeJson(selectedProduct.image)}`,
+        `raw: ${safeJson(getPrimaryProductImage(selectedProduct))}`,
         `resolved: ${resolvedImage}`,
         `fallback: ${resolvedImage === "/desktop.jpg" ? "yes" : "no"}`,
       ].join("\n"),
     );
   }, [selectedProduct]);
+
+  useEffect(() => {
+    const primaryFile = form.files.find(
+      (file): file is File => Boolean(file),
+    );
+
+    if (primaryFile) {
+      setPreview((current) => {
+        if (current.startsWith("blob:")) {
+          URL.revokeObjectURL(current);
+        }
+        return URL.createObjectURL(primaryFile);
+      });
+      return;
+    }
+
+    if (selectedProduct) {
+      setPreview(resolveImageSource(getPrimaryProductImage(selectedProduct), "/desktop.jpg"));
+      return;
+    }
+
+    setPreview("");
+  }, [form.files, selectedProduct]);
 
   const filteredProducts = useMemo(() => {
     const normalizedProducts = Array.isArray(products) ? products : [];
@@ -348,15 +418,91 @@ export default function ProductsPage() {
     setError("");
   };
 
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const updateImageSlot = (
+    index: number,
+    file: File | null,
+    input?: HTMLInputElement | null,
+  ) => {
+    if (file && !ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
+      setError("Upload PNG, JPEG, WebP, or SVG images for the product.");
+      if (input) input.value = "";
+      return;
+    }
 
-    setForm((current) => ({ ...current, file }));
-    setPreview((current) => {
-      if (current.startsWith("blob:")) URL.revokeObjectURL(current);
-      return URL.createObjectURL(file);
+    setError("");
+    setForm((current) => {
+      const nextFiles = [...current.files];
+      nextFiles[index] = file;
+      return { ...current, files: nextFiles };
     });
+
+    if (input) input.value = "";
+  };
+
+  const handleImageUpload = (
+    index: number,
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0] ?? null;
+    updateImageSlot(index, file, event.target);
+  };
+
+  const addImageSlot = () => {
+    setForm((current) => {
+      if (current.files.length >= MAX_PRODUCT_IMAGES) return current;
+      return { ...current, files: [...current.files, null] };
+    });
+  };
+
+  const removeImageSlot = (index: number) => {
+    setForm((current) => {
+      if (current.files.length <= 1) {
+        return { ...current, files: [null] };
+      }
+
+      const nextFiles = current.files.filter((_, fileIndex) => fileIndex !== index);
+      return { ...current, files: nextFiles.length ? nextFiles : [null] };
+    });
+  };
+
+  const updateSpecRow = (
+    index: number,
+    field: "key" | "value",
+    value: string,
+  ) => {
+    setForm((current) => ({
+      ...current,
+      specRows: current.specRows.map((row, rowIndex) =>
+        rowIndex === index ? { ...row, [field]: value } : row,
+      ),
+    }));
+  };
+
+  const addSpecRow = () => {
+    setForm((current) => ({
+      ...current,
+      specRows: [...current.specRows, createSpecRow()],
+    }));
+  };
+
+  const removeSelectedImage = (index: number) => {
+    setForm((current) => ({
+      ...current,
+      files:
+        current.files.length > 1
+          ? current.files.filter((_, fileIndex) => fileIndex !== index)
+          : [],
+    }));
+  };
+
+  const removeSpecRow = (index: number) => {
+    setForm((current) => ({
+      ...current,
+      specRows:
+        current.specRows.length > 1
+          ? current.specRows.filter((_, rowIndex) => rowIndex !== index)
+          : [createSpecRow()],
+    }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -367,15 +513,26 @@ export default function ProductsPage() {
       return;
     }
 
-    if (isCreating && !form.file) {
-      setError("Upload a product image before creating a product.");
+    if (isCreating && !form.files.some((file) => Boolean(file))) {
+      setError("Upload at least one product image before creating a product.");
       return;
     }
 
-    if (form.file && !ALLOWED_IMAGE_MIME_TYPES.has(form.file.type)) {
-      setError("Upload a PNG, JPEG, WebP, or SVG image for the product.");
+    const selectedFiles = form.files.filter(
+      (file): file is File => Boolean(file),
+    );
+
+    if (selectedFiles.length > MAX_PRODUCT_IMAGES) {
+      setError(`Upload up to ${MAX_PRODUCT_IMAGES} product images.`);
       return;
     }
+
+    if (selectedFiles.some((file) => !ALLOWED_IMAGE_MIME_TYPES.has(file.type))) {
+      setError("Upload PNG, JPEG, WebP, or SVG images for the product.");
+      return;
+    }
+
+    const specs = buildSpecsObject(form.specRows);
 
     const payload = {
       name: (form.name || "").trim(),
@@ -385,7 +542,8 @@ export default function ProductsPage() {
       description: (form.description || "").trim(),
       visible: form.visible,
       inStock: form.inStock,
-      file: form.file,
+      files: selectedFiles,
+      specs,
     };
 
     const missing = [];
@@ -446,13 +604,13 @@ export default function ProductsPage() {
       );
       setSelectedProduct(saved);
       const resolvedSavedImage = resolveImageSource(
-        saved.image,
+        getPrimaryProductImage(saved),
         "/desktop.jpg",
       );
       setPreview(resolvedSavedImage);
       setImageDebug(
         [
-          `saved raw: ${safeJson(saved.image)}`,
+          `saved raw: ${safeJson(getPrimaryProductImage(saved))}`,
           `saved resolved: ${resolvedSavedImage}`,
           `saved fallback: ${resolvedSavedImage === "/desktop.jpg" ? "yes" : "no"}`,
         ].join("\n"),
@@ -718,7 +876,13 @@ export default function ProductsPage() {
                   key={product.id || (product as any)._id}
                   className="rounded-[1.4rem] border border-slate-100 bg-white p-4 shadow-sm"
                 >
-                  <ProductPreview src={product.image?.url} alt={product.name} />
+                  <ProductPreview
+                    src={resolveImageSource(
+                      getPrimaryProductImage(product),
+                      "/desktop.jpg",
+                    )}
+                    alt={product.name}
+                  />
                   <div className="mt-4 flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -906,12 +1070,11 @@ export default function ProductsPage() {
               <div className="grid gap-4 rounded-[1.5rem] bg-slate-50 p-4 md:col-span-2">
                 <ProductPreview
                   src={
-                    preview || form.file
-                      ? preview
-                      : resolveImageSource(
-                          selectedProduct?.image,
-                          "/desktop.jpg",
-                        )
+                    preview ||
+                    resolveImageSource(
+                      getPrimaryProductImage(selectedProduct),
+                      "/desktop.jpg",
+                    )
                   }
                   alt={form.name || "Product preview"}
                 />
@@ -924,15 +1087,120 @@ export default function ProductsPage() {
                   </pre>
                 </div>
                 <div className="grid gap-3">
-                  <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
-                    <span>Image file</span>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                      onChange={handleImageUpload}
-                      className="w-full rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:border-[#0a2a78]"
-                    />
-                  </label>
+                  <div className="grid gap-2 text-sm font-medium text-slate-700">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-slate-700">
+                          Product images
+                        </p>
+                        <p className="text-xs leading-5 text-slate-500">
+                          Add up to {MAX_PRODUCT_IMAGES} image slots. The first
+                          slot is used as the main preview.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addImageSlot}
+                        disabled={form.files.length >= MAX_PRODUCT_IMAGES}
+                        className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Add slot
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid gap-3">
+                    {form.files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="grid gap-3 rounded-[1.4rem] border border-slate-200 bg-white p-4 sm:grid-cols-[minmax(0,1.2fr)_auto]"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                              {getImageLabel(index)}
+                            </p>
+                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                              {index === 0 ? "Main" : "Extra"}
+                            </span>
+                          </div>
+                          <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4">
+                            <p className="truncate text-sm font-medium text-slate-900">
+                              {file ? file.name : "No image selected"}
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-slate-500">
+                              {file
+                                ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
+                                : "Choose a PNG, JPEG, WebP, or SVG file"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 sm:items-end">
+                          <label className="inline-flex cursor-pointer items-center justify-center rounded-full bg-[#0a2a78] px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#12386a]">
+                            Choose file
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                              onChange={(event) => handleImageUpload(index, event)}
+                              className="hidden"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => removeImageSlot(index)}
+                            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 transition hover:bg-slate-100"
+                          >
+                            Remove slot
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="hidden rounded-2xl border border-dashed border-slate-300 bg-white p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                        Selected images
+                      </p>
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                        {form.files.length}/{MAX_PRODUCT_IMAGES}
+                      </span>
+                    </div>
+                    {form.files.length > 0 ? (
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {form.files
+                          .filter((file): file is File => Boolean(file))
+                          .map((file, index) => (
+                          <div
+                            key={`${file.name}-${index}`}
+                            className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3"
+                          >
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                              {index === 0 ? "Main" : `#${index + 1}`}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-slate-900">
+                                {file.name}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeSelectedImage(index)}
+                              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-500">
+                        No images selected yet.
+                      </p>
+                    )}
+                  </div>
                   <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
                     <span>Slug</span>
                     <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
@@ -961,6 +1229,9 @@ export default function ProductsPage() {
                       </button>
                     </div>
                   </label>
+                  <p className="text-xs font-medium text-slate-500">
+                    Selected images: {form.files.length || "none"}
+                  </p>
                 </div>
               </div>
 
@@ -1142,6 +1413,67 @@ export default function ProductsPage() {
                   placeholder="Short product description"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
                 />
+              </label>
+
+              <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+                <span>Specs</span>
+                <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                  <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm leading-6 text-slate-600">
+                      Add structured product details like RAM, storage, GPU,
+                      or processor. These become a flexible specs object in the
+                      backend.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={addSpecRow}
+                      className="inline-flex w-full items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-slate-800 sm:w-auto"
+                    >
+                      Add field
+                    </button>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {form.specRows.map((row, index) => (
+                      <div
+                        key={`${index}-${row.key}`}
+                        className="grid gap-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_auto]"
+                      >
+                        <input
+                          value={row.key}
+                          onChange={(event) =>
+                            updateSpecRow(index, "key", event.target.value)
+                          }
+                          placeholder="Spec name"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                        />
+                        <input
+                          value={row.value}
+                          onChange={(event) =>
+                            updateSpecRow(index, "value", event.target.value)
+                          }
+                          placeholder="Spec value"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeSpecRow(index)}
+                          className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:w-auto"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-white px-4 py-3 text-xs leading-5 text-slate-500">
+                    Example: <span className="font-semibold">RAM</span>,{" "}
+                    <span className="font-semibold">Storage</span>,{" "}
+                    <span className="font-semibold">Processor</span>,{" "}
+                    <span className="font-semibold">Graphics</span>,{" "}
+                    <span className="font-semibold">Battery</span>.
+                  </div>
+                </div>
               </label>
 
               <label className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
