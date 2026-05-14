@@ -576,7 +576,7 @@ export default function OrdersPage() {
             </p>
           ) : null}
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <label className="sr-only">
               Order status
               <select
@@ -585,7 +585,7 @@ export default function OrdersPage() {
                   setPage(1);
                   setFilterOrderStatus(event.target.value);
                 }}
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white sm:w-auto"
               >
                 <option value="">All order statuses</option>
                 {orderStatusOptions.map((status) => (
@@ -603,7 +603,7 @@ export default function OrdersPage() {
                   setPage(1);
                   setFilterPaymentStatus(event.target.value);
                 }}
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white sm:w-auto"
               >
                 <option value="">All payment statuses</option>
                 {paymentStatusOptions.map((status) => (
@@ -621,7 +621,7 @@ export default function OrdersPage() {
                   setPage(1);
                   setPageSize(Number(event.target.value));
                 }}
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white sm:w-auto"
               >
                 {ORDER_PAGE_SIZE_OPTIONS.map((size) => (
                   <option key={size} value={size}>
@@ -634,13 +634,13 @@ export default function OrdersPage() {
               type="button"
               onClick={() => void refresh()}
               disabled={refreshing}
-              className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {refreshing ? "Refreshing..." : "Refresh"}
             </button>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.2rem] bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <div className="mt-4 flex flex-col gap-3 rounded-[1.2rem] bg-slate-50 px-4 py-3 text-sm text-slate-600 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <p>
               Page <strong className="text-slate-900">{page}</strong>
               <span className="ml-2">
@@ -649,12 +649,12 @@ export default function OrdersPage() {
                   : "No orders on this page"}
               </span>
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
               <button
                 type="button"
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={loading || page === 1}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 Previous
               </button>
@@ -662,7 +662,7 @@ export default function OrdersPage() {
                 type="button"
                 onClick={() => setPage((current) => current + 1)}
                 disabled={loading || !hasNextPage}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 Next
               </button>
@@ -715,20 +715,22 @@ export default function OrdersPage() {
                   <span className="text-xs uppercase tracking-[0.24em] text-slate-500">
                     Updated {new Date(order.updatedAt).toLocaleString()}
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <button
                       type="button"
                       onClick={() => {
                         void setSelectedOrderById(order.id);
-                        document.getElementById("order-details")?.scrollIntoView({ behavior: "smooth" });
+                        document
+                          .getElementById("order-details")
+                          ?.scrollIntoView({ behavior: "smooth" });
                       }}
-                      className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                      className="w-full rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 transition hover:bg-slate-200 sm:w-auto sm:text-sm sm:normal-case sm:tracking-normal"
                     >
                       Quick view
                     </button>
                     <Link
                       href={`/admin/orders/${order.id}`}
-                      className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                      className="w-full rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white shadow-sm transition hover:bg-slate-800 sm:w-auto sm:text-sm sm:normal-case sm:tracking-normal"
                     >
                       View details
                     </Link>
@@ -758,16 +760,16 @@ export default function OrdersPage() {
                 the dashboard.
               </p>
             </div>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 href="/admin/products"
-                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 sm:w-auto"
               >
                 Products
               </Link>
               <Link
                 href="/admin/settings"
-                className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                className="w-full rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15 sm:w-auto"
               >
                 Profile settings
               </Link>
@@ -951,7 +953,10 @@ export default function OrdersPage() {
             </form>
           </section>
 
-          <section id="order-details" className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
+          <section
+            id="order-details"
+            className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
               Selected order
             </p>

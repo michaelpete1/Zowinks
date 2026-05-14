@@ -18,7 +18,7 @@ export default function PortalResetPasswordPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const validateForm = () => {
@@ -38,7 +38,7 @@ export default function PortalResetPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -55,11 +55,15 @@ export default function PortalResetPasswordPage() {
       });
 
       setMessage("Password reset email sent! Please check your inbox.");
-      
+
       // Clear form
       setFormData({ email: "" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send password reset email. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to send password reset email. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -68,12 +72,14 @@ export default function PortalResetPasswordPage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <PortalNavbar />
-      
+
       <main className="mx-auto max-w-md px-4 py-12 md:px-8">
         <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-white">Reset Password</h1>
-            <p className="mt-2 text-slate-300">Enter your email to receive a password reset link</p>
+            <p className="mt-2 text-slate-300">
+              Enter your email to receive a password reset link
+            </p>
           </div>
 
           {error && (
@@ -90,7 +96,10 @@ export default function PortalResetPasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="email"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Email Address
               </label>
               <input
@@ -117,13 +126,19 @@ export default function PortalResetPasswordPage() {
           <div className="mt-8 text-center">
             <p className="text-sm text-slate-300">
               Remember your password?{" "}
-              <Link href="/portal/auth/login" className="text-[#f3c74d] hover:underline">
+              <Link
+                href="/portal/auth/login"
+                className="text-[#f3c74d] hover:underline"
+              >
                 Sign in
               </Link>
             </p>
             <p className="mt-2 text-sm text-slate-300">
               Don't have an account?{" "}
-              <Link href="/portal/auth/signup" className="text-[#f3c74d] hover:underline">
+              <Link
+                href="/portal/auth/signup"
+                className="text-[#f3c74d] hover:underline"
+              >
                 Sign up
               </Link>
             </p>

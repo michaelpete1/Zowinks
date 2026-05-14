@@ -1210,6 +1210,9 @@ video {
 .overflow-y-auto {
   overflow-y: auto;
 }
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1448,6 +1451,10 @@ video {
 .bg-\[\#07131f\] {
   --tw-bg-opacity: 1;
   background-color: rgb(7 19 31 / var(--tw-bg-opacity, 1));
+}
+.bg-\[\#07142a\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(7 20 42 / var(--tw-bg-opacity, 1));
 }
 .bg-\[\#07142a\]\/95 {
   background-color: rgb(7 20 42 / 0.95);
@@ -1998,10 +2005,6 @@ video {
   padding-left: 1.5rem;
   padding-right: 1.5rem;
 }
-.py-0\.5 {
-  padding-top: 0.125rem;
-  padding-bottom: 0.125rem;
-}
 .py-1 {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
@@ -2083,6 +2086,9 @@ video {
 .pl-3 {
   padding-left: 0.75rem;
 }
+.pr-1 {
+  padding-right: 0.25rem;
+}
 .pr-10 {
   padding-right: 2.5rem;
 }
@@ -2136,9 +2142,6 @@ video {
 }
 .text-\[11px\] {
   font-size: 11px;
-}
-.text-\[9px\] {
-  font-size: 9px;
 }
 .text-base {
   font-size: 1rem;
@@ -2776,6 +2779,14 @@ video {
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
+.ring-2 {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+.ring-\[\#f3c74d\]\/25 {
+  --tw-ring-color: rgb(243 199 77 / 0.25);
+}
 .ring-slate-100 {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(241 245 249 / var(--tw-ring-opacity, 1));
@@ -3097,6 +3108,10 @@ h6 {
   border-color: rgb(15 23 42 / var(--tw-border-opacity, 1));
 }
 
+.hover\:border-white\/25:hover {
+  border-color: rgb(255 255 255 / 0.25);
+}
+
 .hover\:bg-\[\#0a2a78\]:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(10 42 120 / var(--tw-bg-opacity, 1));
@@ -3130,6 +3145,10 @@ h6 {
 .hover\:bg-amber-700:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(180 83 9 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-black\/45:hover {
+  background-color: rgb(0 0 0 / 0.45);
 }
 
 .hover\:bg-emerald-600:hover {
@@ -3627,9 +3646,19 @@ h6 {
     padding-bottom: 0.5rem;
   }
 
+  .sm\:py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
   .sm\:py-4 {
     padding-top: 1rem;
     padding-bottom: 1rem;
+  }
+
+  .sm\:py-6 {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
   }
 
   .sm\:py-8 {
@@ -3684,6 +3713,10 @@ h6 {
     line-height: 1rem;
   }
 
+  .sm\:normal-case {
+    text-transform: none;
+  }
+
   .sm\:leading-6 {
     line-height: 1.5rem;
   }
@@ -3698,6 +3731,10 @@ h6 {
 
   .sm\:tracking-\[0\.2em\] {
     letter-spacing: 0.2em;
+  }
+
+  .sm\:tracking-normal {
+    letter-spacing: 0em;
   }
 }
 
@@ -3727,16 +3764,8 @@ h6 {
     display: inline-flex;
   }
 
-  .md\:table {
-    display: table;
-  }
-
   .md\:grid {
     display: grid;
-  }
-
-  .md\:hidden {
-    display: none;
   }
 
   .md\:h-48 {
@@ -3948,6 +3977,10 @@ h6 {
 
   .lg\:flex {
     display: flex;
+  }
+
+  .lg\:table {
+    display: table;
   }
 
   .lg\:grid {

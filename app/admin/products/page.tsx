@@ -38,11 +38,20 @@ type ProductForm = {
   subcategory: string;
   price: string;
   description: string;
-  specRows: { key: string; value: string }[];
+  specRows: { id: string; key: string; value: string }[];
   visible: boolean;
   inStock: boolean;
   files: (File | null)[];
 };
+
+const createRowId = () =>
+  typeof globalThis !== "undefined" &&
+  typeof globalThis.crypto !== "undefined" &&
+  typeof globalThis.crypto.randomUUID === "function"
+    ? globalThis.crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+const createSpecRow = () => ({ id: createRowId(), key: "", value: "" });
 
 const emptyForm = (category = "", subcategory = ""): ProductForm => ({
   name: "",
@@ -51,7 +60,7 @@ const emptyForm = (category = "", subcategory = ""): ProductForm => ({
   subcategory,
   price: "",
   description: "",
-  specRows: [{ key: "", value: "" }],
+  specRows: [createSpecRow()],
   visible: true,
   inStock: true,
   files: [null],
@@ -92,15 +101,16 @@ const safeJson = (value: unknown) => {
   }
 };
 
-const createSpecRow = () => ({ key: "", value: "" });
-
-const normalizeSpecRows = (specs: unknown): { key: string; value: string }[] => {
+const normalizeSpecRows = (
+  specs: unknown,
+): { id: string; key: string; value: string }[] => {
   if (!specs || typeof specs !== "object" || Array.isArray(specs)) {
     return [createSpecRow()];
   }
 
   const entries = Object.entries(specs as Record<string, unknown>).map(
     ([key, value]) => ({
+      id: createRowId(),
       key,
       value:
         typeof value === "string"
@@ -116,7 +126,9 @@ const normalizeSpecRows = (specs: unknown): { key: string; value: string }[] => 
   return entries.length ? entries : [createSpecRow()];
 };
 
-const buildSpecsObject = (rows: { key: string; value: string }[]) => {
+const buildSpecsObject = (
+  rows: { id: string; key: string; value: string }[],
+) => {
   const specEntries = rows
     .map(({ key, value }) => [key.trim(), value.trim()] as const)
     .filter(([key, value]) => key && value);
@@ -334,7 +346,9 @@ export default function ProductsPage() {
           ? String(selectedProduct.price)
           : "",
       description: asString(selectedProduct.description),
-      specRows: normalizeSpecRows(selectedProduct.specs),
+      specRows: normalizeSpecRows(
+        selectedProduct.specs ?? selectedProduct.specifications,
+      ),
       visible: Boolean(selectedProduct.visible),
       inStock: Boolean(selectedProduct.inStock),
       files: [null],
@@ -354,9 +368,7 @@ export default function ProductsPage() {
   }, [selectedProduct]);
 
   useEffect(() => {
-    const primaryFile = form.files.find(
-      (file): file is File => Boolean(file),
-    );
+    const primaryFile = form.files.find((file): file is File => Boolean(file));
 
     if (primaryFile) {
       setPreview((current) => {
@@ -369,7 +381,12 @@ export default function ProductsPage() {
     }
 
     if (selectedProduct) {
-      setPreview(resolveImageSource(getPrimaryProductImage(selectedProduct), "/desktop.jpg"));
+      setPreview(
+        resolveImageSource(
+          getPrimaryProductImage(selectedProduct),
+          "/desktop.jpg",
+        ),
+      );
       return;
     }
 
@@ -460,7 +477,9 @@ export default function ProductsPage() {
         return { ...current, files: [null] };
       }
 
-      const nextFiles = current.files.filter((_, fileIndex) => fileIndex !== index);
+      const nextFiles = current.files.filter(
+        (_, fileIndex) => fileIndex !== index,
+      );
       return { ...current, files: nextFiles.length ? nextFiles : [null] };
     });
   };
@@ -518,8 +537,8 @@ export default function ProductsPage() {
       return;
     }
 
-    const selectedFiles = form.files.filter(
-      (file): file is File => Boolean(file),
+    const selectedFiles = form.files.filter((file): file is File =>
+      Boolean(file),
     );
 
     if (selectedFiles.length > MAX_PRODUCT_IMAGES) {
@@ -527,14 +546,16 @@ export default function ProductsPage() {
       return;
     }
 
-    if (selectedFiles.some((file) => !ALLOWED_IMAGE_MIME_TYPES.has(file.type))) {
+    if (
+      selectedFiles.some((file) => !ALLOWED_IMAGE_MIME_TYPES.has(file.type))
+    ) {
       setError("Upload PNG, JPEG, WebP, or SVG images for the product.");
       return;
     }
 
     const specs = buildSpecsObject(form.specRows);
 
-    const payload = {
+    const payloadBase = {
       name: (form.name || "").trim(),
       category: form.category || "",
       subcategory: form.subcategory || "",
@@ -542,15 +563,14 @@ export default function ProductsPage() {
       description: (form.description || "").trim(),
       visible: form.visible,
       inStock: form.inStock,
-      files: selectedFiles,
       specs,
     };
 
     const missing = [];
-    if (!payload.name) missing.push("Product Name");
-    if (!payload.category) missing.push("Category");
-    if (!payload.subcategory) missing.push("Subcategory");
-    if (!form.price || Number.isNaN(payload.price)) missing.push("Price");
+    if (!payloadBase.name) missing.push("Product Name");
+    if (!payloadBase.category) missing.push("Category");
+    if (!payloadBase.subcategory) missing.push("Subcategory");
+    if (!form.price || Number.isNaN(payloadBase.price)) missing.push("Price");
 
     if (missing.length > 0) {
       setError(
@@ -571,18 +591,67 @@ export default function ProductsPage() {
     );
     console.log(
       "payload booleans:",
-      payload.visible,
-      payload.inStock,
-      typeof payload.visible,
-      typeof payload.inStock,
+      payloadBase.visible,
+      payloadBase.inStock,
+      typeof payloadBase.visible,
+      typeof payloadBase.inStock,
       "payload keys:",
-      Object.keys(payload),
+      Object.keys(payloadBase),
     );
 
     try {
       const productId = selectedProduct?.id || (selectedProduct as any)?._id;
-      const isValidProduct = selectedProduct && productId;
+      const isValidProduct = Boolean(selectedProduct && productId);
       console.log("isValidProduct:", isValidProduct, "productId:", productId);
+
+      let finalFiles = selectedFiles;
+      if (isValidProduct && finalFiles.length === 0) {
+        const existingImage = resolveImageSource(
+          getPrimaryProductImage(selectedProduct),
+          "",
+        );
+
+        if (!existingImage || existingImage === "/desktop.jpg") {
+          setError(
+            "Select at least one product image before saving changes. The current backend update endpoint requires a file upload.",
+          );
+          return;
+        }
+
+        try {
+          const response = await fetch(existingImage);
+          if (!response.ok) {
+            throw new Error(
+              `Could not fetch existing image (${response.status}).`,
+            );
+          }
+
+          const blob = await response.blob();
+          const mime = blob.type || "image/jpeg";
+          const extension = mime.includes("png")
+            ? "png"
+            : mime.includes("webp")
+              ? "webp"
+              : mime.includes("svg")
+                ? "svg"
+                : "jpg";
+          finalFiles = [
+            new File([blob], `product-${productId}.${extension}`, {
+              type: mime,
+            }),
+          ];
+        } catch {
+          setError(
+            "Select at least one product image before saving changes. The current backend update endpoint requires a file upload.",
+          );
+          return;
+        }
+      }
+
+      const payload = {
+        ...payloadBase,
+        files: finalFiles,
+      };
 
       const saved = isValidProduct
         ? await zowkinsApi.updateAdminProduct(
@@ -749,7 +818,7 @@ export default function ProductsPage() {
 
           <div className="mt-8 overflow-hidden rounded-[1.5rem] border border-slate-100 bg-white shadow-sm">
             <div className="w-full overflow-x-auto">
-              <table className="hidden min-w-full border-separate border-spacing-0 text-left text-sm md:table">
+              <table className="hidden min-w-full border-separate border-spacing-0 text-left text-sm lg:table">
                 <thead className="bg-slate-50 text-slate-500">
                   <tr className="divide-x divide-slate-200">
                     <th className="px-4 py-4 font-semibold">Product</th>
@@ -865,7 +934,7 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:hidden">
+          <div className="mt-6 grid gap-4 lg:hidden">
             {loading ? (
               <div className="rounded-[1.4rem] border border-slate-100 bg-white p-4 text-sm text-slate-500 shadow-sm">
                 Loading products...
@@ -1141,7 +1210,9 @@ export default function ProductsPage() {
                             <input
                               type="file"
                               accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                              onChange={(event) => handleImageUpload(index, event)}
+                              onChange={(event) =>
+                                handleImageUpload(index, event)
+                              }
                               className="hidden"
                             />
                           </label>
@@ -1170,30 +1241,30 @@ export default function ProductsPage() {
                         {form.files
                           .filter((file): file is File => Boolean(file))
                           .map((file, index) => (
-                          <div
-                            key={`${file.name}-${index}`}
-                            className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3"
-                          >
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                              {index === 0 ? "Main" : `#${index + 1}`}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium text-slate-900">
-                                {file.name}
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                {(file.size / 1024 / 1024).toFixed(2)} MB
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeSelectedImage(index)}
-                              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                            <div
+                              key={`${file.name}-${index}`}
+                              className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3"
                             >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
+                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                {index === 0 ? "Main" : `#${index + 1}`}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-slate-900">
+                                  {file.name}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeSelectedImage(index)}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
                       </div>
                     ) : (
                       <p className="mt-3 text-sm text-slate-500">
@@ -1389,7 +1460,7 @@ export default function ProductsPage() {
                           onClick={() =>
                             setForm((c) => ({ ...c, subcategory: sub }))
                           }
-                          className="rounded-full border border-slate-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-500 transition hover:border-[#0a2a78] hover:text-[#0a2a78]"
+                          className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:border-[#0a2a78] hover:text-[#0a2a78]"
                         >
                           {sub}
                         </button>
@@ -1420,14 +1491,14 @@ export default function ProductsPage() {
                 <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
                   <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm leading-6 text-slate-600">
-                      Add structured product details like RAM, storage, GPU,
-                      or processor. These become a flexible specs object in the
+                      Add structured product details like RAM, storage, GPU, or
+                      processor. These become a flexible specs object in the
                       backend.
                     </p>
                     <button
                       type="button"
                       onClick={addSpecRow}
-                      className="inline-flex w-full items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-slate-800 sm:w-auto"
+                      className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
                     >
                       Add field
                     </button>
@@ -1436,7 +1507,7 @@ export default function ProductsPage() {
                   <div className="mt-4 space-y-3">
                     {form.specRows.map((row, index) => (
                       <div
-                        key={`${index}-${row.key}`}
+                        key={row.id}
                         className="grid gap-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_auto]"
                       >
                         <input
@@ -1458,7 +1529,7 @@ export default function ProductsPage() {
                         <button
                           type="button"
                           onClick={() => removeSpecRow(index)}
-                          className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:w-auto"
+                          className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 sm:w-auto sm:py-3 sm:text-sm"
                         >
                           Remove
                         </button>

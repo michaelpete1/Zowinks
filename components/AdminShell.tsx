@@ -322,7 +322,8 @@ export function AdminShell({
 }: AdminShellProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { ready, isAdmin, session, clearSession, refreshSession } = useAdminSession();
+  const { ready, isAdmin, session, clearSession, refreshSession } =
+    useAdminSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -333,10 +334,13 @@ export function AdminShell({
   useEffect(() => {
     if (!isAdmin || !ready) return;
 
-    const refreshInterval = setInterval(() => {
-      console.log("Auto-refreshing admin session...");
-      refreshSession();
-    }, 45 * 60 * 1000); // 45 minutes
+    const refreshInterval = setInterval(
+      () => {
+        console.log("Auto-refreshing admin session...");
+        refreshSession();
+      },
+      45 * 60 * 1000,
+    ); // 45 minutes
 
     return () => clearInterval(refreshInterval);
   }, [isAdmin, ready, refreshSession]);
@@ -375,8 +379,8 @@ export function AdminShell({
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#eef2f7_0%,#f7f9fc_100%)] text-slate-900">
-      <div className="flex min-h-screen">
+    <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#eef2f7_0%,#f7f9fc_100%)] text-slate-900">
+      <div className="flex min-h-screen min-w-0">
         <aside className="hidden w-72 max-w-[18rem] shrink-0 border-r border-slate-200 bg-white/95 px-4 py-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)] lg:flex lg:flex-col">
           <Link
             href="/admin"
@@ -432,7 +436,7 @@ export function AdminShell({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur-xl md:px-6 lg:px-8">
+          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-3 py-3 backdrop-blur-xl sm:px-4 sm:py-4 md:px-6 lg:px-8">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 lg:hidden">
                 <button
@@ -501,7 +505,7 @@ export function AdminShell({
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 md:px-6 md:py-8 lg:px-8 lg:py-10">
+          <main className="flex-1 px-3 py-5 sm:px-4 sm:py-6 md:px-6 md:py-8 lg:px-8 lg:py-10">
             {children}
           </main>
         </div>
@@ -515,7 +519,7 @@ export function AdminShell({
             aria-label="Close admin menu"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-[86vw] max-w-sm bg-white px-5 py-6 shadow-2xl">
+          <aside className="absolute inset-y-0 left-0 flex w-[86vw] max-w-sm flex-col bg-white px-5 py-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-3 py-2">
                 <Image
@@ -545,7 +549,7 @@ export function AdminShell({
               </button>
             </div>
 
-            <nav className="mt-5 space-y-2">
+            <nav className="mt-5 flex-1 space-y-2 overflow-y-auto pr-1">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
@@ -558,7 +562,7 @@ export function AdminShell({
               ))}
             </nav>
 
-            <div className="mt-8 space-y-3 border-t border-slate-100 pt-5">
+            <div className="mt-6 shrink-0 space-y-3 border-t border-slate-100 pt-5">
               <Link
                 href="/"
                 className="block rounded-2xl border border-slate-200 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-900"

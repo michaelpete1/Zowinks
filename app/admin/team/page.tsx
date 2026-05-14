@@ -461,25 +461,25 @@ export default function TeamPage() {
                   </span>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
                   <button
                     type="button"
                     onClick={() => setSelectedMember(member)}
-                    className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
+                    className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 sm:w-auto"
                   >
                     Edit
                   </button>
                   <button
                     type="button"
                     onClick={() => handleResend(member.id)}
-                    className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
+                    className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 sm:w-auto"
                   >
                     Resend invite
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(member.id)}
-                    className="rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
+                    className="w-full rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 sm:w-auto"
                   >
                     Remove
                   </button>
@@ -507,16 +507,16 @@ export default function TeamPage() {
                 password.
               </p>
             </div>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 href="/admin/settings"
-                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 sm:w-auto"
               >
                 Profile settings
               </Link>
               <button
                 onClick={refreshTeam}
-                className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                className="w-full rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15 sm:w-auto"
               >
                 Refresh team
               </button>

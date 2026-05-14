@@ -676,10 +676,16 @@ const normalizeProductImage = (product: {
 
 const normalizeProduct = (product: ProductDetails & { _id?: string }): ProductDetails => {
   const normalized = normalizeEntityId(product);
+  const specs =
+    normalized.specs ??
+    (normalized as ProductDetails).specifications ??
+    (normalized as Record<string, unknown>).specifications;
   return {
     ...normalized,
     image: normalizeProductImage(normalized),
     images: Array.isArray(normalized.images) ? normalized.images : undefined,
+    specs,
+    specifications: (normalized as ProductDetails).specifications ?? specs,
   };
 };
 
@@ -941,7 +947,7 @@ export const zowkinsApi = {
     const { files, specs, ...data } = payload;
     appendJsonPart(
       formData,
-      specs == null ? data : { ...data, specs },
+      specs == null ? data : { ...data, specs, specifications: specs },
     );
     appendFilesPart(formData, files);
 
@@ -958,7 +964,7 @@ export const zowkinsApi = {
     const { files, specs, ...data } = payload;
     appendJsonPart(
       formData,
-      specs == null ? data : { ...data, specs },
+      specs == null ? data : { ...data, specs, specifications: specs },
     );
     appendFilesPart(formData, files);
 
@@ -1412,9 +1418,9 @@ export const zowkinsApi = {
     });
   },
   getProductBySlug(slug: string) {
-    return apiRequest<ProductDetails>(`/products/${encodeURIComponent(slug)}`).then(
-      (product) => normalizeProduct(product as ProductDetails & { _id?: string }),
-    );
+    return apiRequest<ProductDetails>(`/products/${encodeURIComponent(slug)}`, {
+      cache: "no-store",
+    }).then((product) => normalizeProduct(product as ProductDetails & { _id?: string }));
   },
   getPortalMe(token: string) {
     return apiRequest<PortalUser>("/portal/users/me", {

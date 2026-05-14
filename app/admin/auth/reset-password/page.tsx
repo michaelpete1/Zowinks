@@ -253,7 +253,13 @@ function AdminResetPasswordPageContent() {
 
 export default function AdminResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen grid place-items-center bg-slate-50 text-slate-600">Loading reset page...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen grid place-items-center bg-slate-50 text-slate-600">
+          Loading reset page...
+        </div>
+      }
+    >
       <AdminResetPasswordPageContent />
     </Suspense>
   );

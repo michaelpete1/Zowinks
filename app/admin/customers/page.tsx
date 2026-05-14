@@ -363,12 +363,12 @@ export default function CustomersPage() {
             </p>
           ) : null}
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <select
               value={filterStatus}
               onChange={(event) => setFilterStatus(event.target.value)}
               title="Filter by status"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white sm:w-auto"
             >
               <option value="">All statuses</option>
               <option value="pending">Pending</option>
@@ -380,7 +380,7 @@ export default function CustomersPage() {
               value={filterReferral}
               onChange={(event) => setFilterReferral(event.target.value)}
               title="Filter by referral source"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white sm:w-auto"
             >
               <option value="">All referral states</option>
               <option value="true">Referral partners</option>
@@ -389,7 +389,7 @@ export default function CustomersPage() {
             <button
               type="button"
               onClick={() => void loadCustomers()}
-              className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
             >
               Refresh
             </button>
@@ -450,11 +450,11 @@ export default function CustomersPage() {
                   </span>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
                   <button
                     type="button"
                     onClick={() => void openCustomer(customer)}
-                    className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
+                    className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 sm:w-auto"
                   >
                     View
                   </button>
@@ -466,7 +466,7 @@ export default function CustomersPage() {
                     disabled={
                       deletingId === (customer.id || (customer as any)._id)
                     }
-                    className="rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                   >
                     Delete
                   </button>
@@ -495,16 +495,16 @@ export default function CustomersPage() {
               </p>
               <p>Edit or delete a customer without leaving the admin panel.</p>
             </div>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 href="/admin/orders"
-                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 sm:w-auto"
               >
                 Orders
               </Link>
               <Link
                 href="/admin/settings"
-                className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                className="w-full rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15 sm:w-auto"
               >
                 Profile settings
               </Link>
