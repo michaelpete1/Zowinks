@@ -20,11 +20,6 @@ export default function Navbar() {
               className="h-11 w-11 object-contain"
             />
           </div>
-          <div>
-            <p className="font-display text-lg font-semibold leading-none">
-              Zowkins Enterprise
-            </p>
-          </div>
         </div>
 
         <div className="hidden items-center lg:flex lg:flex-1 xl:flex-[2]">
@@ -121,11 +116,6 @@ export default function Navbar() {
                       height={56}
                       className="h-11 w-11 object-contain"
                     />
-                  </div>
-                  <div>
-                    <p className="font-display text-lg font-semibold leading-none">
-                      Zowkins Enterprise
-                    </p>
                   </div>
                 </div>
                 <button

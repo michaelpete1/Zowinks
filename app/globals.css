@@ -5,6 +5,9 @@
 :root {
   --background: #050b16;
   --foreground: #f7f2e6;
+  --font-body: "Aptos", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Aptos Display", "Aptos", "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,8 +20,10 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  font-family: var(--font-body, ui-sans-serif), system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-feature-settings: "ss01" 1, "ss02" 1, "cv01" 1, "cv02" 1;
+  text-rendering: optimizeLegibility;
 }
 
 h1,
@@ -31,9 +36,43 @@ h6 {
 }
 
 .font-display {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display, var(--font-body, ui-sans-serif)), system-ui,
+    -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    sans-serif;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.app-settings-page {
+  color: #0f172a;
+}
+
+.app-settings-page :is(p, h1, h2, h3, h4, h5, h6, label, span, li, a, button, code, pre) {
+  color: inherit;
+}
+
+.app-settings-page input,
+.app-settings-page textarea,
+.app-settings-page select {
+  color: #0f172a !important;
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.app-settings-page input::placeholder,
+.app-settings-page textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.app-settings-page .app-settings-hero {
+  color: #ffffff;
+  background: linear-gradient(180deg, #0a1020 0%, #081224 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.app-settings-page .app-settings-hero :is(p, h1, h2, h3, h4, h5, h6, label, span, li, a, button, code, pre) {
+  color: #ffffff !important;
 }
 
 @keyframes fadeIn {

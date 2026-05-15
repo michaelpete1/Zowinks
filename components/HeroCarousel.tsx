@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
 import { type EmblaOptionsType } from "embla-carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { DEFAULT_HERO_IMAGES } from "../lib/hero-images";
 
 interface HeroSlide {
   img: string;
@@ -17,9 +18,8 @@ interface HeroSlide {
   cta2Href: string;
 }
 
-const heroSlides: HeroSlide[] = [
+const heroTemplates: Omit<HeroSlide, "img">[] = [
   {
-    img: "/heroimage1.jpg",
     title: "Empowering Your Business",
     subtitle: "with Innovative IT Solutions",
     cta1: "Explore Products",
@@ -28,7 +28,6 @@ const heroSlides: HeroSlide[] = [
     cta2Href: "/request-quote",
   },
   {
-    img: "/heroimage2.jpg",
     title: "Premium IT Procurement",
     subtitle: "Trusted suppliers for modern teams",
     cta1: "View Categories",
@@ -37,7 +36,6 @@ const heroSlides: HeroSlide[] = [
     cta2Href: "/full-quote-bill",
   },
   {
-    img: "/desktop.jpg",
     title: "Business Technology Solutions",
     subtitle: "Laptops, Desktops & Accessories",
     cta1: "Shop Now",
@@ -57,6 +55,15 @@ export default function HeroCarousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
     Autoplay({ delay: 5000 }),
   ]);
+
+  const heroSlides = useMemo(() => {
+    return heroTemplates.map((slide, index) => ({
+      ...slide,
+      img:
+        DEFAULT_HERO_IMAGES[index] ||
+        DEFAULT_HERO_IMAGES[index % DEFAULT_HERO_IMAGES.length],
+    }));
+  }, []);
 
   const scrollTo = useCallback(
     (index: number) => {

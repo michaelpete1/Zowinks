@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Navbar from "../../../components/NewNavbar";
 import AddToCartButton from "../../../components/AddToCartButton";
 import ProductImageGallery from "../../../components/ProductImageGallery";
-import { ApiError, zowkinsApi } from "../../../lib/zowkins-api";
+import { ApiError, zowkinsApi, type ProductDetails } from "../../../lib/zowkins-api";
 import { resolveImageSource } from "../../../lib/media";
 
 type ProductPageProps = {
@@ -69,6 +69,36 @@ function coerceSpecs(value: unknown): unknown {
   return value;
 }
 
+function formatSpecValue(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(formatSpecValue).filter(Boolean).join(", ");
+  }
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "";
+    }
+  }
+
+  return String(value);
+}
+
+function isWarrantyKey(key: string): boolean {
+  const normalized = key.toLowerCase();
+  return (
+    normalized.includes("warranty") ||
+    normalized.includes("guarantee") ||
+    normalized.includes("return policy") ||
+    normalized.includes("support period")
+  );
+}
+
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
@@ -90,7 +120,8 @@ export async function generateMetadata({
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  let product;
+  let product: ProductDetails;
+  let loadError: string | null = null;
 
   try {
     product = await zowkinsApi.getProductBySlug(params.slug);
@@ -99,7 +130,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
       notFound();
     }
 
-    throw error;
+    loadError =
+      error instanceof Error
+        ? error.message
+        : "Unable to load product details right now.";
+
+    product = {
+      id: params.slug,
+      slug: params.slug,
+      name: "Product details unavailable",
+      description:
+        "The product specification data could not be loaded from the backend right now.",
+      price: 0,
+      inStock: false,
+      visible: true,
+      images: ["/desktop.jpg"],
+      specs: null,
+      specifications: null,
+      category: "Unknown",
+      subcategory: "",
+      image: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as ProductDetails;
   }
 
   const resolvedGallery = [
@@ -161,138 +214,243 @@ export default async function ProductPage({ params }: ProductPageProps) {
     return [];
   })();
 
+  const warrantySpecs = specEntries.filter(([key]) => isWarrantyKey(key));
+  const nonWarrantySpecs = specEntries.filter(([key]) => !isWarrantyKey(key));
+  const quickSpecs = nonWarrantySpecs.slice(0, 4);
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_20px_60px_rgba(0,0,0,0.22)] lg:grid lg:grid-cols-[1.02fr_0.98fr]">
-          <ProductImageGallery
-            images={gallery}
-            alt={product.name}
-            badgeLabel={product.visible ? "Visible" : "Hidden"}
-          />
-
-          <div className="space-y-6 px-6 py-10 md:px-10 md:py-14 lg:px-12 lg:py-16">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-                {categoryLabel}
-              </p>
-              <h1 className="mt-2 font-display text-4xl font-bold leading-tight text-white md:text-5xl">
-                {product.name}
-              </h1>
-              <p className="mt-3 text-lg leading-7 text-slate-300">
-                {product.description}
-              </p>
+      <main className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10 lg:py-12">
+        <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] xl:gap-8">
+          <section className="space-y-6 lg:pt-2">
+            <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
+              <ProductImageGallery
+                images={gallery}
+                alt={product.name}
+                badgeLabel={product.visible ? "Visible" : "Hidden"}
+              />
             </div>
+
+            {loadError ? (
+              <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900">
+                <p className="text-sm font-semibold">Product details are temporarily unavailable.</p>
+                <p className="mt-1 text-sm leading-6">
+                  {loadError}. The page is showing a fallback view until the backend responds again.
+                </p>
+              </div>
+            ) : null}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-white/55">
-                  Price
+                  Category
                 </p>
-                <p className="mt-2 text-2xl font-bold text-white">
-                  {formatPrice(product.price)}
-                </p>
+                <p className="mt-2 font-medium text-white">{categoryLabel}</p>
               </div>
               <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-white/55">
                   Stock
                 </p>
-                <p className="mt-2 text-2xl font-bold text-white">
-                  {product.inStock ? "In stock" : "Out of stock"}
+                <p className="mt-2 font-medium text-white">
+                  {product.inStock ? "Ready now" : "Out of stock"}
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <AddToCartButton
-                item={{
-                  id: getProductId(product) || product.slug,
-                  slug: product.slug,
-                  title: product.name,
-                  price: formatPrice(product.price),
-                  spec: cartSpec,
-                  image: imageUrl,
-                }}
-                className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
-              >
-                Add to cart
-              </AddToCartButton>
-              <Link
-                href="/cart"
-                className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
-              >
-                Review order
-              </Link>
-            </div>
-
-            <div className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-[#081224] p-5 text-sm text-slate-300 sm:grid-cols-2">
-              <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-white/45">
-                  Slug
-                </p>
-                <p className="mt-1 font-medium text-white">{product.slug}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-white/45">
-                  Subcategory
-                </p>
-                <p className="mt-1 font-medium text-white">
-                  {subcategoryLabel || "N/A"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-white/45">
-                  Created
-                </p>
-                <p className="mt-1 font-medium text-white">
-                  {new Date(product.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-white/45">
-                  Updated
-                </p>
-                <p className="mt-1 font-medium text-white">
-                  {new Date(product.updatedAt).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-[1.8rem] border border-white/10 bg-[#081224] p-6">
-              <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-                Specifications
-              </p>
-              {specEntries.length ? (
+            {quickSpecs.length ? (
+              <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-5">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.28em] text-white/55">
+                      Highlights
+                    </p>
+                    <h2 className="mt-2 font-display text-xl font-bold text-white">
+                      Quick product facts
+                    </h2>
+                  </div>
+                  <p className="text-sm text-slate-300">
+                    A compact view of the most useful specs.
+                  </p>
+                </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {specEntries.map(([key, value]) => (
+                  {quickSpecs.map(([key, value]) => (
                     <div
-                      key={key}
-                      className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-3"
+                      key={`highlight-${key}`}
+                      className="rounded-[1.15rem] border border-white/10 bg-[#081224] px-4 py-3"
                     >
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
                         {key}
                       </p>
-                      <p className="mt-2 text-sm font-semibold text-white">
-                        {String(value)}
+                      <p className="mt-1 text-sm font-semibold leading-6 text-white break-words">
+                        {formatSpecValue(value)}
                       </p>
                     </div>
                   ))}
                 </div>
-              ) : specs ? (
-                <pre className="mt-4 whitespace-pre-wrap break-words rounded-[1.25rem] border border-white/10 bg-white/5 p-4 text-xs text-slate-200">
-                  {typeof specs === "string"
-                    ? specs
-                    : JSON.stringify(specs, null, 2)}
-                </pre>
-              ) : (
-                <p className="mt-4 text-sm text-slate-300">
-                  No specifications were added for this product yet.
-                </p>
-              )}
+              </div>
+            ) : null}
+          </section>
+
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] px-6 py-7 shadow-[0_20px_60px_rgba(0,0,0,0.22)] md:px-8 md:py-8">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex rounded-full border border-[#f3c74d]/25 bg-[#f3c74d]/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#f3c74d]">
+                  Product details
+                </span>
+                <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/65">
+                  {categoryLabel}
+                </span>
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${
+                    product.inStock
+                      ? "bg-emerald-500/10 text-emerald-300"
+                      : "bg-rose-500/10 text-rose-300"
+                  }`}
+                >
+                  {product.inStock ? "In stock" : "Out of stock"}
+                </span>
+              </div>
+              <h1 className="mt-4 max-w-3xl font-display text-3xl font-bold leading-[1.02] tracking-[-0.06em] text-white text-balance sm:text-4xl lg:text-[2.8rem] xl:text-5xl">
+                {product.name}
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 md:text-lg">
+                {product.description}
+              </p>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs uppercase tracking-[0.24em] text-white/55">
+                    Price
+                  </p>
+                  <p className="mt-2 text-2xl font-bold text-white">
+                    {formatPrice(product.price)}
+                  </p>
+                </div>
+                <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs uppercase tracking-[0.24em] text-white/55">
+                    Stock
+                  </p>
+                  <p className="mt-2 text-2xl font-bold text-white">
+                    {product.inStock ? "Ready now" : "Out of stock"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <AddToCartButton
+                  item={{
+                    id: getProductId(product) || product.slug,
+                    slug: product.slug,
+                    title: product.name,
+                    price: formatPrice(product.price),
+                    spec: cartSpec,
+                    image: imageUrl,
+                  }}
+                  className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
+                >
+                  Add to cart
+                </AddToCartButton>
+                <Link
+                  href="/cart"
+                  className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                >
+                  Review order
+                </Link>
+              </div>
+
+              {warrantySpecs.length ? (
+                <div className="mt-6 rounded-[1.5rem] border border-[#f3c74d]/25 bg-[linear-gradient(180deg,rgba(243,199,77,0.12),rgba(255,255,255,0.04))] p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f3c74d] text-[#050b16]">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path
+                          d="M12 3.5l7 3.5v4.5c0 4.6-3.2 8.8-7 9.9-3.8-1.1-7-5.3-7-9.9V7l7-3.5z"
+                          strokeWidth="1.8"
+                        />
+                        <path
+                          d="M9.2 12.2l1.9 1.9L15.6 9.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.9"
+                        />
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs uppercase tracking-[0.28em] text-[#f3c74d]">
+                        Warranty
+                      </p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        {warrantySpecs.map(([key, value]) => (
+                          <div
+                            key={`warranty-${key}`}
+                            className="rounded-[1.15rem] border border-white/10 bg-[#081224] px-4 py-3"
+                          >
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
+                              {key}
+                            </p>
+                            <p className="mt-1 text-sm font-semibold leading-6 text-white break-words">
+                              {formatSpecValue(value)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
             </div>
+          </aside>
+        </div>
+
+        <section className="mt-6 rounded-[2rem] border border-white/10 bg-[#081224] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.18)] md:p-6 lg:mt-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-white/55">
+                Specifications
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
+                Everything in one view
+              </h2>
+            </div>
+            <p className="max-w-xl text-sm leading-6 text-slate-300">
+              Dense cards and a multi-column layout keep the full spec sheet
+              readable without forcing a long vertical scroll.
+            </p>
           </div>
+
+          {nonWarrantySpecs.length ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {nonWarrantySpecs.map(([key, value]) => (
+                <div
+                  key={key}
+                  className="h-full rounded-[1.2rem] border border-white/10 bg-white/5 p-4"
+                >
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
+                    {key}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-white break-words">
+                    {formatSpecValue(value)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : specs ? (
+            <pre className="mt-5 whitespace-pre-wrap break-words rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-xs text-slate-200">
+              {typeof specs === "string" ? specs : JSON.stringify(specs, null, 2)}
+            </pre>
+          ) : (
+            <p className="mt-5 text-sm text-slate-300">
+              No specifications were added for this product yet.
+            </p>
+          )}
         </section>
       </main>
     </div>

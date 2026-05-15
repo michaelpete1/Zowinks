@@ -379,6 +379,38 @@ export default function AdminSettingsPage() {
           </div>
         </section>
 
+        <section className="rounded-[2rem] border border-[#f3c74d]/20 bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#0a2a78]">
+                Website settings
+              </p>
+              <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
+                Homepage hero images live in App Settings
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                If you want to change the main homepage carousel, open the app
+                settings page. That is where the hero image editor lives.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/admin/settings/app"
+                className="inline-flex items-center justify-center rounded-full bg-[#0a2a78] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a]"
+              >
+                Open hero image editor
+              </Link>
+              <Link
+                href="/admin/settings/app"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              >
+                Edit website settings
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <div className="space-y-6">
           <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">

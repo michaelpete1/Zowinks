@@ -140,14 +140,14 @@ const buildSpecsObject = (
 
 function ProductPreview({ src, alt }: { src?: string | null; alt: string }) {
   return (
-    <div className="overflow-hidden rounded-[1.2rem] bg-slate-100 ring-1 ring-slate-200">
+    <div className="w-full max-w-full overflow-hidden rounded-[1.2rem] bg-slate-100 ring-1 ring-slate-200">
       <img
         src={resolveImageSource(src, "/desktop.jpg")}
         alt={alt}
         onError={(e) => {
           (e.target as HTMLImageElement).src = "/desktop.jpg";
         }}
-        className="h-40 w-full object-cover md:h-48"
+        className="block h-40 w-full max-w-full object-cover md:h-48"
       />
     </div>
   );
@@ -730,7 +730,7 @@ export default function ProductsPage() {
       searchPlaceholder="Search products..."
     >
       <div className="grid gap-6 min-w-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.95fr)] xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)]">
-        <section className="min-w-0 rounded-[2rem] bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:p-6 md:p-8">
+        <section className="min-w-0 overflow-hidden rounded-[2rem] bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:p-6 md:p-8">
           <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
               <p className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500">
@@ -943,7 +943,7 @@ export default function ProductsPage() {
               filteredProducts.map((product) => (
                 <article
                   key={product.id || (product as any)._id}
-                  className="rounded-[1.4rem] border border-slate-100 bg-white p-4 shadow-sm"
+                  className="min-w-0 overflow-hidden rounded-[1.4rem] border border-slate-100 bg-white p-4 shadow-sm"
                 >
                   <ProductPreview
                     src={resolveImageSource(
@@ -953,24 +953,26 @@ export default function ProductsPage() {
                     alt={product.name}
                   />
                   <div className="mt-4 flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                         {product.slug}
                       </p>
-                      <h3 className="mt-2 break-words text-base font-bold text-slate-900">
+                      <h3 className="mt-2 break-words text-base font-bold leading-snug text-slate-900">
                         {product.name}
                       </h3>
                     </div>
-                    <AdminBadge
-                      label={product.visible ? "Visible" : "Hidden"}
-                    />
+                    <div className="shrink-0">
+                      <AdminBadge
+                        label={product.visible ? "Visible" : "Hidden"}
+                      />
+                    </div>
                   </div>
                   <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2">
                     <div>
                       <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
                         Category
                       </p>
-                      <p className="mt-1 font-semibold text-slate-900">
+                      <p className="mt-1 break-words font-semibold text-slate-900">
                         {getCategoryLabel(product.category)}
                       </p>
                     </div>
@@ -978,7 +980,7 @@ export default function ProductsPage() {
                       <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
                         Subcategory
                       </p>
-                      <p className="mt-1 font-semibold text-slate-900">
+                      <p className="mt-1 break-words font-semibold text-slate-900">
                         {typeof product.subcategory === "object" &&
                         product.subcategory !== null
                           ? (product.subcategory as any).name
@@ -1006,7 +1008,7 @@ export default function ProductsPage() {
                     <button
                       type="button"
                       onClick={() => openEdit(product)}
-                      className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 sm:w-auto"
+                      className="w-full rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 sm:w-auto"
                     >
                       Edit
                     </button>
@@ -1018,7 +1020,7 @@ export default function ProductsPage() {
                       disabled={
                         deletingId === (product.id || (product as any)._id)
                       }
-                      className="rounded-full bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                      className="w-full rounded-full bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
                       Delete
                     </button>
@@ -1136,7 +1138,7 @@ export default function ProductsPage() {
               onSubmit={handleSubmit}
               className="mt-6 grid gap-4 lg:grid-cols-2"
             >
-              <div className="grid gap-4 rounded-[1.5rem] bg-slate-50 p-4 md:col-span-2">
+              <div className="grid min-w-0 gap-4 rounded-[1.5rem] bg-slate-50 p-4 md:col-span-2">
                 <ProductPreview
                   src={
                     preview ||
@@ -1147,18 +1149,18 @@ export default function ProductsPage() {
                   }
                   alt={form.name || "Product preview"}
                 />
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-[11px] leading-5 text-slate-600">
+                <div className="min-w-0 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-[11px] leading-5 text-slate-600">
                   <p className="mb-2 font-semibold uppercase tracking-[0.24em] text-slate-500">
                     Image debug
                   </p>
-                  <pre className="whitespace-pre-wrap break-words font-mono">
+                  <pre className="max-w-full whitespace-pre-wrap break-words font-mono">
                     {imageDebug || "No product selected yet."}
                   </pre>
                 </div>
-                <div className="grid gap-3">
+                <div className="grid min-w-0 gap-3">
                   <div className="grid gap-2 text-sm font-medium text-slate-700">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
                         <p className="text-sm font-medium text-slate-700">
                           Product images
                         </p>
@@ -1171,7 +1173,7 @@ export default function ProductsPage() {
                         type="button"
                         onClick={addImageSlot}
                         disabled={form.files.length >= MAX_PRODUCT_IMAGES}
-                        className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                       >
                         Add slot
                       </button>
@@ -1181,7 +1183,7 @@ export default function ProductsPage() {
                     {form.files.map((file, index) => (
                       <div
                         key={index}
-                        className="grid gap-3 rounded-[1.4rem] border border-slate-200 bg-white p-4 sm:grid-cols-[minmax(0,1.2fr)_auto]"
+                        className="grid min-w-0 gap-3 rounded-[1.4rem] border border-slate-200 bg-white p-4 sm:grid-cols-[minmax(0,1.2fr)_auto]"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center justify-between gap-3">
@@ -1227,7 +1229,7 @@ export default function ProductsPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="hidden rounded-2xl border border-dashed border-slate-300 bg-white p-3">
+                  <div className="min-w-0 rounded-2xl border border-dashed border-slate-300 bg-white p-3">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                         Selected images
@@ -1243,7 +1245,7 @@ export default function ProductsPage() {
                           .map((file, index) => (
                             <div
                               key={`${file.name}-${index}`}
-                              className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3"
+                              className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3"
                             >
                               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                                 {index === 0 ? "Main" : `#${index + 1}`}

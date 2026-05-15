@@ -67,12 +67,6 @@ export default function Footer() {
 
           <div className="flex flex-col items-start gap-2 text-xs text-slate-400 md:items-end">
             <Link
-              href="/admin/auth"
-              className="transition-colors hover:text-[#f3c74d]"
-            >
-              Admin Sign In
-            </Link>
-            <Link
               href="/privacy"
               className="transition-colors hover:text-[#f3c74d]"
             >

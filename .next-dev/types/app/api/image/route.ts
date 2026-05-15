@@ -1,8 +1,8 @@
-// File: C:\Users\micha\Desktop\emeka_frontend\app\api\zowkins\[...path]\route.ts
-import * as entry from '../../../../../../app/api/zowkins/[...path]/route.js'
+// File: C:\Users\micha\Desktop\emeka_frontend\app\api\image\route.ts
+import * as entry from '../../../../../app/api/image/route.js'
 import type { NextRequest } from 'next/server.js'
 
-type TEntry = typeof import('../../../../../../app/api/zowkins/[...path]/route.js')
+type TEntry = typeof import('../../../../../app/api/image/route.js')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{
