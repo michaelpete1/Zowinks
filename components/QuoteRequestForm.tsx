@@ -28,9 +28,10 @@ type QuoteRequestFormProps = {
   description?: string;
   submitLabel?: string;
   whatsappLabel?: string;
+  whatsappNumber?: string;
 };
 
-const WHATSAPP_NUMBER = "971543895126";
+const DEFAULT_WHATSAPP_NUMBER = "971543895126";
 
 function createProductRow() {
   return {
@@ -83,6 +84,7 @@ export default function QuoteRequestForm({
   description = "Tell us what you need and we will reply with pricing, delivery, and availability.",
   submitLabel = "Submit quote request",
   whatsappLabel = "Request via WhatsApp",
+  whatsappNumber = DEFAULT_WHATSAPP_NUMBER,
 }: QuoteRequestFormProps) {
   const [formData, setFormData] = useState<QuoteFormState>(emptyFormState);
   const [status, setStatus] = useState<"idle" | "sent">("idle");
@@ -139,7 +141,8 @@ export default function QuoteRequestForm({
 
   const openWhatsApp = () => {
     const body = buildQuoteLines(formData).join("\n");
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(body)}`;
+    const digits = whatsappNumber.replace(/\D/g, "");
+    const whatsappUrl = `https://wa.me/${digits || whatsappNumber}?text=${encodeURIComponent(body)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 

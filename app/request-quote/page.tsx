@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RequestQuotePage() {
   const { app } = await getAppSettings();
+  const whatsappNumber = "08064667917";
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
@@ -68,9 +69,10 @@ export default async function RequestQuotePage() {
             <div className="bg-[#050b16] px-4 py-6 text-slate-100 md:px-6 md:py-8 lg:px-8 lg:py-10">
               <QuoteRequestForm
                 title="Build your quote request"
-                description={`Use the form below for product pricing, bulk orders, and delivery quotes. Your request will be sent to the team, and you can still continue on WhatsApp at ${app.whatsAppNumber}.`}
+                description={`Use the form below for product pricing, bulk orders, and delivery quotes. Your request will be sent to the team, and you can still continue on WhatsApp at ${whatsappNumber}.`}
                 submitLabel="Submit quote request"
                 whatsappLabel="Request via WhatsApp"
+                whatsappNumber={whatsappNumber}
               />
               <div className="mt-4 flex flex-wrap gap-3 px-1 text-xs text-slate-400">
                 <Link href="/products" className="transition-colors hover:text-[#f3c74d]">
