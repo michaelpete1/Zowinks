@@ -77,12 +77,12 @@ export default function ProductImageGallery({
 
   return (
     <div className="bg-[#081224]">
-      <div className="relative min-h-[320px] overflow-hidden">
+      <div className="relative min-h-[240px] overflow-hidden sm:min-h-[320px]">
         <div className="embla h-full" ref={emblaRef}>
           <div className="embla__container flex h-full">
             {gallery.map((src, index) => (
               <div key={`${src}-slide`} className="flex-[0_0_100%] min-w-0">
-                <div className="relative min-h-[320px]">
+                <div className="relative min-h-[240px] sm:min-h-[320px]">
                   <FallbackImage
                     src={src}
                     alt={alt}
@@ -130,7 +130,7 @@ export default function ProductImageGallery({
 
       {hasMultiple ? (
         <div className="border-t border-white/10 bg-[#07142a] px-4 py-4">
-          <div className="flex gap-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex max-w-full gap-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {gallery.map((src, index) => {
               const active = index === selectedIndex;
               return (

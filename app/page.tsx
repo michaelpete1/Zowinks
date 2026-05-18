@@ -152,7 +152,12 @@ function getValueTone(title: string) {
 function getTrustIcon(icon: (typeof trustStrip)[number]["icon"]) {
   if (icon === "shield") {
     return (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+      >
         <path
           d="M12 3.5l7 3.5v4.5c0 4.6-3.2 8.8-7 9.9-3.8-1.1-7-5.3-7-9.9V7l7-3.5z"
           strokeWidth="1.8"
@@ -169,7 +174,12 @@ function getTrustIcon(icon: (typeof trustStrip)[number]["icon"]) {
 
   if (icon === "truck") {
     return (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+      >
         <path
           d="M3 7h11v8H3zM14 10h3l3 3v2h-6z"
           strokeWidth="1.7"
@@ -182,7 +192,12 @@ function getTrustIcon(icon: (typeof trustStrip)[number]["icon"]) {
   }
 
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+    >
       <path
         d="M4 5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"
         strokeWidth="1.7"

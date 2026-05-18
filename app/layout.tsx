@@ -38,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-[linear-gradient(180deg,#050b16_0%,#07142a_45%,#0b1d3b_100%)] text-slate-100">
+      <body className="antialiased overflow-x-hidden bg-[linear-gradient(180deg,#050b16_0%,#07142a_45%,#0b1d3b_100%)] text-slate-100">
         {children}
         <Footer />
       </body>

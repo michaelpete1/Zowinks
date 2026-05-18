@@ -4,7 +4,11 @@ import { notFound } from "next/navigation";
 import Navbar from "../../../components/NewNavbar";
 import AddToCartButton from "../../../components/AddToCartButton";
 import ProductImageGallery from "../../../components/ProductImageGallery";
-import { ApiError, zowkinsApi, type ProductDetails } from "../../../lib/zowkins-api";
+import {
+  ApiError,
+  zowkinsApi,
+  type ProductDetails,
+} from "../../../lib/zowkins-api";
 import { resolveImageSource } from "../../../lib/media";
 
 type ProductPageProps = {
@@ -224,7 +228,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <main className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10 lg:py-12">
         <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] xl:gap-8">
-          <section className="space-y-6 lg:pt-2">
+          <section className="min-w-0 space-y-6 lg:pt-2">
             <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
               <ProductImageGallery
                 images={gallery}
@@ -235,9 +239,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {loadError ? (
               <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900">
-                <p className="text-sm font-semibold">Product details are temporarily unavailable.</p>
+                <p className="text-sm font-semibold">
+                  Product details are temporarily unavailable.
+                </p>
                 <p className="mt-1 text-sm leading-6">
-                  {loadError}. The page is showing a fallback view until the backend responds again.
+                  {loadError}. The page is showing a fallback view until the
+                  backend responds again.
                 </p>
               </div>
             ) : null}
@@ -261,7 +268,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {quickSpecs.length ? (
               <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-5">
-                <div className="flex flex-wrap items-end justify-between gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.28em] text-white/55">
                       Highlights
@@ -270,7 +277,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                       Quick product facts
                     </h2>
                   </div>
-                  <p className="text-sm text-slate-300">
+                  <p className="w-full text-sm text-slate-300 sm:w-auto sm:max-w-sm sm:text-right md:max-w-md">
                     A compact view of the most useful specs.
                   </p>
                 </div>
@@ -283,7 +290,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
                         {key}
                       </p>
-                      <p className="mt-1 text-sm font-semibold leading-6 text-white break-words">
+                      <p className="mt-1 text-sm font-semibold leading-6 text-white break-words [overflow-wrap:anywhere]">
                         {formatSpecValue(value)}
                       </p>
                     </div>
@@ -293,11 +300,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
             ) : null}
           </section>
 
-          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] px-6 py-7 shadow-[0_20px_60px_rgba(0,0,0,0.22)] md:px-8 md:py-8">
+          <aside className="min-w-0 space-y-6 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] px-5 py-6 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:px-6 sm:py-7 md:px-8 md:py-8">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex rounded-full border border-[#f3c74d]/25 bg-[#f3c74d]/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#f3c74d]">
-                  Product details
+                  Product details Product details
                 </span>
                 <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/65">
                   {categoryLabel}
@@ -312,10 +319,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   {product.inStock ? "In stock" : "Out of stock"}
                 </span>
               </div>
-              <h1 className="mt-4 max-w-3xl font-display text-3xl font-bold leading-[1.02] tracking-[-0.06em] text-white text-balance sm:text-4xl lg:text-[2.8rem] xl:text-5xl">
+              <h1 className="mt-4 max-w-3xl font-display text-2xl font-bold leading-[1.06] tracking-[-0.05em] text-white break-words text-balance sm:text-3xl md:text-4xl lg:text-[2.8rem] xl:text-5xl">
                 {product.name}
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 md:text-lg">
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 break-words sm:text-base md:text-lg">
                 {product.description}
               </p>
 
@@ -324,7 +331,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <p className="text-xs uppercase tracking-[0.24em] text-white/55">
                     Price
                   </p>
-                  <p className="mt-2 text-2xl font-bold text-white">
+                  <p className="mt-2 text-xl font-bold text-white sm:text-2xl">
                     {formatPrice(product.price)}
                   </p>
                 </div>
@@ -332,13 +339,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <p className="text-xs uppercase tracking-[0.24em] text-white/55">
                     Stock
                   </p>
-                  <p className="mt-2 text-2xl font-bold text-white">
+                  <p className="mt-2 text-xl font-bold text-white sm:text-2xl">
                     {product.inStock ? "Ready now" : "Out of stock"}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <AddToCartButton
                   item={{
                     id: getProductId(product) || product.slug,
@@ -348,13 +355,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     spec: cartSpec,
                     image: imageUrl,
                   }}
-                  className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
+                  className="w-full rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935] sm:w-auto"
                 >
                   Add to cart
                 </AddToCartButton>
                 <Link
                   href="/cart"
-                  className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                  className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10 sm:w-auto"
                 >
                   Review order
                 </Link>
@@ -405,13 +412,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   </div>
                 </div>
               ) : null}
-
             </div>
           </aside>
         </div>
 
-        <section className="mt-6 rounded-[2rem] border border-white/10 bg-[#081224] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.18)] md:p-6 lg:mt-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+        <section className="mt-6 rounded-[2rem] border border-white/10 bg-[#081224] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] sm:p-5 md:p-6 lg:mt-8">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-white/55">
                 Specifications
@@ -420,7 +426,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 Everything in one view
               </h2>
             </div>
-            <p className="max-w-xl text-sm leading-6 text-slate-300">
+            <p className="w-full max-w-xl text-sm leading-6 text-slate-300 sm:w-auto sm:text-right">
               Dense cards and a multi-column layout keep the full spec sheet
               readable without forcing a long vertical scroll.
             </p>
@@ -436,15 +442,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
                     {key}
                   </p>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-white break-words">
+                  <p className="mt-2 text-sm font-semibold leading-6 text-white break-words [overflow-wrap:anywhere]">
                     {formatSpecValue(value)}
                   </p>
                 </div>
               ))}
             </div>
           ) : specs ? (
-            <pre className="mt-5 whitespace-pre-wrap break-words rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-xs text-slate-200">
-              {typeof specs === "string" ? specs : JSON.stringify(specs, null, 2)}
+            <pre className="mt-5 whitespace-pre-wrap break-words rounded-[1.2rem] border border-white/10 bg-white/5 p-4 text-xs text-slate-200 overflow-x-auto">
+              {typeof specs === "string"
+                ? specs
+                : JSON.stringify(specs, null, 2)}
             </pre>
           ) : (
             <p className="mt-5 text-sm text-slate-300">
