@@ -1,18 +1,22 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useCart } from "../hooks/useCart";
 
 export default function Navbar() {
   const items = useCart((state) => state.items);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const pathname = usePathname();
+  const [pathname, setPathname] = useState("/");
   const router = useRouter();
   const isHome = pathname === "/";
+
+  useEffect(() => {
+    setPathname(window.location.pathname);
+  }, []);
 
   const links = [
     { href: "/", label: "Home" },

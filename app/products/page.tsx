@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import AddToCartButton from "../../components/AddToCartButton";
 import FallbackImage from "../../components/FallbackImage";
+import { getAppSettings } from "../../lib/app-settings";
 import { fetchAllProducts } from "../../lib/catalog";
 import { zowkinsApi } from "../../lib/zowkins-api";
 
@@ -14,201 +16,693 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductsPage() {
-  const [products, categoriesResponse] = await Promise.all([
+const CATEGORY_CARDS = [
+  {
+    label: "Laptops",
+    slug: "laptops",
+    icon: "💻",
+    image: "/hp.jpg",
+    description: "Business laptops, ultrabooks, and everyday work machines.",
+  },
+  {
+    label: "Desktops",
+    slug: "desktops",
+    icon: "🖥️",
+    image: "/desktop.jpg",
+    description: "Reliable desktop systems for offices and teams.",
+  },
+  {
+    label: "Accessories",
+    slug: "accessories",
+    icon: "🎧",
+    image: "/keyboard.jpg",
+    description: "Keyboards, mice, docking stations, and more.",
+  },
+  {
+    label: "Speakers",
+    slug: "speakers",
+    icon: "🔊",
+    image: "/mb.jpg",
+    description: "Audio gear for desks, rooms, and small workspaces.",
+  },
+  {
+    label: "Gaming",
+    slug: "gaming",
+    icon: "🎮",
+    image: "/desktop 2.jpg",
+    description: "High-performance systems for creative and gaming use.",
+  },
+];
+
+const TRUST_FEATURES = [
+  "Warranty Available",
+  "Fast Delivery",
+  "Affordable Prices",
+  "Tested Devices",
+  "Bulk Orders Accepted",
+];
+
+const FEATURED_BADGES = ["Best Seller", "New Arrival", "Hot Deal"] as const;
+
+const BRAND_IMAGE_MAP: Record<string, string> = {
+  hp: "/hplogo.jpg",
+  dell: "/delllogo.jpg",
+  lenovo: "/lenovologo.jpg",
+  asus: "/asuslogo.jpg",
+  apple: "/applelogo.jpg",
+};
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const getSearchParam = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value[0] : value;
+
+const matchesText = (value: string, needle: string) =>
+  slugify(value).includes(needle) || value.toLowerCase().includes(needle.replace(/-/g, " "));
+
+const matchesBrand = (
+  product: {
+    title: string;
+    brand: string;
+    subcategory: string;
+    category: string;
+    description: string;
+  },
+  brandSlug: string,
+) => {
+  const fields = `${product.title} ${product.brand} ${product.subcategory} ${product.category} ${product.description}`;
+  const normalizedBrand = slugify(product.subcategory || product.brand || "");
+  return (
+    normalizedBrand === brandSlug ||
+    matchesText(fields, brandSlug) ||
+    fields.toLowerCase().includes(brandSlug.toLowerCase())
+  );
+};
+
+const matchesCategory = (
+  product: { title: string; brand: string; category: string; description: string },
+  categorySlug: string,
+) => {
+  const fields = `${product.title} ${product.brand} ${product.category} ${product.description}`;
+  return (
+    slugify(product.category) === categorySlug ||
+    matchesText(fields, categorySlug) ||
+    fields.toLowerCase().includes(categorySlug.toLowerCase())
+  );
+};
+
+const brandFilterHref = (brandSlug: string) =>
+  `/products?brand=${encodeURIComponent(brandSlug)}`;
+
+const categoryFilterHref = (categorySlug: string) =>
+  `/products?category=${encodeURIComponent(categorySlug)}`;
+
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams?: { brand?: string | string[]; category?: string | string[] };
+}) {
+  const [products, categoriesResponse, appSettings] = await Promise.all([
     fetchAllProducts(),
     zowkinsApi.listCategories({ page: 1, limit: 12 }).catch(() => null),
+    getAppSettings(),
   ]);
 
   const categories = categoriesResponse?.categories ?? [];
   const visibleProducts = products.filter(Boolean);
+  const selectedBrand = slugify(getSearchParam(searchParams?.brand) || "");
+  const selectedCategory = slugify(getSearchParam(searchParams?.category) || "");
+  const app = appSettings.app;
 
-  const grouped = visibleProducts.reduce<Record<string, typeof visibleProducts>>(
-    (acc, product) => {
-      const key = product.category || "Other";
-      acc[key] = acc[key] || [];
-      acc[key].push(product);
-      return acc;
-    },
-    {},
+  const liveBrands = Array.from(
+    new Map(
+      categories.flatMap((category) =>
+        (category.subcategories ?? []).map((subcategory: any) => {
+          const label = String(subcategory.name || "").trim();
+          const slug = String(subcategory.slug || slugify(label));
+          const categorySlug = String(category.slug || "");
+          const categoryName = String(category.name || "Category");
+          return [
+            slug,
+            {
+              label,
+              slug,
+              categorySlug,
+              categoryName,
+              image:
+                BRAND_IMAGE_MAP[slug] ||
+                BRAND_IMAGE_MAP[slugify(label)] ||
+                "/desktop.jpg",
+            },
+          ] as const;
+        }),
+      ),
+    ).values(),
+  ).filter((brand) => brand.label && brand.slug);
+
+  const displayProducts =
+    selectedBrand || selectedCategory
+      ? visibleProducts.filter((product) => {
+          const brandMatch = selectedBrand
+            ? matchesBrand(product, selectedBrand)
+            : true;
+          const categoryMatch = selectedCategory
+            ? matchesCategory(product, selectedCategory)
+            : true;
+          return brandMatch && categoryMatch;
+        })
+      : visibleProducts;
+
+  const brandCounts = liveBrands
+    .map((brand) => ({
+      ...brand,
+      count: visibleProducts.filter((product) => matchesBrand(product, brand.slug))
+        .length,
+    }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+
+  const categoryCounts = categories
+    .map((category) => ({
+      label: category.name,
+      slug: category.slug,
+      count: visibleProducts.filter((product) =>
+        matchesCategory(product, category.slug),
+      ).length,
+    }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+
+  const topProducts = displayProducts.slice(0, 3);
+  const whatsappNumber = app.whatsAppNumber.replace(/\D/g, "");
+  const whatsappMessage = encodeURIComponent(
+    "Hi Zowkins, I need help choosing a product from the products page.",
   );
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
+    : `https://wa.me/?text=${whatsappMessage}`;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
-        <section className="overflow-hidden rounded-[2.2rem] border border-white/10 bg-[#0a1020] shadow-[0_24px_70px_rgba(0,0,0,0.26)]">
-          <div className="grid gap-8 px-6 py-10 md:px-10 lg:grid-cols-[1.15fr_0.85fr] lg:px-14 lg:py-14">
-            <div className="space-y-6">
-              <p className="text-xs uppercase tracking-[0.35em] text-white/55">
+        <section className="overflow-hidden rounded-[2.4rem] border border-white/10 bg-[#08111f] shadow-[0_28px_80px_rgba(0,0,0,0.28)]">
+          <div className="grid gap-10 px-6 py-10 md:px-10 lg:grid-cols-[1.1fr_0.9fr] lg:px-14 lg:py-14">
+            <div className="space-y-7">
+              <div className="inline-flex rounded-full border border-[#f3c74d]/20 bg-[#f3c74d]/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#f3c74d]">
                 Product catalog
-              </p>
-              <h1 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
-                Browse products by category, brand, and use case.
-              </h1>
-              <p className="max-w-2xl text-lg leading-7 text-slate-300">
-                Use this page to explore the full product lineup. If you want a
-                brand family, head into Laptops or Desktops. If you want the
-                full catalog, stay here.
-              </p>
+              </div>
+              <div className="space-y-4">
+                <h1 className="max-w-2xl font-display text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+                  Find the Right Tech for Work, Gaming & Everyday Use
+                </h1>
+                <p className="max-w-2xl text-lg leading-8 text-slate-300">
+                  Explore premium laptops, desktops, accessories, and gadgets at
+                  competitive prices. New brand collections automatically
+                  appear here from the backend.
+                </p>
+              </div>
+
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/categories"
+                  href="#featured-products"
                   className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
                 >
-                  Browse categories
+                  Shop Products
                 </Link>
                 <Link
-                  href="/laptops"
+                  href="/categories"
                   className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
                 >
-                  Browse laptop families
+                  Browse Categories
                 </Link>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                {TRUST_FEATURES.map((feature) => (
+                  <span
+                    key={feature}
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-200"
+                  >
+                    {feature}
+                  </span>
+                ))}
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">
-                  Products
-                </p>
-                <p className="mt-2 text-3xl font-bold text-white">
-                  {visibleProducts.length}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">
-                  Categories
-                </p>
-                <p className="mt-2 text-3xl font-bold text-white">
-                  {categories.length}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">
-                  Focus
-                </p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  One catalog, multiple routes
-                </p>
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0d1728] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
+              <div className="relative min-h-[360px] overflow-hidden rounded-[1.6rem]">
+                <Image
+                  src="/heroimage1.jpg"
+                  alt="Featured products"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,10,22,0.08)_0%,rgba(4,10,22,0.72)_100%)]" />
+                <div className="absolute inset-x-0 bottom-0 p-6">
+                  <div className="max-w-sm rounded-[1.4rem] border border-white/10 bg-[#050b16]/80 p-4 backdrop-blur">
+                    <p className="text-xs uppercase tracking-[0.28em] text-[#f3c74d]">
+                      Premium catalog
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-200">
+                      Clean sourcing, business-ready systems, and fast delivery
+                      for modern teams.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mt-10">
+        <section className="mt-12" id="featured-products">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                Quick links
+                Featured products
               </p>
-              <h2 className="mt-2 font-display text-3xl font-bold text-white">
-                Start with a category or jump straight into a product.
+              <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
+                Best sellers, new arrivals, and hot deals
+              </h2>
+            </div>
+            <Link
+              href="/request-quote"
+              className="rounded-full border border-[#f3c74d]/25 bg-[#f3c74d]/10 px-5 py-3 text-sm font-semibold text-[#f3c74d] transition hover:bg-[#f3c74d]/15"
+            >
+              Request Quote
+            </Link>
+          </div>
+
+          {topProducts.length ? (
+            <div className="mt-6 grid gap-5 md:grid-cols-3">
+              {topProducts.map((product, index) => (
+                <article
+                  key={product.id}
+                  className="group overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(0,0,0,0.24)]"
+                >
+                  <Link href={product.href} className="block">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
+                      <FallbackImage
+                        src={product.image}
+                        alt={product.title}
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.05)_0%,rgba(5,11,22,0.7)_100%)]" />
+                      <div className="absolute left-4 top-4 rounded-full bg-[#050b16]/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white backdrop-blur">
+                        {FEATURED_BADGES[index] || "Featured"}
+                      </div>
+                    </div>
+                  </Link>
+
+                  <div className="space-y-4 p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-100">
+                        {product.category}
+                      </span>
+                      <Link
+                        href={brandFilterHref(slugify(product.brand))}
+                        className="text-sm font-semibold text-[#f3c74d] hover:underline"
+                      >
+                        {product.brand}
+                      </Link>
+                    </div>
+
+                    <div>
+                      <Link href={product.href} className="block">
+                        <h3 className="font-display text-2xl font-bold text-white transition group-hover:text-[#f3c74d]">
+                          {product.title}
+                        </h3>
+                      </Link>
+                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-300">
+                        {product.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
+                          Price
+                        </p>
+                        <p className="mt-1 text-2xl font-bold text-[#f3c74d]">
+                          {product.price}
+                        </p>
+                      </div>
+                      <Link
+                        href={product.href}
+                        className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                      >
+                        View Details
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 rounded-[2rem] border border-dashed border-white/15 bg-[#0a1020] p-10 text-center">
+              <p className="text-slate-300">
+                No featured products available for the current filter.
+              </p>
+              <Link
+                href="/products"
+                className="mt-4 inline-block text-sm font-semibold text-[#f3c74d] hover:underline"
+              >
+                Clear filters
+              </Link>
+            </div>
+          )}
+        </section>
+
+        <section className="mt-12">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/55">
+                Product filters
+              </p>
+              <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
+                Narrow the catalog by brand or category
+              </h2>
+            </div>
+            {selectedBrand || selectedCategory ? (
+              <Link
+                href="/products"
+                className="text-sm font-semibold text-[#f3c74d] hover:underline"
+              >
+                Clear filters
+              </Link>
+            ) : null}
+          </div>
+
+          <div className="mt-6 space-y-6">
+            <div>
+              <p className="mb-3 text-sm font-semibold text-slate-300">
+                Brands
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/products"
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    !selectedBrand
+                      ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                      : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
+                  }`}
+                >
+                  All
+                </Link>
+                {brandCounts.map((brand) => (
+                  <Link
+                    key={brand.slug}
+                    href={brandFilterHref(brand.slug)}
+                    className={`inline-flex items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                      selectedBrand === brand.slug
+                        ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                        : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
+                    }`}
+                  >
+                    <span>{brand.label}</span>
+                    <span className="text-[11px] opacity-75">
+                      {brand.count}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-3 text-sm font-semibold text-slate-300">
+                Categories
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/products"
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    !selectedCategory
+                      ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                      : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
+                  }`}
+                >
+                  All
+                </Link>
+                {categoryCounts.map((category) => (
+                  <Link
+                    key={category.slug}
+                    href={categoryFilterHref(category.slug)}
+                    className={`inline-flex items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                      selectedCategory === category.slug
+                        ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                        : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
+                    }`}
+                  >
+                    <span>{category.label}</span>
+                    <span className="text-[11px] opacity-75">
+                      {category.count}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-12">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/55">
+                Product grid
+              </p>
+              <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
+                Showing {displayProducts.length} products
+              </h2>
+            </div>
+            <Link
+              href="/categories"
+              className="text-sm font-semibold text-[#f3c74d] hover:underline"
+            >
+              Browse all categories
+            </Link>
+          </div>
+
+          {displayProducts.length ? (
+            <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {displayProducts.map((product) => (
+                <article
+                  key={product.id}
+                  className="group overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(0,0,0,0.24)]"
+                >
+                  <Link href={product.href} className="block">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
+                      <FallbackImage
+                        src={product.image}
+                        alt={product.title}
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.05)_0%,rgba(5,11,22,0.72)_100%)]" />
+                    </div>
+                  </Link>
+
+                  <div className="space-y-4 p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <Link
+                        href={categoryFilterHref(slugify(product.category))}
+                        className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:bg-white/14 hover:text-[#f3c74d]"
+                      >
+                        {product.category}
+                      </Link>
+                      <Link
+                        href={brandFilterHref(slugify(product.subcategory || product.brand))}
+                        className="text-sm font-semibold text-[#f3c74d] hover:underline"
+                      >
+                        {product.subcategory || product.brand}
+                      </Link>
+                    </div>
+
+                    <div>
+                      <Link href={product.href} className="block">
+                        <h3 className="font-display text-2xl font-bold text-white transition group-hover:text-[#f3c74d]">
+                          {product.title}
+                        </h3>
+                      </Link>
+                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-300">
+                        {product.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
+                          Price
+                        </p>
+                        <p className="mt-1 text-2xl font-bold text-[#f3c74d]">
+                          {product.price}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <AddToCartButton
+                          item={{
+                            id: product.id,
+                            slug: product.slug,
+                            title: product.title,
+                            price: product.price,
+                            spec: product.subcategory || product.brand,
+                            image: product.image,
+                          }}
+                          className="rounded-full bg-[#f3c74d] px-4 py-2.5 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
+                        >
+                          Add
+                        </AddToCartButton>
+                        <Link
+                          href={product.href}
+                          className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 rounded-[2rem] border border-dashed border-white/15 bg-[#0a1020] p-10 text-center">
+              <p className="text-slate-300">
+                No products match the current filter.
+              </p>
+              <Link
+                href="/products"
+                className="mt-4 inline-block text-sm font-semibold text-[#f3c74d] hover:underline"
+              >
+                Clear filters
+              </Link>
+            </div>
+          )}
+        </section>
+
+        <section className="mt-12">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/55">
+                Popular brands
+              </p>
+              <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
+                Trusted brands customers ask for
               </h2>
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/categories/${category.slug}`}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
-              >
-                {category.name}
-              </Link>
-            ))}
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
+            {brandCounts.map((brand) => {
+              return (
+                <Link
+                  key={brand.slug}
+                  href={brandFilterHref(brand.slug)}
+                  className="group overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#0a1020] p-5 shadow-[0_16px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:border-[#f3c74d]/40 hover:shadow-[0_24px_56px_rgba(0,0,0,0.24)]"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl bg-white/90 p-2">
+                      <Image
+                        src={brand.image}
+                        alt={brand.label}
+                        width={56}
+                        height={56}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-2xl font-bold text-white transition group-hover:text-[#f3c74d]">
+                        {brand.label}
+                      </h3>
+                      <p className="text-sm text-slate-300">
+                        {brand.count} products
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
-        <section className="mt-12 space-y-10">
-          {Object.entries(grouped).map(([categoryName, items]) => (
-            <div key={categoryName}>
-              <div className="mb-6 flex items-end justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                    {categoryName}
-                  </p>
-                  <h3 className="mt-2 font-display text-2xl font-bold text-white">
-                    {items.length} products available
-                  </h3>
-                </div>
-                <Link
-                  href="/categories"
-                  className="text-sm font-semibold text-[#f3c74d] hover:underline"
-                >
-                  View categories
-                </Link>
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {items.map((item) => (
-                  <article
-                    key={item.id}
-                    className="group overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_40px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.24)]"
-                  >
-                    <Link href={item.href} className="block">
-                      <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
-                        <FallbackImage
-                          src={item.image}
-                          alt={item.title}
-                          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.06)_0%,rgba(5,11,22,0.72)_100%)]" />
-                      </div>
-                    </Link>
-
-                    <div className="space-y-4 p-5">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
-                          {item.brand}
-                        </span>
-                        <span className="text-sm font-semibold text-[#f3c74d]">
-                          {item.price}
-                        </span>
-                      </div>
-
-                      <div>
-                        <Link href={item.href} className="block">
-                          <h4 className="font-display text-lg font-bold text-white transition group-hover:text-[#f3c74d]">
-                            {item.title}
-                          </h4>
-                        </Link>
-                        <p className="mt-2 text-sm leading-6 text-slate-300">
-                          {item.description}
-                        </p>
-                      </div>
-
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <AddToCartButton
-                          item={{
-                            id: item.id,
-                            slug: item.slug,
-                            title: item.title,
-                            price: item.price,
-                            spec: item.brand,
-                            image: item.image,
-                          }}
-                          className="rounded-full bg-[#f3c74d] px-4 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
-                        >
-                          Add to cart
-                        </AddToCartButton>
-                        <Link
-                          href={item.href}
-                          className="rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
-                        >
-                          More details
-                        </Link>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+        <section className="mt-12">
+          <div className="grid gap-5 md:grid-cols-3">
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-[#f3c74d]">
+                Genuine Devices
+              </p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">
+                Reliable products sourced for business and everyday use.
+              </p>
             </div>
-          ))}
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-[#f3c74d]">
+                Fast Delivery
+              </p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">
+                Quick fulfillment for urgent orders and team rollouts.
+              </p>
+            </div>
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-[#f3c74d]">
+                Business Support
+              </p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">
+                Bulk orders, procurement help, and after-sales support.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-12 overflow-hidden rounded-[2.4rem] border border-[#f3c74d]/20 bg-[linear-gradient(135deg,#0a1020_0%,#0f1730_100%)] px-6 py-10 shadow-[0_24px_70px_rgba(0,0,0,0.28)] md:px-10">
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="space-y-4">
+              <p className="text-xs uppercase tracking-[0.35em] text-[#f3c74d]">
+                Ready to buy?
+              </p>
+              <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
+                Ready to Upgrade Your Business Tech?
+              </h2>
+              <p className="max-w-2xl text-lg leading-8 text-slate-300">
+                Get reliable laptops, desktops, accessories, and procurement
+                support tailored for your organization.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3 lg:justify-end">
+              <Link
+                href="/request-quote"
+                className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
+              >
+                Request Quote
+              </Link>
+              <Link
+                href="#featured-products"
+                className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+              >
+                Browse Products
+              </Link>
+            </div>
+          </div>
         </section>
       </main>
+
+      <Link
+        href={whatsappHref}
+        target="_blank"
+        rel="noreferrer"
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-full bg-[#25d366] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(37,211,102,0.3)] transition hover:scale-105 hover:bg-[#1fb85a]"
+      >
+        <span className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-lg">
+          💬
+        </span>
+        <span>Chat to Order</span>
+      </Link>
     </div>
   );
 }

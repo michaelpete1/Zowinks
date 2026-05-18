@@ -12,6 +12,7 @@ export type CatalogItem = {
   title: string;
   category: string;
   brand: string;
+  subcategory: string;
   price: string;
   href: string;
   image: string;
@@ -44,6 +45,7 @@ function productToCatalogItem(product: ProductDetails): CatalogItem {
     title: product.name,
     category: String(categoryLabel),
     brand: String(subcategoryLabel || categoryLabel),
+    subcategory: String(subcategoryLabel || ""),
     price: formatPrice(product.price),
     href: `/products/${product.slug}`,
     // Use the product fallback image instead of the generic file placeholder.
@@ -130,16 +132,10 @@ export async function fetchProductsForCategory(
  */
 export async function fetchAllProducts(): Promise<CatalogItem[]> {
   try {
-    const products = await zowkinsApi.listProducts();
-    if (!products.length) {
-      return fetchProductsByCategoryCrawl(999);
-    }
-    return products
-      .filter((product) => product && product.visible !== false)
-      .map(productToCatalogItem);
+    return fetchProductsByCategoryCrawl(999);
   } catch (error) {
     console.error("Error fetching all products:", error);
-    return fetchProductsByCategoryCrawl(999);
+    return [];
   }
 }
 
