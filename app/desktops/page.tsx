@@ -4,6 +4,7 @@ import Image from "next/image";
 import Navbar from "../../components/NewNavbar";
 import { zowkinsApi } from "../../lib/zowkins-api";
 import { resolveImageSource } from "../../lib/media";
+import { formatDisplayName } from "../../lib/display-name";
 
 export const metadata: Metadata = {
   title: "Desktops",
@@ -38,7 +39,7 @@ export default async function DesktopsPage() {
     if (activeCategory) {
       subcategories = activeCategory.subcategories || [];
       productsCount = activeCategory.productsCount || 0;
-      categoryName = activeCategory.name;
+      categoryName = formatDisplayName(activeCategory.name, activeCategory.name);
     }
   } catch {
     // Category not in DB yet - fallback is handled by UI
@@ -51,8 +52,8 @@ export default async function DesktopsPage() {
     if (name.includes("lenovo")) image = "/desktop 2.jpg";
 
     return {
-      title: sub.name,
-      description: `Robust ${sub.name} desktop systems for business environments and professional workflows.`,
+      title: formatDisplayName(sub.name, sub.name),
+      description: `Robust ${formatDisplayName(sub.name, sub.name)} desktop systems for business environments and professional workflows.`,
       href: `/desktops/${sub.slug}`,
       image: resolveImageSource(sub.image, image),
     };
@@ -115,10 +116,16 @@ export default async function DesktopsPage() {
                   </Link>
                 ))
               ) : (
-                <div className="col-span-2 rounded-[1.5rem] border border-dashed border-white/15 bg-white/5 p-8 text-center text-sm text-slate-400">
-                  <p>No brands found under "{categoryName}" yet.</p>
-                  <Link href="/admin/categories" className="mt-4 inline-block font-semibold text-[#f3c74d] hover:underline">
-                    Go to admin categories &rarr;
+            <div className="col-span-2 rounded-[1.5rem] border border-dashed border-white/15 bg-white/5 p-8 text-center text-sm text-slate-400">
+                  <p>
+                    No brands found under "{categoryName}" yet. Try another
+                    category or browse the full catalog.
+                  </p>
+                  <Link
+                    href="/categories"
+                    className="mt-4 inline-block font-semibold text-[#f3c74d] hover:underline"
+                  >
+                    Browse categories &rarr;
                   </Link>
                 </div>
               )}

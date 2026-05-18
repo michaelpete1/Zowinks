@@ -43,6 +43,24 @@ const valueProps = [
   },
 ];
 
+const trustStrip = [
+  {
+    title: "Warranty Available",
+    body: "Selected devices come with after-sales support.",
+    icon: "shield",
+  },
+  {
+    title: "Fast Delivery",
+    body: "Quick fulfillment for urgent business orders.",
+    icon: "truck",
+  },
+  {
+    title: "Trusted Support",
+    body: "We help from quote request to delivery and setup.",
+    icon: "chat",
+  },
+] as const;
+
 function getValueIcon(title: string) {
   if (title === "Trusted Supplier") {
     return (
@@ -131,6 +149,50 @@ function getValueTone(title: string) {
   };
 }
 
+function getTrustIcon(icon: (typeof trustStrip)[number]["icon"]) {
+  if (icon === "shield") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor">
+        <path
+          d="M12 3.5l7 3.5v4.5c0 4.6-3.2 8.8-7 9.9-3.8-1.1-7-5.3-7-9.9V7l7-3.5z"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M9.3 12.1l1.9 1.9L15.8 9.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.9"
+        />
+      </svg>
+    );
+  }
+
+  if (icon === "truck") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor">
+        <path
+          d="M3 7h11v8H3zM14 10h3l3 3v2h-6z"
+          strokeWidth="1.7"
+          strokeLinejoin="round"
+        />
+        <circle cx="7.5" cy="17.5" r="1.5" strokeWidth="1.7" />
+        <circle cx="17.5" cy="17.5" r="1.5" strokeWidth="1.7" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor">
+      <path
+        d="M4 5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M8 10h8M8 13h5.5" strokeLinecap="round" strokeWidth="1.7" />
+    </svg>
+  );
+}
+
 export default async function Home() {
   const { app } = await getAppSettings();
 
@@ -151,10 +213,33 @@ export default async function Home() {
 
       <HeroCarousel />
 
+      <section className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8">
+        <div className="grid gap-3 md:grid-cols-3">
+          {trustStrip.map((item) => (
+            <div
+              key={item.title}
+              className="flex items-start gap-4 rounded-[1.35rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] p-4 shadow-[0_12px_28px_rgba(0,0,0,0.22)]"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.22)]">
+                {getTrustIcon(item.icon)}
+              </span>
+              <div>
+                <h3 className="font-display text-base font-bold text-white">
+                  {item.title}
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-slate-300">
+                  {item.body}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <HomepageCategoriesSection />
 
       <section className="bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)]">
-        <div className="mx-auto max-w-6xl px-4 py-14 md:px-8 md:py-16">
+        <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-16">
           <div className="text-center text-white">
             <p className="text-xs uppercase tracking-[0.35em] text-white/75">
               Why Choose Zowkins?
@@ -163,7 +248,7 @@ export default async function Home() {
               Procurement made simple
             </h2>
           </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:mt-10 md:grid-cols-3 md:gap-6">
             {valueProps.map((card) => {
               const tone = getValueTone(card.title);
 
@@ -203,7 +288,7 @@ export default async function Home() {
       <FeaturedProductsSection />
 
       <section className="bg-[linear-gradient(180deg,#050b16_0%,#07142a_100%)] text-white">
-        <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-12">
+        <div className="mx-auto max-w-6xl px-4 py-8 md:px-8 md:py-12">
           <div className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] px-5 py-6 shadow-[0_12px_30px_rgba(0,0,0,0.22)] md:px-6 md:py-8">
             <div className="text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">

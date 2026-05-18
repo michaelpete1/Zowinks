@@ -2,6 +2,7 @@ import Link from "next/link";
 import FallbackImage from "./FallbackImage";
 import { zowkinsApi, type CategoryListItem } from "../lib/zowkins-api";
 import { resolveImageSource } from "../lib/media";
+import { formatDisplayName } from "../lib/display-name";
 
 export default async function HomepageCategoriesSection() {
   let categories: CategoryListItem[] = [];
@@ -17,7 +18,7 @@ export default async function HomepageCategoriesSection() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-16">
+    <section className="mx-auto max-w-6xl px-4 py-8 md:px-8 md:py-16">
       <div className="text-center">
         <p className="text-xs uppercase tracking-[0.35em] text-white/55">
           Categories
@@ -32,13 +33,13 @@ export default async function HomepageCategoriesSection() {
           {errorMessage}
         </div>
       ) : categories.length > 0 ? (
-        <div className="mx-auto mt-6 max-w-6xl">
-          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-6">
+        <div className="mx-auto mt-5 max-w-6xl md:mt-6">
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 md:gap-6">
             {categories.map((card) => (
               <Link
                 key={card.id}
                 href={`/categories/${card.slug}`}
-                className="group w-[14.25rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)] sm:w-[18rem] md:w-[22rem]"
+                className="group w-[12.75rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)] sm:w-[16.5rem] md:w-[20rem]"
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 sm:aspect-[4/3]">
                   <FallbackImage
@@ -49,7 +50,7 @@ export default async function HomepageCategoriesSection() {
                 </div>
                 <div className="p-4 text-center sm:p-5">
                   <h3 className="font-display text-base font-bold text-white sm:text-lg">
-                    {card.name}
+                    {formatDisplayName(card.name, card.name)}
                   </h3>
                   <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-300 sm:text-sm sm:leading-6">
                     {card.description}
@@ -64,7 +65,8 @@ export default async function HomepageCategoriesSection() {
         </div>
       ) : (
         <div className="mx-auto mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300">
-          No categories available yet. Categories will appear here when added through the admin.
+          No categories available yet. Categories will appear here as soon as
+          they are published.
         </div>
       )}
     </section>

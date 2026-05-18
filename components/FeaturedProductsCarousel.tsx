@@ -7,6 +7,7 @@ import Autoplay from "embla-carousel-autoplay";
 import FallbackImage from "./FallbackImage";
 import AddToCartButton from "./AddToCartButton";
 import { resolveImageSource } from "../lib/media";
+import { compactProductTitle, formatDisplayName } from "../lib/display-name";
 import type { CatalogItem } from "../lib/catalog";
 
 type FeaturedProductsCarouselProps = {
@@ -86,10 +87,10 @@ export default function FeaturedProductsCarousel({
                 <div className="space-y-2.5 p-4 text-center sm:space-y-3 sm:p-5">
                   <Link href={item.href} className="block">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#f3c74d] sm:text-[11px] sm:tracking-[0.24em]">
-                      {item.category}
+                      {formatDisplayName(item.category, item.category)}
                     </p>
                     <h3 className="mt-1.5 font-display text-base font-bold text-white sm:mt-2 sm:text-lg">
-                      {item.title}
+                      {compactProductTitle(item.title)}
                     </h3>
                   </Link>
                   <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
@@ -107,9 +108,9 @@ export default function FeaturedProductsCarousel({
                         item={{
                           id: item.id,
                           slug: item.slug,
-                          title: item.title,
+                          title: compactProductTitle(item.title),
                           price: item.price,
-                          spec: item.category,
+                          spec: formatDisplayName(item.category, item.category),
                           image: item.image,
                         }}
                         className="rounded-full bg-[#f3c74d] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#050b16] transition hover:bg-[#e4b935] sm:py-1 sm:text-[10px] sm:tracking-[0.2em]"

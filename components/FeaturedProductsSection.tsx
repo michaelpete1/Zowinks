@@ -22,8 +22,8 @@ export default async function FeaturedProductsSection() {
         <FeaturedProductsCarousel featured={featured} />
       ) : (
         <div className="mx-auto mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300">
-          No products available yet. Products will appear here when added
-          through the admin.
+          No products available yet. Products will appear here as soon as they
+          are published.
         </div>
       )}
     </section>

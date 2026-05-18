@@ -7,6 +7,7 @@ import FallbackImage from "../../components/FallbackImage";
 import FeaturedProductsCarousel from "../../components/FeaturedProductsCarousel";
 import { getAppSettings } from "../../lib/app-settings";
 import { fetchAllProducts } from "../../lib/catalog";
+import { compactProductTitle, formatDisplayName } from "../../lib/display-name";
 import { zowkinsApi } from "../../lib/zowkins-api";
 
 export const metadata: Metadata = {
@@ -146,11 +147,14 @@ export default async function ProductsPage({
           const label = String(subcategory.name || "").trim();
           const slug = String(subcategory.slug || slugify(label));
           const categorySlug = String(category.slug || "");
-          const categoryName = String(category.name || "Category");
+          const categoryName = formatDisplayName(
+            String(category.name || "Category"),
+            "Category",
+          );
           return [
             slug,
             {
-              label,
+              label: formatDisplayName(label, label),
               slug,
               categorySlug,
               categoryName,
@@ -188,7 +192,7 @@ export default async function ProductsPage({
 
   const categoryCounts = categories
     .map((category) => ({
-      label: category.name,
+      label: formatDisplayName(category.name, category.name),
       slug: category.slug,
       count: visibleProducts.filter((product) =>
         matchesCategory(product, category.slug),
@@ -334,31 +338,29 @@ export default async function ProductsPage({
               <p className="mb-3 text-sm font-semibold text-slate-300">
                 Brands
               </p>
-                <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <Link
-                    href="/products"
-                    className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                      !selectedBrand
-                        ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
-                        : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
+              <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <Link
+                  href="/products"
+                  className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    !selectedBrand
+                      ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                      : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
                   }`}
                 >
                   All
                 </Link>
-                  {brandCounts.map((brand) => (
-                    <Link
-                      key={brand.slug}
-                      href={brandFilterHref(brand.slug)}
-                      className={`inline-flex shrink-0 items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                        selectedBrand === brand.slug
-                          ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
-                          : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
+                {brandCounts.map((brand) => (
+                  <Link
+                    key={brand.slug}
+                    href={brandFilterHref(brand.slug)}
+                    className={`inline-flex shrink-0 items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                      selectedBrand === brand.slug
+                        ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                        : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
                     }`}
                   >
                     <span>{brand.label}</span>
-                    <span className="text-[11px] opacity-75">
-                      {brand.count}
-                    </span>
+                    <span className="text-[11px] opacity-75">{brand.count}</span>
                   </Link>
                 ))}
               </div>
@@ -368,31 +370,29 @@ export default async function ProductsPage({
               <p className="mb-3 text-sm font-semibold text-slate-300">
                 Categories
               </p>
-                <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <Link
-                    href="/products"
-                    className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                      !selectedCategory
-                        ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
-                        : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
+              <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <Link
+                  href="/products"
+                  className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    !selectedCategory
+                      ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                      : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
                   }`}
                 >
                   All
                 </Link>
-                  {categoryCounts.map((category) => (
-                    <Link
-                      key={category.slug}
-                      href={categoryFilterHref(category.slug)}
-                      className={`inline-flex shrink-0 items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                        selectedCategory === category.slug
-                          ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
-                          : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
+                {categoryCounts.map((category) => (
+                  <Link
+                    key={category.slug}
+                    href={categoryFilterHref(category.slug)}
+                    className={`inline-flex shrink-0 items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                      selectedCategory === category.slug
+                        ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                        : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
                     }`}
                   >
                     <span>{category.label}</span>
-                    <span className="text-[11px] opacity-75">
-                      {category.count}
-                    </span>
+                    <span className="text-[11px] opacity-75">{category.count}</span>
                   </Link>
                 ))}
               </div>
@@ -443,20 +443,23 @@ export default async function ProductsPage({
                         href={categoryFilterHref(slugify(product.category))}
                         className="rounded-full bg-white/8 px-2.5 py-1 text-[10px] font-semibold text-slate-100 transition hover:bg-white/14 hover:text-[#f3c74d] sm:px-3 sm:text-xs"
                       >
-                        {product.category}
+                        {formatDisplayName(product.category, product.category)}
                       </Link>
                       <Link
                         href={brandFilterHref(slugify(product.subcategory || product.brand))}
                         className="text-xs font-semibold text-[#f3c74d] hover:underline sm:text-sm"
                       >
-                        {product.subcategory || product.brand}
+                        {formatDisplayName(
+                          product.subcategory || product.brand,
+                          product.subcategory || product.brand,
+                        )}
                       </Link>
                     </div>
 
                     <div>
                       <Link href={product.href} className="block">
                         <h3 className="font-display text-xl font-bold leading-tight text-white transition group-hover:text-[#f3c74d] sm:text-2xl">
-                          {product.title}
+                          {compactProductTitle(product.title)}
                         </h3>
                       </Link>
                       <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-300">
@@ -478,9 +481,12 @@ export default async function ProductsPage({
                           item={{
                             id: product.id,
                             slug: product.slug,
-                            title: product.title,
+                            title: compactProductTitle(product.title),
                             price: product.price,
-                            spec: product.subcategory || product.brand,
+                            spec: formatDisplayName(
+                              product.subcategory || product.brand,
+                              product.subcategory || product.brand,
+                            ),
                             image: product.image,
                           }}
                           className="rounded-full bg-[#f3c74d] px-4 py-2.5 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935] sm:px-4"
@@ -536,9 +542,9 @@ export default async function ProductsPage({
                 >
                   <div className="flex items-center gap-4">
                     <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white/90 p-2 sm:h-14 sm:w-14">
-                      <Image
-                        src={brand.image}
-                        alt={brand.label}
+                        <Image
+                          src={brand.image}
+                          alt={brand.label}
                         width={56}
                         height={56}
                         className="h-full w-full object-contain"

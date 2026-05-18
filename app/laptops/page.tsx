@@ -5,6 +5,7 @@ import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
 import { zowkinsApi } from "../../lib/zowkins-api";
 import { resolveImageSource } from "../../lib/media";
+import { formatDisplayName } from "../../lib/display-name";
 
 export const metadata: Metadata = {
   title: "Laptops",
@@ -39,7 +40,7 @@ export default async function Laptops() {
     if (activeCategory) {
       subcategories = activeCategory.subcategories || [];
       productsCount = activeCategory.productsCount || 0;
-      categoryName = activeCategory.name;
+      categoryName = formatDisplayName(activeCategory.name, activeCategory.name);
     }
   } catch {
     // Category not in DB yet - fallback is handled by UI
@@ -66,11 +67,11 @@ export default async function Laptops() {
       badge = "Premium Choice";
     }
 
-      return {
-        name: sub.name,
+    return {
+        name: formatDisplayName(sub.name, sub.name),
         slug: sub.slug,
         href: `/laptops/${sub.slug}`,
-        description: `Explore the latest ${sub.name} laptop models and configurations.`,
+        description: `Explore the latest ${formatDisplayName(sub.name, sub.name)} laptop models and configurations.`,
         badge,
         tone,
         image: resolveImageSource(sub.image),
@@ -111,7 +112,7 @@ export default async function Laptops() {
             <InfoStrip
               variant="dark"
               items={[
-                { label: "Brands", value: `${brands.length} subcategories` },
+                { label: "Brands", value: `${brands.length} collections` },
                 { label: "Products", value: `${productsCount} items` },
                 { label: "Category", value: categoryName },
               ]}
@@ -162,9 +163,15 @@ export default async function Laptops() {
             </div>
           ) : (
             <div className="rounded-[2rem] border border-dashed border-white/15 bg-[#0a1020] p-12 text-center">
-              <p className="text-slate-400">No brands found under "{categoryName}" yet. Create a category with this name in Admin &rarr;</p>
-              <Link href="/admin/categories" className="mt-4 inline-block text-sm font-semibold text-[#f3c74d] hover:underline">
-                Go to admin categories
+              <p className="text-slate-400">
+                No brands found under "{categoryName}" yet. Try browsing the
+                full catalog or another category.
+              </p>
+              <Link
+                href="/categories"
+                className="mt-4 inline-block text-sm font-semibold text-[#f3c74d] hover:underline"
+              >
+                Browse categories &rarr;
               </Link>
             </div>
           )}

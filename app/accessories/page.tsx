@@ -7,6 +7,7 @@ import AddToCartButton from "../../components/AddToCartButton";
 import { zowkinsApi, ProductDetails } from "../../lib/zowkins-api";
 import { formatPrice } from "../../lib/catalog";
 import { resolveImageSource } from "../../lib/media";
+import { formatDisplayName } from "../../lib/display-name";
 
 export const metadata: Metadata = {
   title: "Accessories",
@@ -31,7 +32,7 @@ export default async function Accessories() {
     );
 
     if (activeCategory) {
-      categoryName = activeCategory.name;
+      categoryName = formatDisplayName(activeCategory.name, activeCategory.name);
       const response = await zowkinsApi.listCategoryProducts(
         activeCategory.slug,
         {
@@ -124,35 +125,49 @@ export default async function Accessories() {
                   <div className="space-y-4 p-6">
                     <div>
                       <h3 className="font-display text-2xl font-semibold text-white">
-                        {product.name}
+                        {formatDisplayName(product.name, product.name)}
                       </h3>
                       <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-300">
                         {product.description}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-2xl font-bold text-white">
                         {formatPrice(product.price)}
                       </span>
-                      <AddToCartButton
-                        item={{
-                          id: product.id,
-                          title: product.name,
-                          price: formatPrice(product.price),
-                          spec:
-                            (typeof product.subcategory === "object"
-                              ? (product.subcategory as any).name
-                              : product.subcategory) ||
-                            (typeof product.category === "object"
-                              ? (product.category as any).name
-                              : product.category),
-                          image: resolveImageSource(product.image),
-                          slug: product.slug,
-                        }}
-                        className="rounded-full bg-[#f3c74d] px-5 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
-                      >
-                        Order Now
-                      </AddToCartButton>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <AddToCartButton
+                          item={{
+                            id: product.id,
+                            title: product.name,
+                            price: formatPrice(product.price),
+                            spec:
+                              (typeof product.subcategory === "object"
+                                ? formatDisplayName(
+                                    (product.subcategory as any).name,
+                                    (product.subcategory as any).name,
+                                  )
+                                : product.subcategory) ||
+                              (typeof product.category === "object"
+                                ? formatDisplayName(
+                                    (product.category as any).name,
+                                    (product.category as any).name,
+                                  )
+                                : product.category),
+                            image: resolveImageSource(product.image),
+                            slug: product.slug,
+                          }}
+                          className="rounded-full bg-[#f3c74d] px-5 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
+                        >
+                          Order Now
+                        </AddToCartButton>
+                        <Link
+                          href={`/products/${encodeURIComponent(product.slug)}`}
+                          className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                        >
+                          View details
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </article>
@@ -161,13 +176,14 @@ export default async function Accessories() {
           ) : (
             <div className="rounded-[2rem] border border-dashed border-white/15 bg-[#0a1020] p-12 text-center">
               <p className="text-slate-400">
-                No items found under "{categoryName}" yet.
+                No items found under "{categoryName}" yet. Try another
+                category or browse the full catalog.
               </p>
               <Link
-                href="/admin/categories"
+                href="/categories"
                 className="mt-4 inline-block font-semibold text-[#f3c74d] hover:underline"
               >
-                Go to admin categories &rarr;
+                Browse categories &rarr;
               </Link>
             </div>
           )}
@@ -176,4 +192,3 @@ export default async function Accessories() {
     </div>
   );
 }
-

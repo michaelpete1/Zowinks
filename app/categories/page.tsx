@@ -4,6 +4,7 @@ import Navbar from "../../components/NewNavbar";
 import FallbackImage from "../../components/FallbackImage";
 import { ApiError, zowkinsApi } from "../../lib/zowkins-api";
 import { resolveImageSource } from "../../lib/media";
+import { formatDisplayName } from "../../lib/display-name";
 
 export const metadata: Metadata = {
   title: "Categories",
@@ -66,7 +67,7 @@ export default async function CategoriesPage() {
                 </div>
                 <div>
                   <h2 className="font-display text-lg font-semibold text-white sm:text-xl">
-                    {category.name}
+                    {formatDisplayName(category.name, category.name)}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-slate-300">
                     {category.description}

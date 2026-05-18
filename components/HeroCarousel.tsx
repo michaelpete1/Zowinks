@@ -20,24 +20,24 @@ interface HeroSlide {
 
 const heroTemplates: Omit<HeroSlide, "img">[] = [
   {
-    title: "Empowering Your Business",
-    subtitle: "with Innovative IT Solutions",
-    cta1: "Explore Products",
+    title: "Smart IT Solutions",
+    subtitle: "for businesses and professionals",
+    cta1: "Shop Products",
     cta1Href: "/products",
     cta2: "Request a Quote",
     cta2Href: "/request-quote",
   },
   {
-    title: "Premium IT Procurement",
-    subtitle: "Trusted suppliers for modern teams",
+    title: "Reliable Tech Procurement",
+    subtitle: "laptops, desktops, and accessories",
     cta1: "View Categories",
     cta1Href: "/categories",
     cta2: "Get Quote",
     cta2Href: "/full-quote-bill",
   },
   {
-    title: "Business Technology Solutions",
-    subtitle: "Laptops, Desktops & Accessories",
+    title: "Fast Support & Delivery",
+    subtitle: "for growing teams and urgent orders",
     cta1: "Shop Now",
     cta1Href: "/products",
     cta2: "Contact Us",
@@ -86,7 +86,7 @@ export default function HeroCarousel() {
 
   return (
     <div className="embla relative overflow-hidden" ref={emblaRef}>
-      <div className="embla__container flex h-screen">
+      <div className="embla__container flex min-h-[82svh] md:h-screen">
         {heroSlides.map((slide, index) => (
           <section key={index} className="relative flex-[0_0_100%]">
             <div className="absolute inset-0">
@@ -102,31 +102,31 @@ export default function HeroCarousel() {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.10),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(243,199,77,0.16),transparent_26%)]" />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
             </div>
-            <div className="relative z-10 flex h-full items-center px-4 py-20 md:px-8 md:py-24 lg:px-12 xl:px-16">
-              <div className="max-w-2xl space-y-6 animate-[fadeIn_0.9s_ease-out]">
+            <div className="relative z-10 flex h-full items-center px-4 py-16 sm:py-20 md:px-8 md:py-24 lg:px-12 xl:px-16">
+              <div className="max-w-2xl space-y-5 animate-[fadeIn_0.9s_ease-out] sm:space-y-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/80 md:text-sm">
                   Zowkins Enterprise
                 </p>
-                <h1 className="font-display text-4xl font-bold leading-tight text-white drop-shadow-2xl md:text-5xl lg:text-6xl">
+                <h1 className="font-display text-3xl font-bold leading-tight text-white drop-shadow-2xl sm:text-4xl md:text-5xl lg:text-6xl">
                   {slide.title}
                   <span className="block">{slide.subtitle}</span>
                 </h1>
-                <p className="max-w-xl text-base leading-7 text-white/95 md:text-lg">
+                <p className="max-w-xl text-sm leading-6 text-white/90 sm:text-base sm:leading-7 md:text-lg">
                   Premium IT procurement for business teams.
                 </p>
-                <p className="text-sm text-white/80">
+                <p className="text-xs text-white/75 sm:text-sm">
                   Rated 4.9/5 for service.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Link
                     href={slide.cta1Href}
-                    className="rounded-lg bg-slate-900/80 px-6 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(11,29,59,0.22)] transition hover:bg-slate-800 backdrop-blur-sm"
+                    className="rounded-lg bg-slate-900/80 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(11,29,59,0.22)] transition hover:bg-slate-800 backdrop-blur-sm sm:px-6"
                   >
                     {slide.cta1}
                   </Link>
                   <Link
                     href={slide.cta2Href}
-                    className="rounded-lg bg-yellow-400/90 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-yellow-400/20 transition hover:bg-yellow-300 backdrop-blur-sm"
+                    className="rounded-lg bg-yellow-400/90 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-yellow-400/20 transition hover:bg-yellow-300 backdrop-blur-sm sm:px-6"
                   >
                     {slide.cta2}
                   </Link>
@@ -137,13 +137,13 @@ export default function HeroCarousel() {
         ))}
       </div>
 
-      <div className="absolute left-1/2 bottom-8 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/30 px-3 py-2 backdrop-blur-sm">
+      <div className="absolute left-1/2 bottom-5 z-20 flex -translate-x-1/2 items-center gap-2.5 rounded-full bg-black/30 px-3 py-2 backdrop-blur-sm sm:bottom-8 sm:gap-3">
         {heroSlides.map((_, index) => (
           <button
             key={index}
             type="button"
             onClick={() => scrollTo(index)}
-            className={`h-3.5 w-3.5 rounded-full border transition focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
+            className={`h-3 w-3 rounded-full border transition focus:outline-none focus:ring-2 focus:ring-yellow-400 sm:h-3.5 sm:w-3.5 ${
               selectedIndex === index
                 ? "border-yellow-400 bg-yellow-400 shadow-[0_0_18px_rgba(250,204,21,0.55)]"
                 : "border-white/25 bg-white/30 hover:bg-white/50"

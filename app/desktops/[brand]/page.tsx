@@ -143,23 +143,31 @@ export default async function DesktopBrandPage({ params }: Props) {
                         {product.description}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-xl font-bold text-white">
                         {formatPrice(product.price)}
                       </span>
-                      <AddToCartButton
-                        item={{
-                          id: product.id,
-                          title: product.name,
-                          price: formatPrice(product.price),
-                          spec: product.subcategory || brandName,
-                          image: resolveImageSource(product.image),
-                          slug: product.slug,
-                        }}
-                        className="rounded-full bg-[#f3c74d] px-5 py-2.5 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
-                      >
-                        Order Now
-                      </AddToCartButton>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <AddToCartButton
+                          item={{
+                            id: product.id,
+                            title: product.name,
+                            price: formatPrice(product.price),
+                            spec: product.subcategory || brandName,
+                            image: resolveImageSource(product.image),
+                            slug: product.slug,
+                          }}
+                          className="rounded-full bg-[#f3c74d] px-5 py-2.5 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
+                        >
+                          Order Now
+                        </AddToCartButton>
+                        <Link
+                          href={`/products/${encodeURIComponent(product.slug)}`}
+                          className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-center text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+                        >
+                          View details
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </article>
