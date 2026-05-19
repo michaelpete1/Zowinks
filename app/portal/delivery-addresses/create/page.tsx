@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { zowkinsApi, DeliveryAddress } from "../../../../lib/zowkins-api";
+import { zowkinsApi } from "../../../../lib/zowkins-api";
 import PortalNavbar from "../../../../components/PortalNavbar";
 
 export default function CreateDeliveryAddressPage() {
   const router = useRouter();
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -161,7 +161,10 @@ export default function CreateDeliveryAddressPage() {
           <div className="grid gap-6 md:grid-cols-2">
             {/* Address Label */}
             <div>
-              <label htmlFor="label" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="label"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Address Label *
               </label>
               <input
@@ -171,19 +174,27 @@ export default function CreateDeliveryAddressPage() {
                 value={formData.label}
                 onChange={(e) => {
                   handleInputChange(e);
-                  if (fieldErrors.label) setFieldErrors((prev) => ({ ...prev, label: undefined }));
+                  if (fieldErrors.label)
+                    setFieldErrors((prev) => ({ ...prev, label: undefined }));
                 }}
                 placeholder="e.g., Home, Office, Work"
                 className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
-                  fieldErrors.label ? "border-red-500" : "border-white/10 focus:border-[#f3c74d]/45"
+                  fieldErrors.label
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
                 }`}
               />
-              {fieldErrors.label && <p className="mt-1 text-sm text-red-400">{fieldErrors.label}</p>}
+              {fieldErrors.label && (
+                <p className="mt-1 text-sm text-red-400">{fieldErrors.label}</p>
+              )}
             </div>
 
             {/* Phone Number */}
             <div>
-              <label htmlFor="phoneNumber" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="phoneNumber"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Phone Number *
               </label>
               <input
@@ -193,19 +204,32 @@ export default function CreateDeliveryAddressPage() {
                 value={formData.phoneNumber}
                 onChange={(e) => {
                   handleInputChange(e);
-                  if (fieldErrors.phoneNumber) setFieldErrors((prev) => ({ ...prev, phoneNumber: undefined }));
+                  if (fieldErrors.phoneNumber)
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      phoneNumber: undefined,
+                    }));
                 }}
                 placeholder="e.g., 08012345678"
                 className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
-                  fieldErrors.phoneNumber ? "border-red-500" : "border-white/10 focus:border-[#f3c74d]/45"
+                  fieldErrors.phoneNumber
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
                 }`}
               />
-              {fieldErrors.phoneNumber && <p className="mt-1 text-sm text-red-400">{fieldErrors.phoneNumber}</p>}
+              {fieldErrors.phoneNumber && (
+                <p className="mt-1 text-sm text-red-400">
+                  {fieldErrors.phoneNumber}
+                </p>
+              )}
             </div>
 
             {/* Street Address */}
             <div className="md:col-span-2">
-              <label htmlFor="street" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="street"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Street Address *
               </label>
               <input
@@ -215,19 +239,29 @@ export default function CreateDeliveryAddressPage() {
                 value={formData.street}
                 onChange={(e) => {
                   handleInputChange(e);
-                  if (fieldErrors.street) setFieldErrors((prev) => ({ ...prev, street: undefined }));
+                  if (fieldErrors.street)
+                    setFieldErrors((prev) => ({ ...prev, street: undefined }));
                 }}
                 placeholder="e.g., 123 Main Street, Apartment 4B"
                 className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
-                  fieldErrors.street ? "border-red-500" : "border-white/10 focus:border-[#f3c74d]/45"
+                  fieldErrors.street
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
                 }`}
               />
-              {fieldErrors.street && <p className="mt-1 text-sm text-red-400">{fieldErrors.street}</p>}
+              {fieldErrors.street && (
+                <p className="mt-1 text-sm text-red-400">
+                  {fieldErrors.street}
+                </p>
+              )}
             </div>
 
             {/* City */}
             <div>
-              <label htmlFor="city" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="city"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 City *
               </label>
               <input
@@ -237,19 +271,27 @@ export default function CreateDeliveryAddressPage() {
                 value={formData.city}
                 onChange={(e) => {
                   handleInputChange(e);
-                  if (fieldErrors.city) setFieldErrors((prev) => ({ ...prev, city: undefined }));
+                  if (fieldErrors.city)
+                    setFieldErrors((prev) => ({ ...prev, city: undefined }));
                 }}
                 placeholder="e.g., Lagos"
                 className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
-                  fieldErrors.city ? "border-red-500" : "border-white/10 focus:border-[#f3c74d]/45"
+                  fieldErrors.city
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
                 }`}
               />
-              {fieldErrors.city && <p className="mt-1 text-sm text-red-400">{fieldErrors.city}</p>}
+              {fieldErrors.city && (
+                <p className="mt-1 text-sm text-red-400">{fieldErrors.city}</p>
+              )}
             </div>
 
             {/* State */}
             <div>
-              <label htmlFor="state" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="state"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 State *
               </label>
               <input
@@ -259,19 +301,27 @@ export default function CreateDeliveryAddressPage() {
                 value={formData.state}
                 onChange={(e) => {
                   handleInputChange(e);
-                  if (fieldErrors.state) setFieldErrors((prev) => ({ ...prev, state: undefined }));
+                  if (fieldErrors.state)
+                    setFieldErrors((prev) => ({ ...prev, state: undefined }));
                 }}
                 placeholder="e.g., Lagos State"
                 className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
-                  fieldErrors.state ? "border-red-500" : "border-white/10 focus:border-[#f3c74d]/45"
+                  fieldErrors.state
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
                 }`}
               />
-              {fieldErrors.state && <p className="mt-1 text-sm text-red-400">{fieldErrors.state}</p>}
+              {fieldErrors.state && (
+                <p className="mt-1 text-sm text-red-400">{fieldErrors.state}</p>
+              )}
             </div>
 
             {/* Country */}
             <div>
-              <label htmlFor="country" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="country"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Country *
               </label>
               <select
@@ -282,17 +332,33 @@ export default function CreateDeliveryAddressPage() {
                 className="w-full rounded-lg border border-white/10 bg-[#0a1020] px-4 py-3 text-white focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
                 required
               >
-                <option value="Nigeria" className="bg-[#0a1020] text-white">Nigeria</option>
-                <option value="Ghana" className="bg-[#0a1020] text-white">Ghana</option>
-                <option value="Kenya" className="bg-[#0a1020] text-white">Kenya</option>
-                <option value="South Africa" className="bg-[#0a1020] text-white">South Africa</option>
-                <option value="Other" className="bg-[#0a1020] text-white">Other</option>
+                <option value="Nigeria" className="bg-[#0a1020] text-white">
+                  Nigeria
+                </option>
+                <option value="Ghana" className="bg-[#0a1020] text-white">
+                  Ghana
+                </option>
+                <option value="Kenya" className="bg-[#0a1020] text-white">
+                  Kenya
+                </option>
+                <option
+                  value="South Africa"
+                  className="bg-[#0a1020] text-white"
+                >
+                  South Africa
+                </option>
+                <option value="Other" className="bg-[#0a1020] text-white">
+                  Other
+                </option>
               </select>
             </div>
 
             {/* Postal Code */}
             <div>
-              <label htmlFor="postalCode" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="postalCode"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Postal Code *
               </label>
               <input
@@ -302,18 +368,24 @@ export default function CreateDeliveryAddressPage() {
                 value={formData.postalCode}
                 onChange={(e) => {
                   handleInputChange(e);
-                  if (fieldErrors.postalCode) setFieldErrors((prev) => ({ ...prev, postalCode: undefined }));
+                  if (fieldErrors.postalCode)
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      postalCode: undefined,
+                    }));
                 }}
                 placeholder="e.g., 100234"
                 className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
-                  fieldErrors.postalCode ? "border-red-500" : "border-white/10 focus:border-[#f3c74d]/45"
+                  fieldErrors.postalCode
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
                 }`}
               />
-              {fieldErrors.postalCode && <p className="mt-1 text-sm text-red-400">{fieldErrors.postalCode}</p>}
-            </div>
-          </div>
-                required
-              />
+              {fieldErrors.postalCode && (
+                <p className="mt-1 text-sm text-red-400">
+                  {fieldErrors.postalCode}
+                </p>
+              )}
             </div>
           </div>
 

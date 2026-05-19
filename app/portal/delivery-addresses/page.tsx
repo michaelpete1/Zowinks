@@ -98,7 +98,7 @@ export default function PortalDeliveryAddressesPage() {
 
         {addresses.length === 0 ? (
           <div className="rounded-lg border border-white/10 bg-white/5 p-8 text-center">
-            <p className="text-slate-300">You haven't added any delivery addresses yet.</p>
+            <p className="text-slate-300">You haven&apos;t added any delivery addresses yet.</p>
             <Link 
               href="/portal/delivery-addresses/create" 
               className="mt-4 inline-block rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"

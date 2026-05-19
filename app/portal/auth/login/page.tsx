@@ -162,7 +162,7 @@ export default function PortalLoginPage() {
 
           <div className="mt-8 text-center">
             <p className="text-sm text-slate-300">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/portal/auth/signup" className="text-[#f3c74d] hover:underline">
                 Sign up
               </Link>

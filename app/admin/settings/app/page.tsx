@@ -230,14 +230,18 @@ export default function AdminAppSettingsPage() {
 
   const validateContactForm = () => {
     const newErrors: Partial<Record<keyof AppContactUpdate, string>> = {};
-    if (!contactForm.email.trim()) {
+    const email = contactForm.email ?? "";
+    const phoneNumber = contactForm.phoneNumber ?? "";
+    const address = contactForm.address ?? "";
+
+    if (!email.trim()) {
       newErrors.email = "Support email is required";
-    } else if (!/\S+@\S+\.\S+/.test(contactForm.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Invalid email format";
     }
-    if (!contactForm.phoneNumber.trim())
+    if (!phoneNumber.trim())
       newErrors.phoneNumber = "Phone number is required";
-    if (!contactForm.address.trim())
+    if (!address.trim())
       newErrors.address = "Business address is required";
 
     setContactFieldErrors(newErrors);

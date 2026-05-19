@@ -9,10 +9,7 @@ import { NIGERIA_36_STATES, STATE_TO_CITIES } from "../../lib/location-data";
 import {
   zowkinsApi,
   type DeliveryMethod,
-  type PortalCreateAccountInput,
-  type PortalLoginInput,
   type CreatePortalOrderInput,
-  type PortalOrder,
   normalizeOrderGender,
 } from "../../lib/zowkins-api";
 
@@ -65,7 +62,7 @@ export default function Cart() {
   const removeItem = useCart((state) => state.removeItem);
   const [formData, setFormData] = useState<OrderFormState>(emptyFormState);
   const [stage, setStage] = useState<OrderStage>("form");
-  const [orderReference, setOrderReference] = useState("");
+  const [, setOrderReference] = useState("");
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>([]);
   const [loadingDeliveryMethods, setLoadingDeliveryMethods] = useState(false);
@@ -93,10 +90,10 @@ export default function Cart() {
   const summaryTax = submittedOrder?.tax ?? tax;
   const summaryTotal = submittedOrder?.total ?? total;
 
-  const totalLabel = currency(summaryTotal);
+  // const totalLabel = currency(summaryTotal);
 
-  const selectedLocation =
-    formData.deliveryAddress || formData.pickupPoint || "Not provided yet";
+  // const selectedLocation =
+  //   formData.deliveryAddress || formData.pickupPoint || "Not provided yet";
 
   useEffect(() => {
     setSelectedItemIds((current) =>
