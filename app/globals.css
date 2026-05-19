@@ -41,7 +41,7 @@ h6 {
     sans-serif;
   letter-spacing: -0.015em;
   font-weight: 600;
-  text-wrap: balance;
+  /* removed text-wrap: balance for better Chrome compatibility (< 114) */
 }
 
 .app-settings-page {

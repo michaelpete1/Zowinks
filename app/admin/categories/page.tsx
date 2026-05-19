@@ -130,6 +130,9 @@ export default function CategoriesPage() {
   const [toastMessage, setToastMessage] = useState("");
   const [imageDebug, setImageDebug] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof CategoryForm, string>>
+  >({});
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -323,10 +326,50 @@ export default function CategoriesPage() {
     });
   };
 
+  const validateForm = () => {
+    const newErrors: Partial<Record<keyof CategoryForm, string>> = {};
+
+    const name = asText(form.name).trim();
+    const description = asText(form.description).trim();
+    const slug = asText(form.slug).trim();
+
+    if (!name) {
+      newErrors.name = "Category name is required";
+    } else if (name.length < 3 || name.length > 80) {
+      newErrors.name = "Name must be between 3 and 80 characters";
+    }
+
+    if (!description) {
+      newErrors.description = "Category description is required";
+    } else if (description.length < 10 || description.length > 500) {
+      newErrors.description =
+        "Description must be between 10 and 500 characters";
+    }
+
+    if (slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      newErrors.slug =
+        "Invalid slug format (lowercase letters, numbers, and hyphens only)";
+    }
+
+    if (!selectedCategory && !form.files[0]) {
+      newErrors.files = "Category image is required";
+    }
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const submitCategory = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setFieldErrors({});
+
     if (!apiReady) {
       setError("Use your admin session token or save a bearer token first.");
+      return;
+    }
+
+    if (!validateForm()) {
+      setError("Please fix the errors in the form.");
       return;
     }
 
@@ -334,32 +377,10 @@ export default function CategoriesPage() {
     const description = asText(form.description).trim().replace(/\s+/g, " ");
     const slug = asText(form.slug).trim().toLowerCase();
 
-    if (name.length < 3 || name.length > 80) {
-      setError("Category name must be between 3 and 80 characters.");
-      return;
-    }
-
-    if (description.length < 10 || description.length > 500) {
-      setError("Category description must be between 10 and 500 characters.");
-      return;
-    }
-
-    if (slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-      setError(
-        "Category slug can only use lowercase letters, numbers, and hyphens.",
-      );
-      return;
-    }
-
     const file = form.files[0] ?? null;
 
     if (file && !ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
       setError("Upload a PNG, JPEG, WebP, or SVG image for the category.");
-      return;
-    }
-
-    if (!selectedCategory && !file) {
-      setError("Add a category image before creating a new category.");
       return;
     }
 
@@ -788,45 +809,76 @@ export default function CategoriesPage() {
                 </div>
               </div>
 
-              <input
-                value={form.name}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    name: event.target.value,
-                    slug: current.slug
-                      ? current.slug
-                      : slugify(event.target.value),
-                  }))
-                }
-                placeholder="Category name"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
+              <div className="grid gap-2">
+                <input
+                  value={form.name}
+                  onChange={(event) => {
+                    setForm((current) => ({
+                      ...current,
+                      name: event.target.value,
+                      slug: current.slug
+                        ? current.slug
+                        : slugify(event.target.value),
+                    }));
+                    if (fieldErrors.name)
+                      setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                  }}
+                  placeholder="Category name"
+                  className={`rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    fieldErrors.name
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
+                />
+                {fieldErrors.name && (
+                  <p className="px-1 text-xs font-medium text-rose-600">
+                    {fieldErrors.name}
+                  </p>
+                )}
+              </div>
 
-              <textarea
-                value={form.description}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    description: event.target.value,
-                  }))
-                }
-                rows={4}
-                placeholder="Category description"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
+              <div className="grid gap-2">
+                <textarea
+                  value={form.description}
+                  onChange={(event) => {
+                    setForm((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }));
+                    if (fieldErrors.description)
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        description: undefined,
+                      }));
+                  }}
+                  rows={4}
+                  placeholder="Category description"
+                  className={`rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    fieldErrors.description
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
+                />
+                {fieldErrors.description && (
+                  <p className="px-1 text-xs font-medium text-rose-600">
+                    {fieldErrors.description}
+                  </p>
+                )}
+              </div>
 
-              <input
-                value={form.subcategories}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    subcategories: event.target.value,
-                  }))
-                }
-                placeholder="Subcategories (comma separated)"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
+              <div className="grid gap-2">
+                <input
+                  value={form.subcategories}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      subcategories: event.target.value,
+                    }))
+                  }
+                  placeholder="Subcategories (comma separated)"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                />
+              </div>
 
               <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
                 <input

@@ -96,6 +96,12 @@ export default function TeamPage() {
   const [saving, setSaving] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [accepting, setAccepting] = useState(false);
+  const [inviteFieldErrors, setInviteFieldErrors] = useState<
+    Partial<Record<keyof InviteForm, string>>
+  >({});
+  const [editFieldErrors, setEditFieldErrors] = useState<
+    Partial<Record<keyof EditForm, string>>
+  >({});
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -205,21 +211,35 @@ export default function TeamPage() {
     }
   };
 
+  const validateInviteForm = () => {
+    const newErrors: Partial<Record<keyof InviteForm, string>> = {};
+    if (!inviteForm.firstName.trim())
+      newErrors.firstName = "First name is required";
+    if (!inviteForm.lastName.trim())
+      newErrors.lastName = "Last name is required";
+    if (!inviteForm.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(inviteForm.email)) {
+      newErrors.email = "Invalid email format";
+    }
+    if (!inviteForm.phoneNumber.trim())
+      newErrors.phoneNumber = "Phone number is required";
+
+    setInviteFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleInviteSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setInviteFieldErrors({});
+
     if (!apiReady) {
       setError("Add a valid admin access token before inviting members.");
       return;
     }
 
-    if (
-      !inviteForm.firstName.trim() ||
-      !inviteForm.lastName.trim() ||
-      !inviteForm.email.trim()
-    ) {
-      setError(
-        "First name, last name, and email are required to send an invitation.",
-      );
+    if (!validateInviteForm()) {
+      setError("Please fix the errors in the invitation form.");
       return;
     }
 
@@ -551,39 +571,87 @@ export default function TeamPage() {
               onSubmit={handleInviteSubmit}
               className="mt-6 grid gap-4 md:grid-cols-2"
             >
-              <input
-                value={inviteForm.firstName}
-                onChange={(event) =>
-                  setInviteForm((current) => ({
-                    ...current,
-                    firstName: event.target.value,
-                  }))
-                }
-                placeholder="First name"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
-              <input
-                value={inviteForm.lastName}
-                onChange={(event) =>
-                  setInviteForm((current) => ({
-                    ...current,
-                    lastName: event.target.value,
-                  }))
-                }
-                placeholder="Last name"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
-              <input
-                value={inviteForm.email}
-                onChange={(event) =>
-                  setInviteForm((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
-                }
-                placeholder="Email"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white md:col-span-2"
-              />
+              <div className="grid gap-2">
+                <input
+                  value={inviteForm.firstName}
+                  onChange={(event) => {
+                    setInviteForm((current) => ({
+                      ...current,
+                      firstName: event.target.value,
+                    }));
+                    if (inviteFieldErrors.firstName)
+                      setInviteFieldErrors((prev) => ({
+                        ...prev,
+                        firstName: undefined,
+                      }));
+                  }}
+                  placeholder="First name"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    inviteFieldErrors.firstName
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
+                />
+                {inviteFieldErrors.firstName && (
+                  <p className="px-1 text-xs font-medium text-rose-600">
+                    {inviteFieldErrors.firstName}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <input
+                  value={inviteForm.lastName}
+                  onChange={(event) => {
+                    setInviteForm((current) => ({
+                      ...current,
+                      lastName: event.target.value,
+                    }));
+                    if (inviteFieldErrors.lastName)
+                      setInviteFieldErrors((prev) => ({
+                        ...prev,
+                        lastName: undefined,
+                      }));
+                  }}
+                  placeholder="Last name"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    inviteFieldErrors.lastName
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
+                />
+                {inviteFieldErrors.lastName && (
+                  <p className="px-1 text-xs font-medium text-rose-600">
+                    {inviteFieldErrors.lastName}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-2 md:col-span-2">
+                <input
+                  value={inviteForm.email}
+                  onChange={(event) => {
+                    setInviteForm((current) => ({
+                      ...current,
+                      email: event.target.value,
+                    }));
+                    if (inviteFieldErrors.email)
+                      setInviteFieldErrors((prev) => ({
+                        ...prev,
+                        email: undefined,
+                      }));
+                  }}
+                  placeholder="Email"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    inviteFieldErrors.email
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
+                />
+                {inviteFieldErrors.email && (
+                  <p className="px-1 text-xs font-medium text-rose-600">
+                    {inviteFieldErrors.email}
+                  </p>
+                )}
+              </div>
               <label className="sr-only" htmlFor="invite-role">
                 Role
               </label>
@@ -624,17 +692,33 @@ export default function TeamPage() {
                   </option>
                 ))}
               </select>
-              <input
-                value={inviteForm.phoneNumber}
-                onChange={(event) =>
-                  setInviteForm((current) => ({
-                    ...current,
-                    phoneNumber: event.target.value,
-                  }))
-                }
-                placeholder="Phone number"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
+              <div className="grid gap-2">
+                <input
+                  value={inviteForm.phoneNumber}
+                  onChange={(event) => {
+                    setInviteForm((current) => ({
+                      ...current,
+                      phoneNumber: event.target.value,
+                    }));
+                    if (inviteFieldErrors.phoneNumber)
+                      setInviteFieldErrors((prev) => ({
+                        ...prev,
+                        phoneNumber: undefined,
+                      }));
+                  }}
+                  placeholder="Phone number"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    inviteFieldErrors.phoneNumber
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
+                />
+                {inviteFieldErrors.phoneNumber && (
+                  <p className="px-1 text-xs font-medium text-rose-600">
+                    {inviteFieldErrors.phoneNumber}
+                  </p>
+                )}
+              </div>
               <input
                 value={inviteForm.dateOfBirth}
                 onChange={(event) =>

@@ -63,9 +63,10 @@ function toAppForm(app: App): AppInput {
     },
     description: app.description ?? "",
     ratings: Number(app.ratings ?? 5),
-    images: Array.isArray(app.images) && app.images.length > 0
-      ? app.images
-      : [...defaultAppSettings.images],
+    images:
+      Array.isArray(app.images) && app.images.length > 0
+        ? app.images
+        : [...defaultAppSettings.images],
     branding: {
       logo: app.branding?.logo ?? "",
       logoLight: app.branding?.logoLight ?? "",
@@ -84,11 +85,14 @@ function toContactForm(app: App): AppContactUpdate {
   };
 }
 
-function fieldClassName() {
+function fieldClassName(hasError?: boolean) {
   return [
-    "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3",
+    "w-full rounded-2xl border bg-slate-50 px-4 py-3",
     "text-slate-900 outline-none transition placeholder:text-slate-400",
-    "focus:border-[#0a2a78] focus:bg-white focus:ring-2 focus:ring-[#0a2a78]/10",
+    "focus:bg-white focus:ring-2 focus:ring-[#0a2a78]/10",
+    hasError
+      ? "border-rose-500 focus:border-rose-600"
+      : "border-slate-200 focus:border-[#0a2a78]",
   ].join(" ");
 }
 
@@ -104,6 +108,12 @@ export default function AdminAppSettingsPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savingContact, setSavingContact] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof AppInput, string>>
+  >({});
+  const [contactFieldErrors, setContactFieldErrors] = useState<
+    Partial<Record<keyof AppContactUpdate, string>>
+  >({});
   const [connectionMessage, setConnectionMessage] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -167,7 +177,9 @@ export default function AdminAppSettingsPage() {
   }, [ready]);
 
   const handleInputChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = event.target;
 
@@ -184,10 +196,7 @@ export default function AdminAppSettingsPage() {
 
     setForm((current) => ({
       ...current,
-      [name]:
-        name === "ratings"
-          ? Number(value)
-          : value,
+      [name]: name === "ratings" ? Number(value) : value,
     }));
   };
 
@@ -209,11 +218,43 @@ export default function AdminAppSettingsPage() {
     }));
   };
 
+  const validateAppForm = () => {
+    const newErrors: Partial<Record<keyof AppInput, string>> = {};
+    if (!form.name.trim()) newErrors.name = "App name is required";
+    if (!form.description.trim())
+      newErrors.description = "App description is required";
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateContactForm = () => {
+    const newErrors: Partial<Record<keyof AppContactUpdate, string>> = {};
+    if (!contactForm.email.trim()) {
+      newErrors.email = "Support email is required";
+    } else if (!/\S+@\S+\.\S+/.test(contactForm.email)) {
+      newErrors.email = "Invalid email format";
+    }
+    if (!contactForm.phoneNumber.trim())
+      newErrors.phoneNumber = "Phone number is required";
+    if (!contactForm.address.trim())
+      newErrors.address = "Business address is required";
+
+    setContactFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleCreateOrUpdateApp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setFieldErrors({});
 
     if (!apiReady) {
       setError("Connect an admin token before saving settings.");
+      return;
+    }
+
+    if (!validateAppForm()) {
+      setError("Please fix the errors in the app settings form.");
       return;
     }
 
@@ -252,7 +293,9 @@ export default function AdminAppSettingsPage() {
       );
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : "Could not save application settings.",
+        err instanceof ApiError
+          ? err.message
+          : "Could not save application settings.",
       );
     } finally {
       setSaving(false);
@@ -261,9 +304,15 @@ export default function AdminAppSettingsPage() {
 
   const handleContactSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setContactFieldErrors({});
 
     if (!apiReady) {
       setError("Connect an admin token before updating contact information.");
+      return;
+    }
+
+    if (!validateContactForm()) {
+      setError("Please fix the errors in the contact form.");
       return;
     }
 
@@ -276,9 +325,11 @@ export default function AdminAppSettingsPage() {
         apiConnection.accessToken.trim(),
         contactForm,
       );
+
       const nextApp = response.app ?? currentApp;
       setAppSettings(nextApp);
       setForm(toAppForm(nextApp));
+      setContactForm(toContactForm(nextApp));
       setMessage("Contact information updated successfully.");
     } catch (err) {
       setError(
@@ -306,8 +357,9 @@ export default function AdminAppSettingsPage() {
               Keep the site identity and contact details in one place
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              The homepage hero stays hardcoded for now. Use this page to manage the
-              live app name, brand assets, contact information, and portal status.
+              The homepage hero stays hardcoded for now. Use this page to manage
+              the live app name, brand assets, contact information, and portal
+              status.
             </p>
           </div>
           <Link
@@ -354,20 +406,34 @@ export default function AdminAppSettingsPage() {
 
               {!loading ? (
                 <div className="space-y-8">
-                  <form onSubmit={handleCreateOrUpdateApp} className="space-y-6">
+                  <form
+                    onSubmit={handleCreateOrUpdateApp}
+                    className="space-y-6"
+                  >
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
+                      <div className="grid gap-2 text-sm font-medium text-slate-700">
                         <span>App Name</span>
                         <input
                           type="text"
                           name="name"
                           value={form.name}
-                          onChange={handleInputChange}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            if (fieldErrors.name)
+                              setFieldErrors((prev) => ({
+                                ...prev,
+                                name: undefined,
+                              }));
+                          }}
                           placeholder="Zowkins Enterprise"
-                          className={fieldClassName()}
-                          required
+                          className={fieldClassName(Boolean(fieldErrors.name))}
                         />
-                      </label>
+                        {fieldErrors.name && (
+                          <p className="px-1 text-xs font-medium text-rose-600">
+                            {fieldErrors.name}
+                          </p>
+                        )}
+                      </div>
 
                       <label className="grid gap-2 text-sm font-medium text-slate-700">
                         <span>Ratings</span>
@@ -385,18 +451,31 @@ export default function AdminAppSettingsPage() {
                       </label>
                     </div>
 
-                    <label className="grid gap-2 text-sm font-medium text-slate-700">
+                    <div className="grid gap-2 text-sm font-medium text-slate-700">
                       <span>Description</span>
                       <textarea
                         name="description"
                         value={form.description}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          if (fieldErrors.description)
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              description: undefined,
+                            }));
+                        }}
                         rows={4}
                         placeholder="Business laptops, desktops, accessories, and IT procurement solutions for modern teams."
-                        className={fieldClassName()}
-                        required
+                        className={fieldClassName(
+                          Boolean(fieldErrors.description),
+                        )}
                       />
-                    </label>
+                      {fieldErrors.description && (
+                        <p className="px-1 text-xs font-medium text-rose-600">
+                          {fieldErrors.description}
+                        </p>
+                      )}
+                    </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -416,7 +495,8 @@ export default function AdminAppSettingsPage() {
                       <label className="grid gap-2 text-sm font-medium text-slate-700">
                         <span>What this affects</span>
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                          Homepage intro, portal badge, and app identity across the site.
+                          Homepage intro, portal badge, and app identity across
+                          the site.
                         </div>
                       </label>
                     </div>
@@ -481,10 +561,15 @@ export default function AdminAppSettingsPage() {
                         disabled={saving || !canUpdate}
                         className="rounded-full bg-[#0a2a78] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {saving ? "Saving..." : appSettings ? "Update Settings" : "Create Settings"}
+                        {saving
+                          ? "Saving..."
+                          : appSettings
+                            ? "Update Settings"
+                            : "Create Settings"}
                       </button>
                       <span className="text-sm text-slate-500">
-                        General and branding changes are saved to the backend app object.
+                        General and branding changes are saved to the backend
+                        app object.
                       </span>
                     </div>
                   </form>
@@ -497,33 +582,62 @@ export default function AdminAppSettingsPage() {
                       Updated separately through the contact endpoint.
                     </p>
 
-                    <form onSubmit={handleContactSubmit} className="mt-5 space-y-6">
+                    <form
+                      onSubmit={handleContactSubmit}
+                      className="mt-5 space-y-6"
+                    >
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <label className="grid gap-2 text-sm font-medium text-slate-700">
+                        <div className="grid gap-2 text-sm font-medium text-slate-700">
                           <span>Email</span>
                           <input
                             type="email"
                             name="email"
                             value={contactForm.email ?? ""}
-                            onChange={handleContactInputChange}
+                            onChange={(e) => {
+                              handleContactInputChange(e);
+                              if (contactFieldErrors.email)
+                                setContactFieldErrors((prev) => ({
+                                  ...prev,
+                                  email: undefined,
+                                }));
+                            }}
                             placeholder="contact@zowkins.com"
-                            className={fieldClassName()}
-                            required
+                            className={fieldClassName(
+                              Boolean(contactFieldErrors.email),
+                            )}
                           />
-                        </label>
+                          {contactFieldErrors.email && (
+                            <p className="px-1 text-xs font-medium text-rose-600">
+                              {contactFieldErrors.email}
+                            </p>
+                          )}
+                        </div>
 
-                        <label className="grid gap-2 text-sm font-medium text-slate-700">
+                        <div className="grid gap-2 text-sm font-medium text-slate-700">
                           <span>Phone Number</span>
                           <input
                             type="tel"
                             name="phoneNumber"
                             value={contactForm.phoneNumber ?? ""}
-                            onChange={handleContactInputChange}
+                            onChange={(e) => {
+                              handleContactInputChange(e);
+                              if (contactFieldErrors.phoneNumber)
+                                setContactFieldErrors((prev) => ({
+                                  ...prev,
+                                  phoneNumber: undefined,
+                                }));
+                            }}
                             placeholder="+971 54 389 5126"
-                            className={fieldClassName()}
-                            required
+                            className={fieldClassName(
+                              Boolean(contactFieldErrors.phoneNumber),
+                            )}
                           />
-                        </label>
+                          {contactFieldErrors.phoneNumber && (
+                            <p className="px-1 text-xs font-medium text-rose-600">
+                              {contactFieldErrors.phoneNumber}
+                            </p>
+                          )}
+                        </div>
 
                         <label className="grid gap-2 text-sm font-medium text-slate-700">
                           <span>WhatsApp Number</span>
@@ -539,18 +653,31 @@ export default function AdminAppSettingsPage() {
                         </label>
                       </div>
 
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
+                      <div className="grid gap-2 text-sm font-medium text-slate-700">
                         <span>Address</span>
                         <textarea
                           name="address"
                           value={contactForm.address ?? ""}
-                          onChange={handleContactInputChange}
+                          onChange={(e) => {
+                            handleContactInputChange(e);
+                            if (contactFieldErrors.address)
+                              setContactFieldErrors((prev) => ({
+                                ...prev,
+                                address: undefined,
+                              }));
+                          }}
                           rows={3}
                           placeholder="Wuse Zone 3, No 7 Maputo Street, Abuja, FCT, Nigeria"
-                          className={fieldClassName()}
-                          required
+                          className={fieldClassName(
+                            Boolean(contactFieldErrors.address),
+                          )}
                         />
-                      </label>
+                        {contactFieldErrors.address && (
+                          <p className="px-1 text-xs font-medium text-rose-600">
+                            {contactFieldErrors.address}
+                          </p>
+                        )}
+                      </div>
 
                       <button
                         type="submit"

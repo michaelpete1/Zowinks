@@ -12,6 +12,10 @@ export default function PortalProfilePage() {
   const [user, setUser] = useState<PortalUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<typeof formData>>({});
+  const [passwordFieldErrors, setPasswordFieldErrors] = useState<
+    Partial<typeof passwordForm>
+  >({});
   const [message, setMessage] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -75,8 +79,26 @@ export default function PortalProfilePage() {
     setPasswordForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const validateProfileForm = () => {
+    const newErrors: Partial<typeof formData> = {};
+    if (!formData.firstName.trim())
+      newErrors.firstName = "First name is required";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!formData.phoneNumber.trim())
+      newErrors.phoneNumber = "Phone number is required";
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFieldErrors({});
+
+    if (!validateProfileForm()) {
+      setError("Please fix the errors in the profile form");
+      return;
+    }
 
     const token = localStorage.getItem("portalToken");
     if (!token || !user) return;
@@ -101,16 +123,29 @@ export default function PortalProfilePage() {
     }
   };
 
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const validatePasswordForm = () => {
+    const newErrors: Partial<typeof passwordForm> = {};
+    if (!passwordForm.currentPassword)
+      newErrors.currentPassword = "Current password is required";
+    if (!passwordForm.newPassword) {
+      newErrors.newPassword = "New password is required";
+    } else if (passwordForm.newPassword.length < 6) {
+      newErrors.newPassword = "Password must be at least 6 characters";
+    }
     if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
-      setError("New passwords do not match");
-      return;
+      newErrors.confirmNewPassword = "Passwords do not match";
     }
 
-    if (passwordForm.newPassword.length < 6) {
-      setError("Password must be at least 6 characters long");
+    setPasswordFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordFieldErrors({});
+
+    if (!validatePasswordForm()) {
+      setError("Please fix the errors in the password form");
       return;
     }
 
@@ -256,9 +291,25 @@ export default function PortalProfilePage() {
                           id="firstName"
                           name="firstName"
                           value={formData.firstName}
-                          onChange={handleInputChange}
-                          className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            if (fieldErrors.firstName)
+                              setFieldErrors((prev) => ({
+                                ...prev,
+                                firstName: undefined,
+                              }));
+                          }}
+                          className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                            fieldErrors.firstName
+                              ? "border-red-500"
+                              : "border-white/10 focus:border-[#f3c74d]/45"
+                          }`}
                         />
+                        {fieldErrors.firstName && (
+                          <p className="mt-1 text-sm text-red-400">
+                            {fieldErrors.firstName}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label
@@ -272,9 +323,25 @@ export default function PortalProfilePage() {
                           id="lastName"
                           name="lastName"
                           value={formData.lastName}
-                          onChange={handleInputChange}
-                          className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            if (fieldErrors.lastName)
+                              setFieldErrors((prev) => ({
+                                ...prev,
+                                lastName: undefined,
+                              }));
+                          }}
+                          className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                            fieldErrors.lastName
+                              ? "border-red-500"
+                              : "border-white/10 focus:border-[#f3c74d]/45"
+                          }`}
                         />
+                        {fieldErrors.lastName && (
+                          <p className="mt-1 text-sm text-red-400">
+                            {fieldErrors.lastName}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -290,9 +357,25 @@ export default function PortalProfilePage() {
                         id="phoneNumber"
                         name="phoneNumber"
                         value={formData.phoneNumber}
-                        onChange={handleInputChange}
-                        className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          if (fieldErrors.phoneNumber)
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              phoneNumber: undefined,
+                            }));
+                        }}
+                        className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                          fieldErrors.phoneNumber
+                            ? "border-red-500"
+                            : "border-white/10 focus:border-[#f3c74d]/45"
+                        }`}
                       />
+                      {fieldErrors.phoneNumber && (
+                        <p className="mt-1 text-sm text-red-400">
+                          {fieldErrors.phoneNumber}
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
@@ -397,11 +480,26 @@ export default function PortalProfilePage() {
                       id="currentPassword"
                       name="currentPassword"
                       value={passwordForm.currentPassword}
-                      onChange={handlePasswordInputChange}
+                      onChange={(e) => {
+                        handlePasswordInputChange(e);
+                        if (passwordFieldErrors.currentPassword)
+                          setPasswordFieldErrors((prev) => ({
+                            ...prev,
+                            currentPassword: undefined,
+                          }));
+                      }}
                       placeholder="Enter your current password"
-                      className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                      required
+                      className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                        passwordFieldErrors.currentPassword
+                          ? "border-red-500"
+                          : "border-white/10 focus:border-[#f3c74d]/45"
+                      }`}
                     />
+                    {passwordFieldErrors.currentPassword && (
+                      <p className="mt-1 text-sm text-red-400">
+                        {passwordFieldErrors.currentPassword}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label
@@ -415,12 +513,26 @@ export default function PortalProfilePage() {
                       id="newPassword"
                       name="newPassword"
                       value={passwordForm.newPassword}
-                      onChange={handlePasswordInputChange}
+                      onChange={(e) => {
+                        handlePasswordInputChange(e);
+                        if (passwordFieldErrors.newPassword)
+                          setPasswordFieldErrors((prev) => ({
+                            ...prev,
+                            newPassword: undefined,
+                          }));
+                      }}
                       placeholder="Enter your new password (min. 6 characters)"
-                      className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                      required
-                      minLength={6}
+                      className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                        passwordFieldErrors.newPassword
+                          ? "border-red-500"
+                          : "border-white/10 focus:border-[#f3c74d]/45"
+                      }`}
                     />
+                    {passwordFieldErrors.newPassword && (
+                      <p className="mt-1 text-sm text-red-400">
+                        {passwordFieldErrors.newPassword}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label
@@ -434,12 +546,26 @@ export default function PortalProfilePage() {
                       id="confirmNewPassword"
                       name="confirmNewPassword"
                       value={passwordForm.confirmNewPassword}
-                      onChange={handlePasswordInputChange}
+                      onChange={(e) => {
+                        handlePasswordInputChange(e);
+                        if (passwordFieldErrors.confirmNewPassword)
+                          setPasswordFieldErrors((prev) => ({
+                            ...prev,
+                            confirmNewPassword: undefined,
+                          }));
+                      }}
                       placeholder="Confirm your new password"
-                      className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                      required
-                      minLength={6}
+                      className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                        passwordFieldErrors.confirmNewPassword
+                          ? "border-red-500"
+                          : "border-white/10 focus:border-[#f3c74d]/45"
+                      }`}
                     />
+                    {passwordFieldErrors.confirmNewPassword && (
+                      <p className="mt-1 text-sm text-red-400">
+                        {passwordFieldErrors.confirmNewPassword}
+                      </p>
+                    )}
                   </div>
                   <button
                     type="submit"

@@ -19,6 +19,7 @@ export default function PortalSignupPage() {
     gender: "male",
     dateOfBirth: "",
   });
+  const [fieldErrors, setFieldErrors] = useState<Partial<typeof formData>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -31,40 +32,52 @@ export default function PortalSignupPage() {
     }
   }, [router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear field error when user types
+    if (fieldErrors[name as keyof typeof formData]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const validateForm = () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phoneNumber || !formData.password) {
-      setError("Please fill in all required fields");
-      return false;
+    const newErrors: Partial<typeof formData> = {};
+
+    if (!formData.firstName.trim())
+      newErrors.firstName = "First name is required";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.phoneNumber.trim())
+      newErrors.phoneNumber = "Phone number is required";
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return false;
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError("Please enter a valid email address");
-      return false;
-    }
-
-    return true;
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
+      setError("Please fix the errors below");
       return;
     }
 
@@ -73,28 +86,34 @@ export default function PortalSignupPage() {
     setMessage(null);
 
     try {
-      const response: PortalAuthResponse = await zowkinsApi.createPortalAccount({
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        email: formData.email.trim(),
-        phoneNumber: formData.phoneNumber.trim(),
-        password: formData.password,
-        gender: formData.gender,
-        dateOfBirth: formData.dateOfBirth || undefined,
-      });
+      const response: PortalAuthResponse = await zowkinsApi.createPortalAccount(
+        {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          phoneNumber: formData.phoneNumber.trim(),
+          password: formData.password,
+          gender: formData.gender,
+          dateOfBirth: formData.dateOfBirth || undefined,
+        },
+      );
 
       // Store token and user info
       localStorage.setItem("portalToken", response.accessToken);
       localStorage.setItem("portalUser", JSON.stringify(response.user));
 
       setMessage("Account created successfully! Redirecting...");
-      
+
       // Redirect to portal dashboard
       setTimeout(() => {
         router.push("/portal");
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Account creation failed. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Account creation failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -103,12 +122,14 @@ export default function PortalSignupPage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <PortalNavbar />
-      
+
       <main className="mx-auto max-w-2xl px-4 py-12 md:px-8">
         <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-white">Create Account</h1>
-            <p className="mt-2 text-slate-300">Join the Zowkins portal community</p>
+            <p className="mt-2 text-slate-300">
+              Join the Zowkins portal community
+            </p>
           </div>
 
           {error && (
@@ -126,7 +147,10 @@ export default function PortalSignupPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label htmlFor="firstName" className="mb-2 block text-sm font-medium text-white">
+                <label
+                  htmlFor="firstName"
+                  className="mb-2 block text-sm font-medium text-white"
+                >
                   First Name *
                 </label>
                 <input
@@ -136,13 +160,24 @@ export default function PortalSignupPage() {
                   value={formData.firstName}
                   onChange={handleInputChange}
                   placeholder="Enter your first name"
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                  required
+                  className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                    fieldErrors.firstName
+                      ? "border-red-500"
+                      : "border-white/10 focus:border-[#f3c74d]/45"
+                  }`}
                 />
+                {fieldErrors.firstName && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {fieldErrors.firstName}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label htmlFor="lastName" className="mb-2 block text-sm font-medium text-white">
+                <label
+                  htmlFor="lastName"
+                  className="mb-2 block text-sm font-medium text-white"
+                >
                   Last Name *
                 </label>
                 <input
@@ -152,14 +187,25 @@ export default function PortalSignupPage() {
                   value={formData.lastName}
                   onChange={handleInputChange}
                   placeholder="Enter your last name"
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                  required
+                  className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                    fieldErrors.lastName
+                      ? "border-red-500"
+                      : "border-white/10 focus:border-[#f3c74d]/45"
+                  }`}
                 />
+                {fieldErrors.lastName && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {fieldErrors.lastName}
+                  </p>
+                )}
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="email"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Email Address *
               </label>
               <input
@@ -169,13 +215,22 @@ export default function PortalSignupPage() {
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="Enter your email"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                required
+                className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                  fieldErrors.email
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
+                }`}
               />
+              {fieldErrors.email && (
+                <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="phoneNumber" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="phoneNumber"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Phone Number *
               </label>
               <input
@@ -185,14 +240,25 @@ export default function PortalSignupPage() {
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
                 placeholder="Enter your phone number"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                required
+                className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                  fieldErrors.phoneNumber
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
+                }`}
               />
+              {fieldErrors.phoneNumber && (
+                <p className="mt-1 text-sm text-red-400">
+                  {fieldErrors.phoneNumber}
+                </p>
+              )}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label htmlFor="gender" className="mb-2 block text-sm font-medium text-white">
+                <label
+                  htmlFor="gender"
+                  className="mb-2 block text-sm font-medium text-white"
+                >
                   Gender *
                 </label>
                 <select
@@ -200,17 +266,26 @@ export default function PortalSignupPage() {
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
+                  className="w-full rounded-lg border border-white/10 bg-[#0a1020] px-4 py-3 text-white focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
                   required
                 >
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
+                  <option value="male" className="bg-[#0a1020] text-white">
+                    Male
+                  </option>
+                  <option value="female" className="bg-[#0a1020] text-white">
+                    Female
+                  </option>
+                  <option value="other" className="bg-[#0a1020] text-white">
+                    Other
+                  </option>
                 </select>
               </div>
 
               <div>
-                <label htmlFor="dateOfBirth" className="mb-2 block text-sm font-medium text-white">
+                <label
+                  htmlFor="dateOfBirth"
+                  className="mb-2 block text-sm font-medium text-white"
+                >
                   Date of Birth
                 </label>
                 <input
@@ -225,7 +300,10 @@ export default function PortalSignupPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="password"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Password *
               </label>
               <input
@@ -235,14 +313,24 @@ export default function PortalSignupPage() {
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="Create a password (min. 6 characters)"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                required
-                minLength={6}
+                className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                  fieldErrors.password
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
+                }`}
               />
+              {fieldErrors.password && (
+                <p className="mt-1 text-sm text-red-400">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-white">
+              <label
+                htmlFor="confirmPassword"
+                className="mb-2 block text-sm font-medium text-white"
+              >
                 Confirm Password *
               </label>
               <input
@@ -251,11 +339,18 @@ export default function PortalSignupPage() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                placeholder="Confirm your password"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                required
-                minLength={6}
+                placeholder="Repeat your password"
+                className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                  fieldErrors.confirmPassword
+                    ? "border-red-500"
+                    : "border-white/10 focus:border-[#f3c74d]/45"
+                }`}
               />
+              {fieldErrors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-400">
+                  {fieldErrors.confirmPassword}
+                </p>
+              )}
             </div>
 
             <button
@@ -270,7 +365,10 @@ export default function PortalSignupPage() {
           <div className="mt-8 text-center">
             <p className="text-sm text-slate-300">
               Already have an account?{" "}
-              <Link href="/portal/auth/login" className="text-[#f3c74d] hover:underline">
+              <Link
+                href="/portal/auth/login"
+                className="text-[#f3c74d] hover:underline"
+              >
                 Sign in
               </Link>
             </p>

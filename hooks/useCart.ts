@@ -9,6 +9,7 @@ export interface CartItem {
   price: number;
   spec?: string;
   qty: number;
+  image?: string;
 }
 
 export interface CartItemInput {

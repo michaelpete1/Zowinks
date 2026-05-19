@@ -80,6 +80,9 @@ export default function DeliveryMethodsPage() {
   const [message, setMessage] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof DeliveryMethodForm, string>>
+  >({});
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -239,10 +242,28 @@ export default function DeliveryMethodsPage() {
     }
   };
 
+  const validateForm = () => {
+    const newErrors: Partial<Record<keyof DeliveryMethodForm, string>> = {};
+    if (!form.name.trim()) newErrors.name = "Name is required";
+    if (form.fee < 0) newErrors.fee = "Fee cannot be negative";
+    if (!form.estimatedDeliveryTime.trim())
+      newErrors.estimatedDeliveryTime = "Estimated delivery time is required";
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const submitMethod = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setFieldErrors({});
+
     if (!apiReady) {
       setError("Save a bearer token first.");
+      return;
+    }
+
+    if (!validateForm()) {
+      setError("Please fix the errors in the form.");
       return;
     }
 
@@ -250,66 +271,41 @@ export default function DeliveryMethodsPage() {
     const estimatedDeliveryTime = form.estimatedDeliveryTime
       .trim()
       .replace(/\s+/g, " ");
-    const fee = Number(form.fee);
-
-    if (name.length < 3 || name.length > 80) {
-      setError("Delivery method name must be between 3 and 80 characters.");
-      return;
-    }
-
-    if (estimatedDeliveryTime.length < 3 || estimatedDeliveryTime.length > 80) {
-      setError("Estimated delivery time must be between 3 and 80 characters.");
-      return;
-    }
-
-    if (
-      !/[a-zA-Z]/.test(estimatedDeliveryTime) ||
-      !/[0-9a-zA-Z]/.test(estimatedDeliveryTime)
-    ) {
-      setError(
-        "Estimated delivery time should include clear text such as '2-3 business days'.",
-      );
-      return;
-    }
-
-    if (!Number.isFinite(fee) || fee < 0 || fee > 1000000000) {
-      setError("Enter a valid delivery fee.");
-      return;
-    }
 
     setSaving(true);
     setError("");
     setMessage("");
 
     try {
-      const payload: AdminDeliveryMethodInput = {
-        name,
-        fee,
-        estimatedDeliveryTime,
-        isActive: form.isActive,
-        visibility: form.visibility,
-      };
-
-      const saved = selectedMethod
-        ? await zowkinsApi.updateAdminDeliveryMethod(
-            apiConnection.accessToken.trim(),
-            selectedMethod.id || (selectedMethod as any)._id,
-            payload,
-          )
-        : await zowkinsApi.createAdminDeliveryMethod(
-            apiConnection.accessToken.trim(),
-            payload,
-          );
-
-      setSelectedMethod(saved);
       if (selectedMethod) {
-        setToastMessage("Delivery method updated successfully.");
+        const id = selectedMethod.id || (selectedMethod as any)._id;
+        const updated = await zowkinsApi.updateAdminDeliveryMethod(
+          apiConnection.accessToken.trim(),
+          id,
+          {
+            ...form,
+            name,
+            estimatedDeliveryTime,
+          },
+        );
         setMessage("Delivery method updated successfully.");
+        setToastMessage(`Updated ${name}`);
+        await loadMethods();
+        setSelectedMethod(updated);
       } else {
+        const created = await zowkinsApi.createAdminDeliveryMethod(
+          apiConnection.accessToken.trim(),
+          {
+            ...form,
+            name,
+            estimatedDeliveryTime,
+          },
+        );
         setMessage("Delivery method created successfully.");
+        setToastMessage(`Created ${name}`);
+        await loadMethods();
+        setSelectedMethod(created);
       }
-      await loadMethods();
-      setSelectedMethod(saved);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         clearSession();
@@ -651,41 +647,85 @@ export default function DeliveryMethodsPage() {
                 : "Add a new delivery method"}
             </h2>
             <form onSubmit={submitMethod} className="mt-6 grid gap-4">
-              <input
-                value={form.name}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-                placeholder="Name"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
-              <input
-                value={form.fee}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    fee: Number(event.target.value),
-                  }))
-                }
-                placeholder="Fee"
-                type="number"
-                min="0"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
-              <input
-                value={form.estimatedDeliveryTime}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    estimatedDeliveryTime: event.target.value,
-                  }))
-                }
-                placeholder="Estimated delivery time"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
+              <div className="grid gap-2">
+                <input
+                  value={form.name}
+                  onChange={(event) => {
+                    setForm((current) => ({
+                      ...current,
+                      name: event.target.value,
+                    }));
+                    if (fieldErrors.name)
+                      setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                  }}
+                  placeholder="Name"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    fieldErrors.name
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
+                />
+                {fieldErrors.name && (
+                  <p className="px-1 text-xs font-medium text-rose-600">
+                    {fieldErrors.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <input
+                  value={form.fee}
+                  onChange={(event) => {
+                    setForm((current) => ({
+                      ...current,
+                      fee: Number(event.target.value),
+                    }));
+                    if (fieldErrors.fee)
+                      setFieldErrors((prev) => ({ ...prev, fee: undefined }));
+                  }}
+                  placeholder="Fee"
+                  type="number"
+                  min="0"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    fieldErrors.fee
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
+                />
+                {fieldErrors.fee && (
+                  <p className="px-1 text-xs font-medium text-rose-600">
+                    {fieldErrors.fee}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <input
+                  value={form.estimatedDeliveryTime}
+                  onChange={(event) => {
+                    setForm((current) => ({
+                      ...current,
+                      estimatedDeliveryTime: event.target.value,
+                    }));
+                    if (fieldErrors.estimatedDeliveryTime)
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        estimatedDeliveryTime: undefined,
+                      }));
+                  }}
+                  placeholder="Estimated delivery time"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    fieldErrors.estimatedDeliveryTime
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
+                />
+                {fieldErrors.estimatedDeliveryTime && (
+                  <p className="px-1 text-xs font-medium text-rose-600">
+                    {fieldErrors.estimatedDeliveryTime}
+                  </p>
+                )}
+              </div>
               <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
                 <input
                   checked={form.isActive}

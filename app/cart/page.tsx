@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../../components/NewNavbar";
 import { useCart, type CartItem } from "../../hooks/useCart";
+import { NIGERIA_36_STATES, STATE_TO_CITIES } from "../../lib/location-data";
 import {
   zowkinsApi,
   type DeliveryMethod,
@@ -75,6 +76,9 @@ export default function Cart() {
     total: number;
   } | null>(null);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof OrderFormState, string>>
+  >({});
   const [submitting, setSubmitting] = useState(false);
 
   const subtotal = useMemo(
@@ -100,10 +104,13 @@ export default function Cart() {
     );
   }, [items]);
 
+  const [retryCount, setRetryCount] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
 
     const loadDeliveryMethods = async () => {
+      setError("");
       setLoadingDeliveryMethods(true);
       try {
         const methods: DeliveryMethod[] =
@@ -130,10 +137,18 @@ export default function Cart() {
         });
       } catch (err) {
         if (!cancelled) {
+          const isTimeout =
+            err instanceof Error &&
+            (err.message.includes("504") ||
+              err.message.includes("timeout") ||
+              err.message.includes("fetch failed"));
+
           setError(
-            err instanceof Error
-              ? err.message
-              : "Failed to load delivery methods",
+            isTimeout
+              ? "The delivery service is taking a moment to wake up (Render free tier). Please wait a few seconds and try again."
+              : err instanceof Error
+                ? err.message
+                : "Failed to load delivery methods",
           );
         }
       } finally {
@@ -148,7 +163,7 @@ export default function Cart() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retryCount]);
 
   const selectedItemCount = selectedItemIds.length;
 
@@ -172,6 +187,43 @@ export default function Cart() {
   const removeSelectedItems = () => {
     selectedItemIds.forEach((id) => removeItem(id));
     setSelectedItemIds([]);
+  };
+
+  const validateForm = () => {
+    const newErrors: Partial<Record<keyof OrderFormState, string>> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Please enter your full name";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Please enter your email address";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Please enter your phone number";
+    }
+
+    if (!formData.state.trim()) {
+      newErrors.state = "Please select a state";
+    }
+
+    if (!formData.city.trim()) {
+      newErrors.city = "Please select a city";
+    }
+
+    if (!formData.deliveryAddress.trim()) {
+      newErrors.deliveryAddress = "Please enter a delivery address";
+    }
+
+    if (!formData.deliveryMethod.trim()) {
+      newErrors.deliveryMethod = "Please select a delivery method";
+    }
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const submitOrder = async () => {
@@ -237,25 +289,15 @@ export default function Cart() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+    setFieldErrors({});
 
     if (!items.length) {
       setError("Add a product first, then place the order.");
       return;
     }
 
-    if (
-      !formData.name.trim() ||
-      !formData.email.trim() ||
-      !formData.phone.trim() ||
-      !formData.city.trim() ||
-      !formData.state.trim()
-    ) {
-      setError("Fill in your name, email, phone, city, and state.");
-      return;
-    }
-
-    if (!formData.deliveryAddress.trim() && !formData.pickupPoint.trim()) {
-      setError("Add either a delivery address or a pick-up point.");
+    if (!validateForm()) {
+      setError("Please fix the errors in the form below.");
       return;
     }
 
@@ -288,6 +330,7 @@ export default function Cart() {
     setSubmittedOrder(null);
     setSelectedItemIds([]);
     setError("");
+    setFieldErrors({});
   };
 
   return (
@@ -419,9 +462,18 @@ export default function Cart() {
                               name: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
+                          className={`w-full rounded-2xl border bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 sm:text-sm ${
+                            fieldErrors.name
+                              ? "border-rose-500/60 focus:border-rose-500"
+                              : "border-white/10 focus:border-[#f3c74d]/60"
+                          }`}
                           placeholder="Your full name"
                         />
+                        {fieldErrors.name && (
+                          <p className="mt-1.5 px-1 text-xs font-medium text-rose-400">
+                            {fieldErrors.name}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-white">
@@ -436,18 +488,32 @@ export default function Cart() {
                               email: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
+                          className={`w-full rounded-2xl border bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 sm:text-sm ${
+                            fieldErrors.email
+                              ? "border-rose-500/60 focus:border-rose-500"
+                              : "border-white/10 focus:border-[#f3c74d]/60"
+                          }`}
                           placeholder="you@example.com"
                         />
+                        {fieldErrors.email && (
+                          <p className="mt-1.5 px-1 text-xs font-medium text-rose-400">
+                            {fieldErrors.email}
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     <div className="grid gap-5 sm:grid-cols-2">
                       <div>
-                        <label className="mb-2 block text-sm font-semibold text-white">
+                        <label
+                          className="mb-2 block text-sm font-semibold text-white"
+                          htmlFor="gender-select"
+                        >
                           Gender
                         </label>
                         <select
+                          id="gender-select"
+                          title="Select gender"
                           value={formData.gender}
                           onChange={(event) =>
                             setFormData({
@@ -458,10 +524,20 @@ export default function Cart() {
                                   : "male",
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
+                          className="w-full rounded-2xl border border-white/10 bg-[#0a1020] px-4 py-3 text-base text-white outline-none transition focus:border-[#f3c74d]/60 sm:text-sm"
                         >
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
+                          <option
+                            value="male"
+                            className="bg-[#0a1020] text-white"
+                          >
+                            Male
+                          </option>
+                          <option
+                            value="female"
+                            className="bg-[#0a1020] text-white"
+                          >
+                            Female
+                          </option>
                         </select>
                       </div>
                     </div>
@@ -479,15 +555,77 @@ export default function Cart() {
                               phone: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
+                          className={`w-full rounded-2xl border bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 sm:text-sm ${
+                            fieldErrors.phone
+                              ? "border-rose-500/60 focus:border-rose-500"
+                              : "border-white/10 focus:border-[#f3c74d]/60"
+                          }`}
                           placeholder="+234..."
                         />
+                        {fieldErrors.phone && (
+                          <p className="mt-1.5 px-1 text-xs font-medium text-rose-400">
+                            {fieldErrors.phone}
+                          </p>
+                        )}
                       </div>
                       <div>
-                        <label className="mb-2 block text-sm font-semibold text-white">
+                        <label
+                          className="mb-2 block text-sm font-semibold text-white"
+                          htmlFor="cart-state"
+                        >
+                          State
+                        </label>
+                        <select
+                          id="cart-state"
+                          title="Select state"
+                          value={formData.state}
+                          onChange={(event) =>
+                            setFormData({
+                              ...formData,
+                              state: event.target.value,
+                              city: "",
+                            })
+                          }
+                          className={`w-full rounded-2xl border bg-[#0a1020] px-4 py-3 text-base text-white outline-none transition sm:text-sm ${
+                            fieldErrors.state
+                              ? "border-rose-500/60 focus:border-rose-500"
+                              : "border-white/10 focus:border-[#f3c74d]/60"
+                          }`}
+                        >
+                          <option
+                            value=""
+                            disabled
+                            className="bg-[#0a1020] text-white"
+                          >
+                            Select state
+                          </option>
+                          {NIGERIA_36_STATES.map((s) => (
+                            <option
+                              key={s}
+                              value={s}
+                              className="bg-[#0a1020] text-white"
+                            >
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                        {fieldErrors.state && (
+                          <p className="mt-1.5 px-1 text-xs font-medium text-rose-400">
+                            {fieldErrors.state}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label
+                          className="mb-2 block text-sm font-semibold text-white"
+                          htmlFor="cart-city"
+                        >
                           City
                         </label>
-                        <input
+                        <select
+                          id="cart-city"
+                          title="Select city"
                           value={formData.city}
                           onChange={(event) =>
                             setFormData({
@@ -495,28 +633,37 @@ export default function Cart() {
                               city: event.target.value,
                             })
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
-                          placeholder="City"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-white">
-                          State
-                        </label>
-                        <input
-                          value={formData.state}
-                          onChange={(event) =>
-                            setFormData({
-                              ...formData,
-                              state: event.target.value,
-                            })
-                          }
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
-                          placeholder="State"
-                        />
+                          disabled={!formData.state}
+                          className={`w-full rounded-2xl border bg-[#0a1020] px-4 py-3 text-base text-white outline-none transition sm:text-sm ${
+                            fieldErrors.city
+                              ? "border-rose-500/60 focus:border-rose-500"
+                              : "border-white/10 focus:border-[#f3c74d]/60"
+                          }`}
+                        >
+                          <option
+                            value=""
+                            disabled
+                            className="bg-[#0a1020] text-white"
+                          >
+                            {formData.state
+                              ? "Select city"
+                              : "Select state first"}
+                          </option>
+                          {(STATE_TO_CITIES[formData.state] ?? []).map((c) => (
+                            <option
+                              key={c}
+                              value={c}
+                              className="bg-[#0a1020] text-white"
+                            >
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                        {fieldErrors.city && (
+                          <p className="mt-1.5 px-1 text-xs font-medium text-rose-400">
+                            {fieldErrors.city}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -568,9 +715,18 @@ export default function Cart() {
                             deliveryAddress: event.target.value,
                           })
                         }
-                        className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:border-[#f3c74d]/60 focus:bg-white/10 sm:text-sm"
+                        className={`w-full rounded-[1.5rem] border bg-white/5 px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-400 focus:bg-white/10 sm:text-sm ${
+                          fieldErrors.deliveryAddress
+                            ? "border-rose-500/60 focus:border-rose-500"
+                            : "border-white/10 focus:border-[#f3c74d]/60"
+                        }`}
                         placeholder="House number, street, landmark, and any delivery notes"
                       />
+                      {fieldErrors.deliveryAddress && (
+                        <p className="mt-1.5 px-1 text-xs font-medium text-rose-400">
+                          {fieldErrors.deliveryAddress}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -589,10 +745,15 @@ export default function Cart() {
                     </div>
 
                     <div className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 sm:p-6">
-                      <label className="block text-sm font-semibold text-white">
+                      <label
+                        className="block text-sm font-semibold text-white"
+                        htmlFor="delivery-method-select"
+                      >
                         Delivery method
                       </label>
                       <select
+                        id="delivery-method-select"
+                        title="Select delivery method"
                         value={formData.deliveryMethod}
                         onChange={(event) =>
                           setFormData({
@@ -600,26 +761,48 @@ export default function Cart() {
                             deliveryMethod: event.target.value,
                           })
                         }
-                        className="w-full rounded-2xl border border-white/10 bg-[#0a1020] px-4 py-3 text-base text-white outline-none transition focus:border-[#f3c74d]/60 sm:text-sm"
+                        className={`w-full rounded-2xl border bg-[#0a1020] px-4 py-3 text-base text-white outline-none transition sm:text-sm ${
+                          fieldErrors.deliveryMethod
+                            ? "border-rose-500/60 focus:border-rose-500"
+                            : "border-white/10 focus:border-[#f3c74d]/60"
+                        }`}
                         disabled={loadingDeliveryMethods}
                       >
-                        <option value="">
+                        <option value="" className="bg-[#0a1020] text-white">
                           {loadingDeliveryMethods
                             ? "Loading delivery methods..."
                             : "Choose a delivery method"}
                         </option>
                         {deliveryMethods.map((method) => (
-                          <option key={method.id} value={method.id}>
+                          <option
+                            key={method.id}
+                            value={method.id}
+                            className="bg-[#0a1020] text-white"
+                          >
                             {method.name} - {currency(method.fee)}
                           </option>
                         ))}
                       </select>
+                      {fieldErrors.deliveryMethod && (
+                        <p className="mt-1 px-1 text-xs font-medium text-rose-400">
+                          {fieldErrors.deliveryMethod}
+                        </p>
+                      )}
                       {deliveryMethods.length === 0 &&
                       !loadingDeliveryMethods ? (
-                        <p className="text-xs text-slate-300">
-                          Delivery methods are not available right now. Please
-                          try again later.
-                        </p>
+                        <div className="space-y-3">
+                          <p className="text-xs text-slate-300">
+                            Delivery methods are not available right now. Please
+                            try again later.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setRetryCount((c) => c + 1)}
+                            className="text-xs font-semibold text-[#f3c74d] underline transition hover:text-[#e4b935]"
+                          >
+                            Retry loading delivery methods
+                          </button>
+                        </div>
                       ) : null}
                     </div>
 
@@ -780,7 +963,7 @@ export default function Cart() {
                           <div className="flex items-start gap-3 min-w-0">
                             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-900">
                               <Image
-                                src="/desktop.jpg"
+                                src={item.image || "/desktop.jpg"}
                                 alt={item.title}
                                 fill
                                 className="object-cover"

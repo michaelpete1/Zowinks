@@ -186,6 +186,9 @@ export default function ProductsPage() {
   const [message, setMessage] = useState("");
   const [imageDebug, setImageDebug] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof ProductForm, string>>
+  >({});
   const [ready, setReady] = useState(false);
 
   // Use session token (same pattern as categories page)
@@ -524,16 +527,44 @@ export default function ProductsPage() {
     }));
   };
 
+  const validateForm = () => {
+    const newErrors: Partial<Record<keyof ProductForm, string>> = {};
+
+    if (!form.name.trim()) {
+      newErrors.name = "Product name is required";
+    }
+
+    if (!form.category.trim()) {
+      newErrors.category = "Category is required";
+    }
+
+    if (!form.subcategory.trim()) {
+      newErrors.subcategory = "Subcategory is required";
+    }
+
+    if (!form.price.trim() || Number.isNaN(Number(form.price))) {
+      newErrors.price = "Valid price is required";
+    }
+
+    if (isCreating && !form.files.some((file) => Boolean(file))) {
+      newErrors.files = "At least one product image is required";
+    }
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setFieldErrors({});
 
     if (!apiReady) {
       setError("Save a bearer token first.");
       return;
     }
 
-    if (isCreating && !form.files.some((file) => Boolean(file))) {
-      setError("Upload at least one product image before creating a product.");
+    if (!validateForm()) {
+      setError("Please fix the errors in the form.");
       return;
     }
 
@@ -565,19 +596,6 @@ export default function ProductsPage() {
       inStock: form.inStock,
       specs,
     };
-
-    const missing = [];
-    if (!payloadBase.name) missing.push("Product Name");
-    if (!payloadBase.category) missing.push("Category");
-    if (!payloadBase.subcategory) missing.push("Subcategory");
-    if (!form.price || Number.isNaN(payloadBase.price)) missing.push("Price");
-
-    if (missing.length > 0) {
-      setError(
-        `Please fill out the following required fields: ${missing.join(", ")}`,
-      );
-      return;
-    }
 
     setSaving(true);
     setError("");
@@ -1312,94 +1330,151 @@ export default function ProductsPage() {
                 <span>Product name</span>
                 <input
                   value={form.name}
-                  onChange={(event) =>
+                  onChange={(event) => {
                     setForm((current) => ({
                       ...current,
                       name: event.target.value,
                       slug: current.slug
                         ? current.slug
                         : slugify(event.target.value),
-                    }))
-                  }
+                    }));
+                    if (fieldErrors.name)
+                      setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                  }}
                   placeholder="EliteBook 840 G11"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    fieldErrors.name
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
                 />
+                {fieldErrors.name && (
+                  <p className="mt-1 px-1 text-xs font-medium text-rose-600">
+                    {fieldErrors.name}
+                  </p>
+                )}
               </label>
 
               <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
                 <span>Price</span>
                 <input
                   value={form.price ?? ""}
-                  onChange={(event) =>
+                  onChange={(event) => {
                     setForm((current) => ({
                       ...current,
                       price: event.target.value,
-                    }))
-                  }
+                    }));
+                    if (fieldErrors.price)
+                      setFieldErrors((prev) => ({ ...prev, price: undefined }));
+                  }}
                   placeholder="1249"
                   type="number"
                   min="0"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    fieldErrors.price
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-[#0a2a78]"
+                  }`}
                 />
+                {fieldErrors.price && (
+                  <p className="mt-1 px-1 text-xs font-medium text-rose-600">
+                    {fieldErrors.price}
+                  </p>
+                )}
               </label>
 
               <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
                 <span>Category</span>
                 {categories.length ? (
-                  <select
-                    value={form.category}
-                    onChange={(event) => {
-                      const nextCategoryId = event.target.value;
-                      const nextCategory =
-                        categories.find(
-                          (c) => (c.id || (c as any)._id) === nextCategoryId,
-                        ) ?? null;
-                      setForm((current) => ({
-                        ...current,
-                        category: nextCategoryId,
-                        subcategory:
-                          (nextCategory?.subcategories[0]?.id ||
-                            (nextCategory?.subcategories[0] as any)?._id) ??
-                          "",
-                      }));
-                    }}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((category) => {
-                      const id = category.id || (category as any)._id;
-                      return (
-                        <option key={id} value={id}>
-                          {category.name}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  <>
+                    <select
+                      value={form.category}
+                      onChange={(event) => {
+                        const nextCategoryId = event.target.value;
+                        const nextCategory =
+                          categories.find(
+                            (c) => (c.id || (c as any)._id) === nextCategoryId,
+                          ) ?? null;
+                        setForm((current) => ({
+                          ...current,
+                          category: nextCategoryId,
+                          subcategory:
+                            (nextCategory?.subcategories[0]?.id ||
+                              (nextCategory?.subcategories[0] as any)?._id) ??
+                            "",
+                        }));
+                        if (fieldErrors.category)
+                          setFieldErrors((prev) => ({
+                            ...prev,
+                            category: undefined,
+                          }));
+                      }}
+                      className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                        fieldErrors.category
+                          ? "border-rose-500 focus:border-rose-600"
+                          : "border-slate-200 focus:border-[#0a2a78]"
+                      }`}
+                    >
+                      <option value="">Select category</option>
+                      {categories.map((category) => {
+                        const id = category.id || (category as any)._id;
+                        return (
+                          <option key={id} value={id}>
+                            {category.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    {fieldErrors.category && (
+                      <p className="mt-1 px-1 text-xs font-medium text-rose-600">
+                        {fieldErrors.category}
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <>
                     <input
                       value={form.category}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setForm((current) => ({
                           ...current,
                           category: event.target.value,
-                        }))
-                      }
+                        }));
+                        if (fieldErrors.category)
+                          setFieldErrors((prev) => ({
+                            ...prev,
+                            category: undefined,
+                          }));
+                      }}
                       placeholder="Laptops"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                      className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                        fieldErrors.category
+                          ? "border-rose-500 focus:border-rose-600"
+                          : "border-slate-200 focus:border-[#0a2a78]"
+                      }`}
                     />
+                    {fieldErrors.category && (
+                      <p className="mt-1 px-1 text-xs font-medium text-rose-600">
+                        {fieldErrors.category}
+                      </p>
+                    )}
                     <div className="mt-2 flex flex-wrap gap-2">
                       {STANDARD_CATEGORIES.map((std) => (
                         <button
                           key={std.name}
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
                             setForm((current) => ({
                               ...current,
                               category: std.name,
                               subcategory: std.subcategories[0],
-                            }))
-                          }
+                            }));
+                            if (fieldErrors.category)
+                              setFieldErrors((prev) => ({
+                                ...prev,
+                                category: undefined,
+                              }));
+                          }}
                           className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600 transition hover:bg-[#0a2a78] hover:text-white"
                         >
                           {std.name}
@@ -1413,39 +1488,70 @@ export default function ProductsPage() {
               <label className="grid min-w-0 gap-2 text-sm font-medium text-slate-700">
                 <span>Subcategory</span>
                 {subcategoryOptions.length ? (
-                  <select
-                    value={form.subcategory}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        subcategory: event.target.value,
-                      }))
-                    }
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                  >
-                    <option value="">Select subcategory</option>
-                    {subcategoryOptions.map((subcategory) => {
-                      const subId = subcategory.id || (subcategory as any)._id;
-                      return (
-                        <option key={subId} value={subId}>
-                          {subcategory.name}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  <>
+                    <select
+                      value={form.subcategory}
+                      onChange={(event) => {
+                        setForm((current) => ({
+                          ...current,
+                          subcategory: event.target.value,
+                        }));
+                        if (fieldErrors.subcategory)
+                          setFieldErrors((prev) => ({
+                            ...prev,
+                            subcategory: undefined,
+                          }));
+                      }}
+                      className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                        fieldErrors.subcategory
+                          ? "border-rose-500 focus:border-rose-600"
+                          : "border-slate-200 focus:border-[#0a2a78]"
+                      }`}
+                    >
+                      <option value="">Select subcategory</option>
+                      {subcategoryOptions.map((subcategory) => {
+                        const subId =
+                          subcategory.id || (subcategory as any)._id;
+                        return (
+                          <option key={subId} value={subId}>
+                            {subcategory.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    {fieldErrors.subcategory && (
+                      <p className="mt-1 px-1 text-xs font-medium text-rose-600">
+                        {fieldErrors.subcategory}
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <>
                     <input
                       value={form.subcategory}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setForm((current) => ({
                           ...current,
                           subcategory: event.target.value,
-                        }))
-                      }
+                        }));
+                        if (fieldErrors.subcategory)
+                          setFieldErrors((prev) => ({
+                            ...prev,
+                            subcategory: undefined,
+                          }));
+                      }}
                       placeholder="Business laptops"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                      className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                        fieldErrors.subcategory
+                          ? "border-rose-500 focus:border-rose-600"
+                          : "border-slate-200 focus:border-[#0a2a78]"
+                      }`}
                     />
+                    {fieldErrors.subcategory && (
+                      <p className="mt-1 px-1 text-xs font-medium text-rose-600">
+                        {fieldErrors.subcategory}
+                      </p>
+                    )}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {(
                         STANDARD_CATEGORIES.find(
@@ -1459,9 +1565,14 @@ export default function ProductsPage() {
                         <button
                           key={sub}
                           type="button"
-                          onClick={() =>
-                            setForm((c) => ({ ...c, subcategory: sub }))
-                          }
+                          onClick={() => {
+                            setForm((c) => ({ ...c, subcategory: sub }));
+                            if (fieldErrors.subcategory)
+                              setFieldErrors((prev) => ({
+                                ...prev,
+                                subcategory: undefined,
+                              }));
+                          }}
                           className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 transition hover:border-[#0a2a78] hover:text-[#0a2a78]"
                         >
                           {sub}

@@ -28,7 +28,12 @@ function persistAuth(
     window.localStorage.setItem(ADMIN_API_TOKEN_KEY, accessToken);
   }
 
-  sessionTools.signInAdmin(`${user.firstName} ${user.lastName}`.trim() || "Admin", user.email, accessToken, user.id);
+  sessionTools.signInAdmin(
+    `${user.firstName} ${user.lastName}`.trim() || "Admin",
+    user.email,
+    accessToken,
+    user.id,
+  );
 }
 
 export default function SignInPage() {
@@ -36,10 +41,25 @@ export default function SignInPage() {
   const sessionTools = useAdminSession();
   const { session, clearSession } = sessionTools;
   const [loginForm, setLoginForm] = useState<LoginForm>(emptyLogin);
+  const [fieldErrors, setFieldErrors] = useState<Partial<LoginForm>>({});
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const validate = () => {
+    const newErrors: Partial<LoginForm> = {};
+    if (!loginForm.email.trim()) {
+      newErrors.email = "Please enter your email";
+    } else if (!/\S+@\S+\.\S+/.test(loginForm.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    if (!loginForm.password.trim()) {
+      newErrors.password = "Please enter your password";
+    }
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -52,9 +72,10 @@ export default function SignInPage() {
     event.preventDefault();
     setError("");
     setMessage("");
+    setFieldErrors({});
 
-    if (!loginForm.email.trim() || !loginForm.password.trim()) {
-      setError("Enter both email and password.");
+    if (!validate()) {
+      setError("Please fix the errors below to sign in.");
       return;
     }
 
@@ -82,7 +103,9 @@ export default function SignInPage() {
     try {
       await zowkinsApi.logoutAdmin();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not log out cleanly.");
+      setError(
+        err instanceof ApiError ? err.message : "Could not log out cleanly.",
+      );
     } finally {
       clearSession();
       if (typeof window !== "undefined") {
@@ -108,7 +131,10 @@ export default function SignInPage() {
             priority
           />
         </Link>
-        <Link href="/admin" className="text-sm font-semibold text-slate-700 hover:text-slate-900">
+        <Link
+          href="/admin"
+          className="text-sm font-semibold text-slate-700 hover:text-slate-900"
+        >
           Admin dashboard
         </Link>
       </div>
@@ -124,25 +150,36 @@ export default function SignInPage() {
               Sign in to the admin dashboard.
             </h1>
             <p className="max-w-md text-sm leading-6 text-slate-600 md:text-base">
-              Use this page only for admin login. Account creation and password recovery now live on their own pages so the flow stays clear.
+              Use this page only for admin login. Account creation and password
+              recovery now live on their own pages so the flow stays clear.
             </p>
 
             <div className="grid gap-3 rounded-[1.5rem] bg-slate-50 px-5 py-4 text-sm text-slate-700">
               <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
                 <span>Current session</span>
-                <span className="text-xs uppercase tracking-[0.25em] text-emerald-700">{session?.email ?? "None"}</span>
+                <span className="text-xs uppercase tracking-[0.25em] text-emerald-700">
+                  {session?.email ?? "None"}
+                </span>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <span>Stored token</span>
-                <span className="text-xs uppercase tracking-[0.25em] text-amber-600">{tokenStatus}</span>
+                <span className="text-xs uppercase tracking-[0.25em] text-amber-600">
+                  {tokenStatus}
+                </span>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Link href="/admin/auth/create-account" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+              <Link
+                href="/admin/auth/create-account"
+                className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
                 Create admin account
               </Link>
-              <Link href="/admin/auth/reset-password" className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+              <Link
+                href="/admin/auth/reset-password"
+                className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              >
                 Reset password
               </Link>
             </div>
@@ -151,31 +188,82 @@ export default function SignInPage() {
 
         <div className="space-y-6">
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.10)] md:p-10">
-            <p className="text-xs uppercase tracking-[0.35em] text-emerald-700">Welcome back</p>
-            <h2 className="mt-4 font-display text-3xl font-bold text-slate-900">Sign in</h2>
+            <p className="text-xs uppercase tracking-[0.35em] text-emerald-700">
+              Welcome back
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-bold text-slate-900">
+              Sign in
+            </h2>
             <form className="mt-6 space-y-5" onSubmit={handleLogin}>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-900">Email</label>
+                <label className="mb-2 block text-sm font-semibold text-slate-900">
+                  Email
+                </label>
                 <input
                   type="email"
                   value={loginForm.email}
-                  onChange={(event) => setLoginForm((current) => ({ ...current, email: event.target.value }))}
+                  onChange={(event) => {
+                    setLoginForm((current) => ({
+                      ...current,
+                      email: event.target.value,
+                    }));
+                    if (fieldErrors.email)
+                      setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                  }}
                   placeholder="admin@example.com"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    fieldErrors.email
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-emerald-500"
+                  }`}
                 />
+                {fieldErrors.email && (
+                  <p className="mt-1.5 px-1 text-xs font-medium text-rose-600">
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-900">Password</label>
+                <label className="mb-2 block text-sm font-semibold text-slate-900">
+                  Password
+                </label>
                 <input
                   type="password"
                   value={loginForm.password}
-                  onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+                  onChange={(event) => {
+                    setLoginForm((current) => ({
+                      ...current,
+                      password: event.target.value,
+                    }));
+                    if (fieldErrors.password)
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        password: undefined,
+                      }));
+                  }}
                   placeholder="password123"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white"
+                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
+                    fieldErrors.password
+                      ? "border-rose-500 focus:border-rose-600"
+                      : "border-slate-200 focus:border-emerald-500"
+                  }`}
                 />
+                {fieldErrors.password && (
+                  <p className="mt-1.5 px-1 text-xs font-medium text-rose-600">
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
-              {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
-              {message ? <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p> : null}
+              {error ? (
+                <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  {error}
+                </p>
+              ) : null}
+              {message ? (
+                <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {message}
+                </p>
+              ) : null}
               <button
                 type="submit"
                 disabled={loading}
@@ -187,19 +275,36 @@ export default function SignInPage() {
           </section>
 
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.10)] md:p-10">
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Quick actions</p>
-            <h2 className="mt-4 font-display text-2xl font-bold text-slate-900">Access options</h2>
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
+              Quick actions
+            </p>
+            <h2 className="mt-4 font-display text-2xl font-bold text-slate-900">
+              Access options
+            </h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <Link href="/admin/auth/create-account" className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-white">
+              <Link
+                href="/admin/auth/create-account"
+                className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-white"
+              >
                 Create a new admin account
               </Link>
-              <Link href="/admin/auth/reset-password" className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-white">
+              <Link
+                href="/admin/auth/reset-password"
+                className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-white"
+              >
                 Send or complete a password reset
               </Link>
-              <button onClick={handleLogout} disabled={loggingOut} className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60">
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 {loggingOut ? "Logging out..." : "Clear current session"}
               </button>
-              <Link href="/" className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-white">
+              <Link
+                href="/"
+                className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-white"
+              >
                 Back to storefront
               </Link>
             </div>

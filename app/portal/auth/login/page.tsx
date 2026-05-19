@@ -13,6 +13,7 @@ export default function PortalLoginPage() {
     email: "",
     password: "",
   });
+  const [fieldErrors, setFieldErrors] = useState<Partial<typeof formData>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -28,13 +29,34 @@ export default function PortalLoginPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear field error when user types
+    if (fieldErrors[name as keyof typeof formData]) {
+      setFieldErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors: Partial<typeof formData> = {};
+    
+    if (!formData.email.trim()) {
+      newErrors.email = "Please enter your email";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    
+    if (!formData.password) {
+      newErrors.password = "Please enter your password";
+    }
+    
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.email || !formData.password) {
-      setError("Please fill in all fields");
+    if (!validate()) {
+      setError("Please fix the errors below");
       return;
     }
 
@@ -100,9 +122,13 @@ export default function PortalLoginPage() {
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="Enter your email"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                required
+                className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                  fieldErrors.email ? "border-red-500" : "border-white/10 focus:border-[#f3c74d]/45"
+                }`}
               />
+              {fieldErrors.email && (
+                <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div>
@@ -116,9 +142,13 @@ export default function PortalLoginPage() {
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="Enter your password"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-[#f3c74d]/45 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20"
-                required
+                className={`w-full rounded-lg border bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f3c74d]/20 ${
+                  fieldErrors.password ? "border-red-500" : "border-white/10 focus:border-[#f3c74d]/45"
+                }`}
               />
+              {fieldErrors.password && (
+                <p className="mt-1 text-sm text-red-400">{fieldErrors.password}</p>
+              )}
             </div>
 
             <button
