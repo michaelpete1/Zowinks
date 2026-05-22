@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 
 type FallbackImageProps = {
@@ -7,7 +8,10 @@ type FallbackImageProps = {
   alt: string;
   fallbackSrc?: string;
   className?: string;
+  style?: CSSProperties;
   loading?: "eager" | "lazy";
+  priority?: boolean;
+  fetchPriority?: "high" | "low" | "auto";
 };
 
 export default function FallbackImage({
@@ -15,7 +19,10 @@ export default function FallbackImage({
   alt,
   fallbackSrc = "/desktop.jpg",
   className,
+  style,
   loading = "eager",
+  priority = false,
+  fetchPriority,
 }: FallbackImageProps) {
   const [currentSrc, setCurrentSrc] = useState(src || fallbackSrc);
   const [retryCount, setRetryCount] = useState(0);
@@ -42,7 +49,10 @@ export default function FallbackImage({
       src={currentSrc}
       alt={alt}
       className={className}
-      loading={loading}
+      style={style}
+      loading={priority ? "eager" : loading}
+      fetchPriority={fetchPriority ?? (priority ? "high" : undefined)}
+      decoding="async"
       onError={handleError}
     />
   );

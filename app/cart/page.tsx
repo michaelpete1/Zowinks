@@ -12,6 +12,7 @@ import {
   type CreatePortalOrderInput,
   normalizeOrderGender,
 } from "../../lib/zowkins-api";
+import { resolveImageSource } from "../../lib/media";
 
 type OrderStage = "form" | "processing" | "success";
 
@@ -960,7 +961,10 @@ export default function Cart() {
                           <div className="flex items-start gap-3 min-w-0">
                             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-900">
                               <Image
-                                src={item.image || "/desktop.jpg"}
+                                src={resolveImageSource(
+                                  item.image,
+                                  "/desktop.jpg",
+                                )}
                                 alt={item.title}
                                 fill
                                 className="object-cover"

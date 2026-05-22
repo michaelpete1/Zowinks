@@ -116,6 +116,8 @@ export default function HomepageCategoriesSection() {
                     src={resolveImageSource(card.image, "/desktop.jpg")}
                     alt={card.name}
                     className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    fetchPriority="low"
                   />
                 </div>
                 <div className="p-4 text-center sm:p-5">

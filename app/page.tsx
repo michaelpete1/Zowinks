@@ -5,7 +5,6 @@ import HeroCarousel from "../components/HeroCarousel";
 import HomepageCategoriesSection from "../components/HomepageCategoriesSection";
 import FeaturedProductsSection from "../components/FeaturedProductsSection";
 import { getAppSettings } from "../lib/app-settings";
-import { zowkinsApi } from "../lib/zowkins-api";
 
 export const metadata: Metadata = {
   title: "Zowkins Enterprise",
@@ -226,7 +225,7 @@ export default async function Home() {
       />
       <Navbar />
 
-      <HeroCarousel />
+      <HeroCarousel initialImages={app.images} />
 
       <section className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8">
         <div className="grid gap-3 md:grid-cols-3">

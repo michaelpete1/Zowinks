@@ -82,9 +82,14 @@ export function resolveApiMediaUrl(value?: unknown): string {
   }
 
   if (raw.startsWith("/")) {
-    const pathSegments = raw.split("/").filter(Boolean);
-    if (pathSegments.length === 1) {
-      return raw;
+    // If it's a local static asset (like /heroimage1.jpg), return it as is
+    const lower = raw.toLowerCase();
+    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") || lower.endsWith(".svg")) {
+      // Check if it's likely a local file in public folder (short path)
+      const segments = raw.split("/").filter(Boolean);
+      if (segments.length === 1) {
+        return raw;
+      }
     }
 
     return toProxiedImageUrl(`${API_ORIGIN}${raw}`);

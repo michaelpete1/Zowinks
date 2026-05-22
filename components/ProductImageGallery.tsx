@@ -87,6 +87,8 @@ export default function ProductImageGallery({
                     src={src}
                     alt={alt}
                     className="absolute inset-0 h-full w-full object-cover"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "low"}
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.1)_0%,rgba(5,11,22,0.75)_100%)]" />
                   <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/30 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white/80 backdrop-blur">
@@ -151,6 +153,7 @@ export default function ProductImageGallery({
                     alt={alt}
                     className="absolute inset-0 h-full w-full object-cover"
                     loading="lazy"
+                    fetchPriority="low"
                   />
                 </button>
               );

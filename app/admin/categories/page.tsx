@@ -90,6 +90,7 @@ const ALLOWED_IMAGE_MIME_TYPES = new Set([
   "image/jpeg",
   "image/webp",
   "image/svg+xml",
+  "application/pdf",
 ]);
 
 const safeJson = (value: unknown) => {

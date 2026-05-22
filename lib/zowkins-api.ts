@@ -534,7 +534,8 @@ export type App = {
   };
   description: string;
   ratings: number;
-  images: string[];
+  heroImage: string | ApiImage | null;
+  images: Array<string | ApiImage>;
   branding: {
     logo: string;
     logoLight: string;
@@ -554,7 +555,8 @@ export type AppInput = {
   };
   description: string;
   ratings: number;
-  images: string[];
+  heroImage?: string | ApiImage | null;
+  images: Array<string | ApiImage>;
   branding: {
     logo: string;
     logoLight: string;
@@ -574,6 +576,7 @@ export type AppUpdate = Partial<{
   };
   description: string;
   ratings: number;
+  heroImage: string | null;
   images: string[];
   branding: {
     logo: string;
@@ -1668,6 +1671,23 @@ export const zowkinsApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
+    });
+  },
+
+  uploadHeroImage(token: string, files: File | File[]) {
+    const formData = new FormData();
+    const fileList = Array.isArray(files) ? files : [files];
+
+    fileList.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    return apiRequest<{ app: App }>("/app/upload-hero-image", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     });
   },
 };

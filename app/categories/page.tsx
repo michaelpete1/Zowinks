@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import FallbackImage from "../../components/FallbackImage";
-import { ApiError, zowkinsApi } from "../../lib/zowkins-api";
+import { zowkinsApi, type CategoryListItem } from "../../lib/zowkins-api";
 import { resolveImageSource } from "../../lib/media";
 import { formatDisplayName } from "../../lib/display-name";
 
@@ -15,14 +15,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CategoriesPage() {
-  let categoriesList: any[] = [];
+  let categoriesList: CategoryListItem[] = [];
   try {
     const response = await zowkinsApi.listCategories({ page: 1, limit: 12 });
     categoriesList = response?.categories || [];
-    console.log(
-      "Categories data:",
-      categoriesList.map((c) => ({ name: c.name, image: c.image })),
-    );
   } catch (error) {
     console.error("Error loading categories:", error);
   }
@@ -47,16 +43,18 @@ export default async function CategoriesPage() {
             <Link
               key={category.id}
               href={`/categories/${category.slug}`}
-              className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_40px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 sm:rounded-[1.75rem]"
+              className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_40px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 sm:rounded-[1.75rem]"
             >
               <div className="relative h-40 bg-slate-900 sm:h-48 md:h-64 lg:h-72">
                 <FallbackImage
                   src={resolveImageSource(category.image, "/desktop.jpg")}
                   alt={category.name}
                   className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  fetchPriority="low"
                 />
               </div>
-              <div className="space-y-3 p-4 sm:p-5">
+              <div className="flex flex-1 flex-col space-y-3 p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
                   <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-white sm:text-xs">
                     {category.visible ? "Visible" : "Hidden"}
@@ -65,7 +63,7 @@ export default async function CategoriesPage() {
                     {category.productsCount} products
                   </span>
                 </div>
-                <div>
+                <div className="flex-1">
                   <h2 className="font-display text-lg font-semibold text-white sm:text-xl">
                     {formatDisplayName(category.name, category.name)}
                   </h2>
@@ -73,7 +71,7 @@ export default async function CategoriesPage() {
                     {category.description}
                   </p>
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-400 sm:text-sm">
+                <div className="mt-auto flex items-center justify-between text-xs text-slate-400 sm:text-sm">
                   <span>{category.subcategories.length} subcategories</span>
                   <span>Browse details</span>
                 </div>

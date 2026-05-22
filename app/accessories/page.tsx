@@ -4,7 +4,11 @@ import Image from "next/image";
 import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
 import AddToCartButton from "../../components/AddToCartButton";
-import { zowkinsApi, ProductDetails } from "../../lib/zowkins-api";
+import {
+  zowkinsApi,
+  type CategoryListItem,
+  type ProductDetails,
+} from "../../lib/zowkins-api";
 import { formatPrice } from "../../lib/catalog";
 import { resolveImageSource } from "../../lib/media";
 import { formatDisplayName } from "../../lib/display-name";
@@ -16,10 +20,18 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+type ProductRelation = string | { name?: string | null } | null | undefined;
+
+const relationName = (value: ProductRelation) => {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") return value.name ?? "";
+  return "";
+};
+
 export default async function Accessories() {
   let products: ProductDetails[] = [];
   let categoryName = "Accessories";
-  let activeCategory: any = null;
+  let activeCategory: CategoryListItem | undefined;
 
   try {
     const response = await zowkinsApi.listCategories({ limit: 100 });
@@ -141,22 +153,16 @@ export default async function Accessories() {
                             id: product.id,
                             title: product.name,
                             price: formatPrice(product.price),
-                            spec:
-                              (typeof product.subcategory === "object"
-                                ? formatDisplayName(
-                                    (product.subcategory as any).name,
-                                    (product.subcategory as any).name,
-                                  )
-                                : product.subcategory) ||
-                              (typeof product.category === "object"
-                                ? formatDisplayName(
-                                    (product.category as any).name,
-                                    (product.category as any).name,
-                                  )
-                                : product.category),
-                            image: resolveImageSource(product.image),
-                            slug: product.slug,
-                          }}
+                        spec:
+                          formatDisplayName(
+                            relationName(product.subcategory) ||
+                              relationName(product.category),
+                            relationName(product.subcategory) ||
+                              relationName(product.category),
+                          ),
+                        image: resolveImageSource(product.image),
+                        slug: product.slug,
+                      }}
                           className="rounded-full bg-[#f3c74d] px-5 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
                         >
                           Order Now
@@ -176,7 +182,7 @@ export default async function Accessories() {
           ) : (
             <div className="rounded-[2rem] border border-dashed border-white/15 bg-[#0a1020] p-12 text-center">
               <p className="text-slate-400">
-                No items found under "{categoryName}" yet. Try another
+                No items found under &quot;{categoryName}&quot; yet. Try another
                 category or browse the full catalog.
               </p>
               <Link

@@ -12,6 +12,14 @@ type PageProps = {
   searchParams?: { page?: string; limit?: string };
 };
 
+type ProductRelation = string | { name?: string | null } | null | undefined;
+
+const relationName = (value: ProductRelation) => {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") return value.name ?? "";
+  return "";
+};
+
 function money(value: number) {
   return value.toLocaleString("en-NG", {
     style: "currency",
@@ -98,6 +106,8 @@ export default async function CategoryPage({
               src={resolveImageSource(category.image, "/desktop.jpg")}
               alt={category.name}
               className="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
+              fetchPriority="low"
             />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.1)_0%,rgba(5,11,22,0.75)_100%)]" />
             <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
@@ -158,17 +168,15 @@ export default async function CategoryPage({
                     src={resolveImageSource(product.image, "/desktop.jpg")}
                     alt={product.name}
                     className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                    fetchPriority="low"
                   />
                 </div>
                 <div className="space-y-3 p-5">
                   <div className="flex items-center justify-between gap-3">
                     <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
-                      {(typeof product.subcategory === "object"
-                        ? (product.subcategory as any).name
-                        : product.subcategory) ||
-                        (typeof product.category === "object"
-                          ? (product.category as any).name
-                          : product.category)}
+                      {relationName(product.subcategory) ||
+                        relationName(product.category)}
                     </span>
                     <span className="text-sm font-semibold text-[#f3c74d]">
                       {money(product.price)}
@@ -189,12 +197,8 @@ export default async function CategoryPage({
                       title: product.name,
                       price: money(product.price),
                       spec:
-                        (typeof product.subcategory === "object"
-                          ? (product.subcategory as any).name
-                          : product.subcategory) ||
-                        (typeof product.category === "object"
-                          ? (product.category as any).name
-                          : product.category),
+                        relationName(product.subcategory) ||
+                        relationName(product.category),
                       image: resolveImageSource(product.image, "/desktop.jpg"),
                     }}
                     className="w-full rounded-full bg-[#0b1d3b] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a]"

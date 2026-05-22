@@ -5,10 +5,10 @@ import Navbar from "../../components/NewNavbar";
 import AddToCartButton from "../../components/AddToCartButton";
 import FallbackImage from "../../components/FallbackImage";
 import FeaturedProductsCarousel from "../../components/FeaturedProductsCarousel";
-import { getAppSettings } from "../../lib/app-settings";
 import { fetchAllProducts } from "../../lib/catalog";
 import { compactProductTitle, formatDisplayName } from "../../lib/display-name";
 import { zowkinsApi } from "../../lib/zowkins-api";
+import { resolveImageSource } from "../../lib/media";
 
 export const metadata: Metadata = {
   title: "Products",
@@ -55,6 +55,7 @@ const CATEGORY_CARDS = [
     description: "High-performance systems for creative and gaming use.",
   },
 ];
+void CATEGORY_CARDS;
 
 const TRUST_FEATURES = [
   "Warranty Available",
@@ -84,7 +85,8 @@ const getSearchParam = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value;
 
 const matchesText = (value: string, needle: string) =>
-  slugify(value).includes(needle) || value.toLowerCase().includes(needle.replace(/-/g, " "));
+  slugify(value).includes(needle) ||
+  value.toLowerCase().includes(needle.replace(/-/g, " "));
 
 const matchesBrand = (
   product: {
@@ -106,7 +108,12 @@ const matchesBrand = (
 };
 
 const matchesCategory = (
-  product: { title: string; brand: string; category: string; description: string },
+  product: {
+    title: string;
+    brand: string;
+    category: string;
+    description: string;
+  },
   categorySlug: string,
 ) => {
   const fields = `${product.title} ${product.brand} ${product.category} ${product.description}`;
@@ -128,22 +135,22 @@ export default async function ProductsPage({
 }: {
   searchParams?: { brand?: string | string[]; category?: string | string[] };
 }) {
-  const [products, categoriesResponse, appSettings] = await Promise.all([
+  const [products, categoriesResponse] = await Promise.all([
     fetchAllProducts(),
     zowkinsApi.listCategories({ page: 1, limit: 12 }).catch(() => null),
-    getAppSettings(),
   ]);
 
   const categories = categoriesResponse?.categories ?? [];
   const visibleProducts = products.filter(Boolean);
   const selectedBrand = slugify(getSearchParam(searchParams?.brand) || "");
-  const selectedCategory = slugify(getSearchParam(searchParams?.category) || "");
-  const app = appSettings.app;
+  const selectedCategory = slugify(
+    getSearchParam(searchParams?.category) || "",
+  );
 
   const liveBrands = Array.from(
     new Map(
       categories.flatMap((category) =>
-        (category.subcategories ?? []).map((subcategory: any) => {
+        (category.subcategories ?? []).map((subcategory: { name: string; slug: string }) => {
           const label = String(subcategory.name || "").trim();
           const slug = String(subcategory.slug || slugify(label));
           const categorySlug = String(category.slug || "");
@@ -185,8 +192,9 @@ export default async function ProductsPage({
   const brandCounts = liveBrands
     .map((brand) => ({
       ...brand,
-      count: visibleProducts.filter((product) => matchesBrand(product, brand.slug))
-        .length,
+      count: visibleProducts.filter((product) =>
+        matchesBrand(product, brand.slug),
+      ).length,
     }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 
@@ -220,8 +228,8 @@ export default async function ProductsPage({
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-slate-300">
                   Explore premium laptops, desktops, accessories, and gadgets at
-                  competitive prices. New brand collections automatically
-                  appear here from the backend.
+                  competitive prices. New brand collections automatically appear
+                  here from the backend.
                 </p>
               </div>
 
@@ -360,7 +368,9 @@ export default async function ProductsPage({
                     }`}
                   >
                     <span>{brand.label}</span>
-                    <span className="text-[11px] opacity-75">{brand.count}</span>
+                    <span className="text-[11px] opacity-75">
+                      {brand.count}
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -392,7 +402,9 @@ export default async function ProductsPage({
                     }`}
                   >
                     <span>{category.label}</span>
-                    <span className="text-[11px] opacity-75">{category.count}</span>
+                    <span className="text-[11px] opacity-75">
+                      {category.count}
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -423,12 +435,12 @@ export default async function ProductsPage({
               {displayProducts.map((product) => (
                 <article
                   key={product.id}
-                  className="group overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(0,0,0,0.24)]"
+                  className="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:shadow-[0_24px_56px_rgba(0,0,0,0.24)]"
                 >
                   <Link href={product.href} className="block">
                     <div className="relative aspect-[16/11] overflow-hidden bg-slate-900 sm:aspect-[4/3]">
                       <FallbackImage
-                        src={product.image}
+                        src={resolveImageSource(product.image, "/desktop.jpg")}
                         alt={product.title}
                         loading="lazy"
                         className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -437,7 +449,7 @@ export default async function ProductsPage({
                     </div>
                   </Link>
 
-                  <div className="space-y-3 p-4 sm:space-y-4 sm:p-5">
+                  <div className="flex flex-1 flex-col space-y-3 p-4 sm:space-y-4 sm:p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
                       <Link
                         href={categoryFilterHref(slugify(product.category))}
@@ -446,7 +458,9 @@ export default async function ProductsPage({
                         {formatDisplayName(product.category, product.category)}
                       </Link>
                       <Link
-                        href={brandFilterHref(slugify(product.subcategory || product.brand))}
+                        href={brandFilterHref(
+                          slugify(product.subcategory || product.brand),
+                        )}
                         className="text-xs font-semibold text-[#f3c74d] hover:underline sm:text-sm"
                       >
                         {formatDisplayName(
@@ -456,7 +470,7 @@ export default async function ProductsPage({
                       </Link>
                     </div>
 
-                    <div>
+                    <div className="flex-1">
                       <Link href={product.href} className="block">
                         <h3 className="font-display text-xl font-bold leading-tight text-white transition group-hover:text-[#f3c74d] sm:text-2xl">
                           {compactProductTitle(product.title)}
@@ -467,7 +481,7 @@ export default async function ProductsPage({
                       </p>
                     </div>
 
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="mt-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                       <div>
                         <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
                           Price
@@ -538,13 +552,13 @@ export default async function ProductsPage({
                 <Link
                   key={brand.slug}
                   href={brandFilterHref(brand.slug)}
-                  className="group overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0a1020] p-4 shadow-[0_16px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:border-[#f3c74d]/40 hover:shadow-[0_24px_56px_rgba(0,0,0,0.24)] sm:p-5"
+                  className="group flex h-full overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0a1020] p-4 shadow-[0_16px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:border-[#f3c74d]/40 hover:shadow-[0_24px_56px_rgba(0,0,0,0.24)] sm:p-5"
                 >
                   <div className="flex items-center gap-4">
                     <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white/90 p-2 sm:h-14 sm:w-14">
-                        <Image
-                          src={brand.image}
-                          alt={brand.label}
+                      <Image
+                        src={brand.image}
+                        alt={brand.label}
                         width={56}
                         height={56}
                         className="h-full w-full object-contain"

@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../../components/NewNavbar";
-import { zowkinsApi } from "../../lib/zowkins-api";
+import {
+  zowkinsApi,
+  type CategoryListItem,
+  type CategorySubcategory,
+} from "../../lib/zowkins-api";
 import { resolveImageSource } from "../../lib/media";
 import { formatDisplayName } from "../../lib/display-name";
 
@@ -13,11 +17,15 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+type DesktopSubcategory = CategorySubcategory & {
+  image?: string | Record<string, unknown> | null;
+};
+
 export default async function DesktopsPage() {
-  let subcategories: any[] = [];
+  let subcategories: DesktopSubcategory[] = [];
   let productsCount = 0;
   let categoryName = "Desktops";
-  let activeCategory: any = null;
+  let activeCategory: CategoryListItem | undefined;
 
   try {
     // 1. Try fetching by standard slug first
@@ -44,6 +52,7 @@ export default async function DesktopsPage() {
   } catch {
     // Category not in DB yet - fallback is handled by UI
   }
+  void productsCount;
 
   const brands = subcategories.map((sub) => {
     const name = sub.name.toLowerCase();
@@ -117,8 +126,8 @@ export default async function DesktopsPage() {
                 ))
               ) : (
             <div className="col-span-2 rounded-[1.5rem] border border-dashed border-white/15 bg-white/5 p-8 text-center text-sm text-slate-400">
-                  <p>
-                    No brands found under "{categoryName}" yet. Try another
+              <p>
+                    No brands found under &quot;{categoryName}&quot; yet. Try another
                     category or browse the full catalog.
                   </p>
                   <Link

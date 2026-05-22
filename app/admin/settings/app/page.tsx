@@ -1,18 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { AdminBadge, AdminShell } from "../../../../components/AdminShell";
 import { useAdminSession } from "../../../../hooks/useAdminSession";
-import {
-  App,
-  AppContactUpdate,
-  AppInput,
-  AppUpdate,
-  ApiError,
-  zowkinsApi,
-} from "../../../../lib/zowkins-api";
+import { App, ApiError, zowkinsApi } from "../../../../lib/zowkins-api";
 import { defaultAppSettings } from "../../../../lib/app-settings";
+import { resolveImageSource } from "../../../../lib/media";
 
 const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
 
@@ -20,81 +15,17 @@ type ApiConnection = {
   accessToken: string;
 };
 
-const emptyAppForm = (): AppInput => ({
-  name: "",
-  address: "",
-  phoneNumber: "",
-  whatsAppNumber: "",
-  email: "",
-  status: {
-    portal: "online",
-  },
-  description: "",
-  ratings: 5,
-  images: [...defaultAppSettings.images],
-  branding: {
-    logo: "",
-    logoLight: "",
-    logomark: "",
-    logomarkLight: "",
-  },
-});
-
-const emptyContactForm: AppContactUpdate = {
-  address: "",
-  phoneNumber: "",
-  whatsAppNumber: "",
-  email: "",
-};
-
 function normalizeToken(value: string) {
   return value.trim().replace(/^Bearer\s+/i, "");
 }
 
-function toAppForm(app: App): AppInput {
-  return {
-    name: app.name ?? "",
-    address: app.address ?? "",
-    phoneNumber: app.phoneNumber ?? "",
-    whatsAppNumber: app.whatsAppNumber ?? "",
-    email: app.email ?? "",
-    status: {
-      portal: app.status?.portal ?? "online",
-    },
-    description: app.description ?? "",
-    ratings: Number(app.ratings ?? 5),
-    images:
-      Array.isArray(app.images) && app.images.length > 0
-        ? app.images
-        : [...defaultAppSettings.images],
-    branding: {
-      logo: app.branding?.logo ?? "",
-      logoLight: app.branding?.logoLight ?? "",
-      logomark: app.branding?.logomark ?? "",
-      logomarkLight: app.branding?.logomarkLight ?? "",
-    },
-  };
-}
-
-function toContactForm(app: App): AppContactUpdate {
-  return {
-    address: app.address ?? "",
-    phoneNumber: app.phoneNumber ?? "",
-    whatsAppNumber: app.whatsAppNumber ?? "",
-    email: app.email ?? "",
-  };
-}
-
-function fieldClassName(hasError?: boolean) {
-  return [
-    "w-full rounded-2xl border bg-slate-50 px-4 py-3",
-    "text-slate-900 outline-none transition placeholder:text-slate-400",
-    "focus:bg-white focus:ring-2 focus:ring-[#0a2a78]/10",
-    hasError
-      ? "border-rose-500 focus:border-rose-600"
-      : "border-slate-200 focus:border-[#0a2a78]",
-  ].join(" ");
-}
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/svg+xml",
+  "application/pdf",
+]);
 
 export default function AdminAppSettingsPage() {
   const { session } = useAdminSession();
@@ -102,18 +33,9 @@ export default function AdminAppSettingsPage() {
     accessToken: "",
   });
   const [appSettings, setAppSettings] = useState<App | null>(null);
-  const [form, setForm] = useState<AppInput>(emptyAppForm());
-  const [contactForm, setContactForm] =
-    useState<AppContactUpdate>(emptyContactForm);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [savingContact, setSavingContact] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof AppInput, string>>
-  >({});
-  const [contactFieldErrors, setContactFieldErrors] = useState<
-    Partial<Record<keyof AppContactUpdate, string>>
-  >({});
+  const [uploadingHero, setUploadingHero] = useState(false);
+  const [selectedHeroFiles, setSelectedHeroFiles] = useState<File[]>([]);
   const [connectionMessage, setConnectionMessage] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -149,18 +71,15 @@ export default function AdminAppSettingsPage() {
       .then((response) => {
         if (cancelled) return;
 
-        const nextApp = response.app ?? defaultAppSettings;
+        const appData = (response as any).app || response;
+        const nextApp = appData ?? defaultAppSettings;
         setAppSettings(nextApp);
-        setForm(toAppForm(nextApp));
-        setContactForm(toContactForm(nextApp));
         setConnectionMessage("App settings loaded from the backend.");
       })
       .catch((err: unknown) => {
         if (cancelled) return;
 
         setAppSettings(null);
-        setForm(toAppForm(defaultAppSettings));
-        setContactForm(toContactForm(defaultAppSettings));
         setConnectionMessage(
           err instanceof ApiError
             ? "Could not reach the backend. Showing default app settings."
@@ -176,173 +95,81 @@ export default function AdminAppSettingsPage() {
     };
   }, [ready]);
 
-  const handleInputChange = (
-    event: ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    const { name, value } = event.target;
+  const currentHeroImages = [
+    ...(Array.isArray(currentApp.images) ? currentApp.images : []),
+  ].filter(Boolean);
 
-    if (name === "portal") {
-      setForm((current) => ({
-        ...current,
-        status: {
-          ...current.status,
-          portal: value,
-        },
-      }));
-      return;
-    }
+  const handleHeroSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []).filter(Boolean);
+    if (!files.length) return;
 
-    setForm((current) => ({
-      ...current,
-      [name]: name === "ratings" ? Number(value) : value,
-    }));
-  };
+    const nextFiles = files.slice(0, 3);
 
-  const handleContactInputChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = event.target;
-    setContactForm((current) => ({ ...current, [name]: value }));
-  };
-
-  const handleBrandingInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setForm((current) => ({
-      ...current,
-      branding: {
-        ...current.branding,
-        [name]: value,
-      },
-    }));
-  };
-
-  const validateAppForm = () => {
-    const newErrors: Partial<Record<keyof AppInput, string>> = {};
-    if (!form.name.trim()) newErrors.name = "App name is required";
-    if (!form.description.trim())
-      newErrors.description = "App description is required";
-
-    setFieldErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateContactForm = () => {
-    const newErrors: Partial<Record<keyof AppContactUpdate, string>> = {};
-    const email = contactForm.email ?? "";
-    const phoneNumber = contactForm.phoneNumber ?? "";
-    const address = contactForm.address ?? "";
-
-    if (!email.trim()) {
-      newErrors.email = "Support email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Invalid email format";
-    }
-    if (!phoneNumber.trim())
-      newErrors.phoneNumber = "Phone number is required";
-    if (!address.trim())
-      newErrors.address = "Business address is required";
-
-    setContactFieldErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleCreateOrUpdateApp = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setFieldErrors({});
-
-    if (!apiReady) {
-      setError("Connect an admin token before saving settings.");
-      return;
-    }
-
-    if (!validateAppForm()) {
-      setError("Please fix the errors in the app settings form.");
-      return;
-    }
-
-    setSaving(true);
-    setError("");
-    setMessage("");
-
-    const payload: AppUpdate = {
-      name: form.name,
-      address: form.address,
-      phoneNumber: form.phoneNumber,
-      whatsAppNumber: form.whatsAppNumber,
-      email: form.email,
-      status: form.status,
-      description: form.description,
-      ratings: Number(form.ratings),
-      branding: form.branding,
-    };
-
-    try {
-      const response = appSettings
-        ? await zowkinsApi.updateApp(apiConnection.accessToken.trim(), payload)
-        : await zowkinsApi.createApp(apiConnection.accessToken.trim(), {
-            ...payload,
-            images: [...defaultAppSettings.images],
-          } as AppInput);
-
-      const nextApp = response.app ?? currentApp;
-      setAppSettings(nextApp);
-      setForm(toAppForm(nextApp));
-      setContactForm(toContactForm(nextApp));
-      setMessage(
-        appSettings
-          ? "Application settings updated successfully."
-          : "Application settings created successfully.",
-      );
-    } catch (err) {
+    if (nextFiles.some((file) => !ALLOWED_IMAGE_MIME_TYPES.has(file.type))) {
       setError(
-        err instanceof ApiError
-          ? err.message
-          : "Could not save application settings.",
+        "Invalid file type. Please upload a PNG, JPEG, WebP, SVG, or PDF.",
       );
-    } finally {
-      setSaving(false);
+      return;
     }
+
+    setSelectedHeroFiles(nextFiles);
   };
 
-  const handleContactSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setContactFieldErrors({});
+  const moveSelectedHeroFile = (index: number, direction: -1 | 1) => {
+    setSelectedHeroFiles((prev) => {
+      const next = [...prev];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      const [item] = next.splice(index, 1);
+      next.splice(target, 0, item);
+      return next;
+    });
+  };
+
+  const removeSelectedHeroFile = (index: number) => {
+    setSelectedHeroFiles((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const clearHeroSelection = () => {
+    setSelectedHeroFiles([]);
+  };
+
+  const uploadSelectedHeroImages = async () => {
+    if (!selectedHeroFiles.length) {
+      setError("Select at least one image before uploading.");
+      return;
+    }
 
     if (!apiReady) {
-      setError("Connect an admin token before updating contact information.");
+      setError("Connect an admin token before uploading images.");
       return;
     }
 
-    if (!validateContactForm()) {
-      setError("Please fix the errors in the contact form.");
-      return;
-    }
-
-    setSavingContact(true);
+    setUploadingHero(true);
     setError("");
     setMessage("");
 
     try {
-      const response = await zowkinsApi.updateAppContact(
+      await zowkinsApi.uploadHeroImage(
         apiConnection.accessToken.trim(),
-        contactForm,
+        selectedHeroFiles,
       );
 
-      const nextApp = response.app ?? currentApp;
-      setAppSettings(nextApp);
-      setForm(toAppForm(nextApp));
-      setContactForm(toContactForm(nextApp));
-      setMessage("Contact information updated successfully.");
+      const refreshed = await zowkinsApi.getApp();
+      const refreshedApp = (refreshed as any).app || refreshed;
+      setAppSettings(refreshedApp);
+      setSelectedHeroFiles([]);
+      setMessage(
+        selectedHeroFiles.length > 1
+          ? `${selectedHeroFiles.length} hero images uploaded successfully.`
+          : "Hero image uploaded successfully.",
+      );
     } catch (err) {
       setError(
-        err instanceof ApiError
-          ? err.message
-          : "Could not update contact information.",
+        err instanceof ApiError ? err.message : "Could not upload hero image.",
       );
     } finally {
-      setSavingContact(false);
+      setUploadingHero(false);
     }
   };
 
@@ -361,9 +188,8 @@ export default function AdminAppSettingsPage() {
               Keep the site identity and contact details in one place
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              The homepage hero stays hardcoded for now. Use this page to manage
-              the live app name, brand assets, contact information, and portal
-              status.
+              Use this page to manage the live app name, brand assets, contact
+              information, and portal status.
             </p>
           </div>
           <Link
@@ -397,7 +223,7 @@ export default function AdminAppSettingsPage() {
                 Backend controls
               </p>
               <h3 className="mt-2 font-display text-2xl font-bold text-slate-900">
-                General, contact, and brand settings
+                Hero carousel management
               </h3>
             </div>
 
@@ -410,287 +236,146 @@ export default function AdminAppSettingsPage() {
 
               {!loading ? (
                 <div className="space-y-8">
-                  <form
-                    onSubmit={handleCreateOrUpdateApp}
-                    className="space-y-6"
-                  >
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="grid gap-2 text-sm font-medium text-slate-700">
-                        <span>App Name</span>
-                        <input
-                          type="text"
-                          name="name"
-                          value={form.name}
-                          onChange={(e) => {
-                            handleInputChange(e);
-                            if (fieldErrors.name)
-                              setFieldErrors((prev) => ({
-                                ...prev,
-                                name: undefined,
-                              }));
-                          }}
-                          placeholder="Zowkins Enterprise"
-                          className={fieldClassName(Boolean(fieldErrors.name))}
-                        />
-                        {fieldErrors.name && (
-                          <p className="px-1 text-xs font-medium text-rose-600">
-                            {fieldErrors.name}
-                          </p>
-                        )}
-                      </div>
-
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
-                        <span>Ratings</span>
-                        <input
-                          type="number"
-                          name="ratings"
-                          value={form.ratings}
-                          onChange={handleInputChange}
-                          min="1"
-                          max="5"
-                          step="0.1"
-                          className={fieldClassName()}
-                          required
-                        />
-                      </label>
-                    </div>
-
-                    <div className="grid gap-2 text-sm font-medium text-slate-700">
-                      <span>Description</span>
-                      <textarea
-                        name="description"
-                        value={form.description}
-                        onChange={(e) => {
-                          handleInputChange(e);
-                          if (fieldErrors.description)
-                            setFieldErrors((prev) => ({
-                              ...prev,
-                              description: undefined,
-                            }));
-                        }}
-                        rows={4}
-                        placeholder="Business laptops, desktops, accessories, and IT procurement solutions for modern teams."
-                        className={fieldClassName(
-                          Boolean(fieldErrors.description),
-                        )}
-                      />
-                      {fieldErrors.description && (
-                        <p className="px-1 text-xs font-medium text-rose-600">
-                          {fieldErrors.description}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
-                        <span>Portal Status</span>
-                        <select
-                          name="portal"
-                          value={form.status.portal}
-                          onChange={handleInputChange}
-                          className={fieldClassName()}
-                        >
-                          <option value="online">Online</option>
-                          <option value="offline">Offline</option>
-                          <option value="maintenance">Maintenance</option>
-                        </select>
-                      </label>
-
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
-                        <span>What this affects</span>
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                          Homepage intro, portal badge, and app identity across
-                          the site.
-                        </div>
-                      </label>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
-                        <span>Logo URL</span>
-                        <input
-                          type="url"
-                          name="logo"
-                          value={form.branding.logo}
-                          onChange={handleBrandingInputChange}
-                          placeholder="https://example.com/logo.png"
-                          className={fieldClassName()}
-                          required
-                        />
-                      </label>
-
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
-                        <span>Light Logo URL</span>
-                        <input
-                          type="url"
-                          name="logoLight"
-                          value={form.branding.logoLight}
-                          onChange={handleBrandingInputChange}
-                          placeholder="https://example.com/logo-light.png"
-                          className={fieldClassName()}
-                          required
-                        />
-                      </label>
-
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
-                        <span>Logomark URL</span>
-                        <input
-                          type="url"
-                          name="logomark"
-                          value={form.branding.logomark}
-                          onChange={handleBrandingInputChange}
-                          placeholder="https://example.com/logomark.png"
-                          className={fieldClassName()}
-                          required
-                        />
-                      </label>
-
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
-                        <span>Light Logomark URL</span>
-                        <input
-                          type="url"
-                          name="logomarkLight"
-                          value={form.branding.logomarkLight}
-                          onChange={handleBrandingInputChange}
-                          placeholder="https://example.com/logomark-light.png"
-                          className={fieldClassName()}
-                          required
-                        />
-                      </label>
-                    </div>
-
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                      <button
-                        type="submit"
-                        disabled={saving || !canUpdate}
-                        className="rounded-full bg-[#0a2a78] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {saving
-                          ? "Saving..."
-                          : appSettings
-                            ? "Update Settings"
-                            : "Create Settings"}
-                      </button>
-                      <span className="text-sm text-slate-500">
-                        General and branding changes are saved to the backend
-                        app object.
-                      </span>
-                    </div>
-                  </form>
-
                   <div className="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
                     <h4 className="font-display text-xl font-bold text-slate-900">
-                      Contact information
+                      Hero carousel management
                     </h4>
                     <p className="mt-2 text-sm text-slate-600">
-                      Updated separately through the contact endpoint.
+                      Upload up to 3 images for your homepage carousel.
                     </p>
 
-                    <form
-                      onSubmit={handleContactSubmit}
-                      className="mt-5 space-y-6"
-                    >
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="grid gap-2 text-sm font-medium text-slate-700">
-                          <span>Email</span>
-                          <input
-                            type="email"
-                            name="email"
-                            value={contactForm.email ?? ""}
-                            onChange={(e) => {
-                              handleContactInputChange(e);
-                              if (contactFieldErrors.email)
-                                setContactFieldErrors((prev) => ({
-                                  ...prev,
-                                  email: undefined,
-                                }));
-                            }}
-                            placeholder="contact@zowkins.com"
-                            className={fieldClassName(
-                              Boolean(contactFieldErrors.email),
-                            )}
-                          />
-                          {contactFieldErrors.email && (
-                            <p className="px-1 text-xs font-medium text-rose-600">
-                              {contactFieldErrors.email}
-                            </p>
-                          )}
+                    <div className="mt-6 rounded-[1.4rem] border border-dashed border-slate-300 bg-white p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                            Upload hero images
+                          </p>
+                          <p className="mt-1 text-sm text-slate-600">
+                            Pick up to 3 images, reorder them, then upload the
+                            whole set to the homepage carousel.
+                          </p>
                         </div>
-
-                        <div className="grid gap-2 text-sm font-medium text-slate-700">
-                          <span>Phone Number</span>
+                        <label className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#0a2a78] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#08215f]">
+                          <span>{uploadingHero ? "Uploading..." : "Choose images"}</span>
                           <input
-                            type="tel"
-                            name="phoneNumber"
-                            value={contactForm.phoneNumber ?? ""}
-                            onChange={(e) => {
-                              handleContactInputChange(e);
-                              if (contactFieldErrors.phoneNumber)
-                                setContactFieldErrors((prev) => ({
-                                  ...prev,
-                                  phoneNumber: undefined,
-                                }));
-                            }}
-                            placeholder="+971 54 389 5126"
-                            className={fieldClassName(
-                              Boolean(contactFieldErrors.phoneNumber),
-                            )}
-                          />
-                          {contactFieldErrors.phoneNumber && (
-                            <p className="px-1 text-xs font-medium text-rose-600">
-                              {contactFieldErrors.phoneNumber}
-                            </p>
-                          )}
-                        </div>
-
-                        <label className="grid gap-2 text-sm font-medium text-slate-700">
-                          <span>WhatsApp Number</span>
-                          <input
-                            type="tel"
-                            name="whatsAppNumber"
-                            value={contactForm.whatsAppNumber ?? ""}
-                            onChange={handleContactInputChange}
-                            placeholder="+971 54 389 5126"
-                            className={fieldClassName()}
-                            required
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            multiple
+                            onChange={handleHeroSelection}
+                            disabled={uploadingHero || !canUpdate}
                           />
                         </label>
                       </div>
 
-                      <div className="grid gap-2 text-sm font-medium text-slate-700">
-                        <span>Address</span>
-                        <textarea
-                          name="address"
-                          value={contactForm.address ?? ""}
-                          onChange={(e) => {
-                            handleContactInputChange(e);
-                            if (contactFieldErrors.address)
-                              setContactFieldErrors((prev) => ({
-                                ...prev,
-                                address: undefined,
-                              }));
-                          }}
-                          rows={3}
-                          placeholder="Wuse Zone 3, No 7 Maputo Street, Abuja, FCT, Nigeria"
-                          className={fieldClassName(
-                            Boolean(contactFieldErrors.address),
-                          )}
-                        />
-                        {contactFieldErrors.address && (
-                          <p className="px-1 text-xs font-medium text-rose-600">
-                            {contactFieldErrors.address}
-                          </p>
-                        )}
-                      </div>
+                      {selectedHeroFiles.length > 0 ? (
+                        <div className="mt-4 space-y-2">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                              Selected images
+                            </p>
+                            <button
+                              type="button"
+                              onClick={clearHeroSelection}
+                              className="text-xs font-semibold text-[#0a2a78] hover:underline"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                          <div className="grid gap-2">
+                            {selectedHeroFiles.map((file, index) => (
+                              <div
+                                key={`${file.name}-${file.size}-${index}`}
+                                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
+                              >
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-semibold text-slate-800">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-[11px] text-slate-500">
+                                    {Math.round(file.size / 1024)} KB
+                                  </p>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => moveSelectedHeroFile(index, -1)}
+                                    disabled={index === 0}
+                                    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                  >
+                                    Up
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => moveSelectedHeroFile(index, 1)}
+                                    disabled={index === selectedHeroFiles.length - 1}
+                                    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                  >
+                                    Down
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSelectedHeroFile(index)}
+                                    className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
 
-                      <button
-                        type="submit"
-                        disabled={savingContact || !canUpdate}
-                        className="rounded-full bg-[#0a2a78] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {savingContact ? "Updating..." : "Update Contact Info"}
-                      </button>
-                    </form>
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => void uploadSelectedHeroImages()}
+                          disabled={uploadingHero || !canUpdate || selectedHeroFiles.length === 0}
+                          className="rounded-lg bg-[#0a2a78] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#08215f] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Save carousel
+                        </button>
+                        <p className="text-xs text-slate-500">
+                          Current order maps to Slide 1, Slide 2, and Slide 3.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid gap-6 sm:grid-cols-3">
+                      {[0, 1, 2].map((index) => {
+                        const imgSource = currentHeroImages[index] || null;
+                        const resolvedImg = resolveImageSource(imgSource, "");
+
+                        return (
+                          <div key={index} className="space-y-3">
+                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                              Slide {index + 1}
+                            </p>
+
+                            {resolvedImg ? (
+                              <div className="relative h-32 w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
+                                <Image
+                                  src={resolvedImg}
+                                  alt={`Hero ${index + 1}`}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex h-32 w-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100/50 text-[10px] text-slate-400">
+                                No custom image
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <p className="mt-4 text-[11px] leading-relaxed text-slate-500 italic">
+                      Uploading a set replaces the carousel order on the
+                      homepage.
+                    </p>
                   </div>
                 </div>
               ) : null}
@@ -719,7 +404,7 @@ export default function AdminAppSettingsPage() {
                     Portal
                   </p>
                   <p className="mt-1 text-sm font-semibold text-slate-900">
-                    {currentApp.status.portal}
+                    {currentApp.status?.portal || "online"}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
@@ -735,7 +420,7 @@ export default function AdminAppSettingsPage() {
                     Logo
                   </p>
                   <p className="mt-1 break-words text-sm font-semibold text-slate-900">
-                    {currentApp.branding.logo ? "Configured" : "Missing"}
+                    {currentApp.branding?.logo ? "Configured" : "Missing"}
                   </p>
                 </div>
               </div>
@@ -749,10 +434,8 @@ export default function AdminAppSettingsPage() {
                 What this page controls
               </h3>
               <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                <p>Brand logos and logomarks for the site chrome.</p>
-                <p>Contact details for footer, about, and support links.</p>
+                <p>Homepage hero images and carousel slides.</p>
                 <p>Portal status badge and application description.</p>
-                <p>Homepage hero remains hardcoded for now.</p>
               </div>
               <div className="mt-4">
                 <AdminBadge

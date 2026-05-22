@@ -18,7 +18,8 @@ export type App = {
   };
   description: string;
   ratings: number;
-  images: string[];
+  heroImage?: string | any | null;
+  images: Array<string | any>;
   branding: {
     logo: string;
     logoLight: string;
@@ -92,8 +93,9 @@ export async function getAppSettings() {
       throw new ApiError("Failed to load application settings", response.status);
     }
 
-    const payload = (await response.json().catch(() => null)) as Partial<AppSettingsResponse> | null;
-    return { app: normalizeApp(payload?.app ?? null) };
+    const payload = (await response.json().catch(() => null));
+    const appData = (payload?.app || payload);
+    return { app: normalizeApp(appData ?? null) };
   } catch {
     return { app: fallback };
   }

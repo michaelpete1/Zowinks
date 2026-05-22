@@ -2,11 +2,13 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
 import { type EmblaOptionsType } from "embla-carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { DEFAULT_HERO_IMAGES } from "../lib/hero-images";
+import { zowkinsApi } from "../lib/zowkins-api";
+import { resolveImageSource } from "../lib/media";
+import FallbackImage from "./FallbackImage";
 
 interface HeroSlide {
   img: string;
@@ -16,7 +18,12 @@ interface HeroSlide {
   cta1Href: string;
   cta2: string;
   cta2Href: string;
+  eyebrow: string;
+  focalPosition: string;
+  overlayStrength: string;
 }
+
+type HeroImageSource = string | { url?: string | null } | null | undefined;
 
 const heroTemplates: Omit<HeroSlide, "img">[] = [
   {
@@ -26,6 +33,9 @@ const heroTemplates: Omit<HeroSlide, "img">[] = [
     cta1Href: "/products",
     cta2: "Request a Quote",
     cta2Href: "/request-quote",
+    eyebrow: "Featured Collection",
+    focalPosition: "center 36%",
+    overlayStrength: "from-black/70 via-black/42 to-black/70",
   },
   {
     title: "Reliable Tech Procurement",
@@ -34,6 +44,9 @@ const heroTemplates: Omit<HeroSlide, "img">[] = [
     cta1Href: "/categories",
     cta2: "Get Quote",
     cta2Href: "/full-quote-bill",
+    eyebrow: "Business Essentials",
+    focalPosition: "center 48%",
+    overlayStrength: "from-black/66 via-black/38 to-black/66",
   },
   {
     title: "Fast Support & Delivery",
@@ -42,6 +55,9 @@ const heroTemplates: Omit<HeroSlide, "img">[] = [
     cta1Href: "/products",
     cta2: "Contact Us",
     cta2Href: "/request-quote",
+    eyebrow: "Quick Turnaround",
+    focalPosition: "center 42%",
+    overlayStrength: "from-black/62 via-black/34 to-black/62",
   },
 ];
 
@@ -50,20 +66,79 @@ const options: EmblaOptionsType = {
   align: "start",
 };
 
-export default function HeroCarousel() {
+interface HeroCarouselProps {
+  initialImages?: HeroImageSource[];
+}
+
+export default function HeroCarousel({ initialImages }: HeroCarouselProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [heroImages, setHeroImages] = useState<HeroImageSource[]>(
+    initialImages || [],
+  );
+  const [isMounted, setIsMounted] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
     Autoplay({ delay: 5000 }),
   ]);
 
-  const heroSlides = useMemo(() => {
-    return heroTemplates.map((slide, index) => ({
-      ...slide,
-      img:
-        DEFAULT_HERO_IMAGES[index] ||
-        DEFAULT_HERO_IMAGES[index % DEFAULT_HERO_IMAGES.length],
-    }));
+  useEffect(() => {
+    setIsMounted(true);
+    // If we already have initial images from SSR, we don't strictly need to fetch again,
+    // but we can refresh them in the background to ensure they are up to date.
+    const fetchHero = async () => {
+      try {
+        const response = await zowkinsApi.getApp();
+        const app = (response as {
+          app?: { images?: HeroImageSource[]; heroImage?: HeroImageSource };
+        }).app;
+        const images: HeroImageSource[] = [];
+
+        // Try to use the images array first
+        if (Array.isArray(app?.images) && app.images.length > 0) {
+          images.push(...app.images);
+        }
+
+        // Also include heroImage if it exists and isn't already in the array
+        if (app?.heroImage) {
+          const heroUrl =
+            typeof app.heroImage === "string"
+              ? app.heroImage
+              : app.heroImage?.url;
+
+          if (
+            heroUrl &&
+            !images.some((img) => {
+              const url = typeof img === "string" ? img : img?.url;
+              return url === heroUrl;
+            })
+          ) {
+            images.push(app.heroImage);
+          }
+        }
+
+        const filtered = images.filter(Boolean);
+        if (filtered.length > 0) {
+          setHeroImages(filtered);
+        }
+      } catch (error) {
+        console.error("Failed to fetch hero image:", error);
+      }
+    };
+
+    fetchHero();
   }, []);
+
+  const heroSlides = useMemo(() => {
+    return heroTemplates.map((slide, index) => {
+      // Use custom image for this index, or custom image 0, or default image for this index
+      const customImg = heroImages[index] || heroImages[0];
+      const defaultImg = DEFAULT_HERO_IMAGES[index] || DEFAULT_HERO_IMAGES[0];
+
+      return {
+        ...slide,
+        img: resolveImageSource(customImg, defaultImg),
+      };
+    });
+  }, [heroImages]);
 
   const scrollTo = useCallback(
     (index: number) => {
@@ -84,37 +159,63 @@ export default function HeroCarousel() {
     };
   }, [emblaApi]);
 
+  if (!isMounted) {
+    // Return a simplified version during SSR to match initial HTML
+    return (
+      <div className="relative overflow-hidden bg-slate-900 min-h-[82svh] md:h-screen">
+            <div className="absolute inset-0">
+              <FallbackImage
+                src={heroSlides[0].img}
+                alt={heroSlides[0].title}
+                fallbackSrc={DEFAULT_HERO_IMAGES[0]}
+                className="absolute inset-0 h-full w-full object-cover object-[center_36%] brightness-[0.86] contrast-[1.03] saturate-[1.08]"
+                priority
+                fetchPriority="high"
+              />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="embla relative overflow-hidden" ref={emblaRef}>
       <div className="embla__container flex min-h-[82svh] md:h-screen">
         {heroSlides.map((slide, index) => (
           <section key={index} className="relative flex-[0_0_100%]">
             <div className="absolute inset-0">
-              <Image
-                src={slide.img}
-                alt={slide.title}
-                fill
-                sizes="100vw"
-                priority={index === 0}
-                className="object-cover object-center brightness-[0.68] contrast-[1.15] saturate-[1.08] scale-[1.02]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/90" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.10),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(243,199,77,0.16),transparent_26%)]" />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
+              {slide.img ? (
+                <FallbackImage
+                  src={slide.img}
+                  alt={slide.title}
+                  fallbackSrc={
+                    DEFAULT_HERO_IMAGES[index] || DEFAULT_HERO_IMAGES[0]
+                  }
+                  className="absolute inset-0 h-full w-full object-cover brightness-[0.86] contrast-[1.03] saturate-[1.08] scale-[1.01]"
+                  style={{ objectPosition: slide.focalPosition } as React.CSSProperties}
+                  priority={index === 0}
+                  fetchPriority={index === 0 ? "high" : "low"}
+                  loading={index === 0 ? "eager" : "lazy"}
+                />
+              ) : (
+                <div className="h-full w-full bg-slate-900" />
+              )}
+              <div className={`absolute inset-0 bg-gradient-to-r ${slide.overlayStrength}`} />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.14),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(243,199,77,0.10),transparent_22%)]" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/45" />
             </div>
             <div className="relative z-10 flex h-full items-center px-4 py-16 sm:py-20 md:px-8 md:py-24 lg:px-12 xl:px-16">
-              <div className="max-w-2xl space-y-5 animate-[fadeIn_0.9s_ease-out] sm:space-y-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/80 md:text-sm">
-                  Zowkins Enterprise
+              <div className="max-w-2xl space-y-5 rounded-[2rem] border border-white/12 bg-[#050b16]/52 px-5 py-6 shadow-[0_22px_70px_rgba(0,0,0,0.3)] backdrop-blur-md animate-[fadeIn_0.9s_ease-out] sm:space-y-6 sm:px-7 sm:py-7 md:px-8 md:py-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#f3c74d] drop-shadow-[0_2px_4px_rgba(0,0,0,0.55)] md:text-sm">
+                  {slide.eyebrow}
                 </p>
-                <h1 className="font-display text-3xl font-bold leading-tight text-white drop-shadow-2xl sm:text-4xl md:text-5xl lg:text-6xl">
+                <h1 className="font-display text-3xl font-bold leading-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.7)] sm:text-4xl md:text-5xl lg:text-6xl">
                   {slide.title}
                   <span className="block">{slide.subtitle}</span>
                 </h1>
-                <p className="max-w-xl text-sm leading-6 text-white/90 sm:text-base sm:leading-7 md:text-lg">
+                <p className="max-w-xl text-sm leading-6 text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-base sm:leading-7 md:text-lg">
                   Premium IT procurement for business teams.
                 </p>
-                <p className="text-xs text-white/75 sm:text-sm">
+                <p className="text-xs text-white/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)] sm:text-sm">
                   Rated 4.9/5 for service.
                 </p>
                 <div className="flex flex-wrap gap-3">
