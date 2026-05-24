@@ -19,6 +19,7 @@ export type App = {
   description: string;
   ratings: number;
   heroImage?: string | any | null;
+  heroImages?: Array<string | any>;
   images: Array<string | any>;
   branding: {
     logo: string;
@@ -72,6 +73,10 @@ function normalizeApp(input: Partial<App> | null | undefined): App {
       ...fallback.branding,
       ...(input?.branding ?? {}),
     },
+    heroImages:
+      Array.isArray(input?.heroImages) && input!.heroImages.length > 0
+        ? input!.heroImages
+        : undefined,
     images: Array.isArray(input?.images) && input!.images.length > 0 ? input!.images : fallback.images,
   };
 }
@@ -86,7 +91,7 @@ export async function getAppSettings() {
       headers: {
         Accept: "application/json",
       },
-      next: { revalidate: 300 },
+      cache: "no-store",
     });
 
     if (!response.ok) {

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { AdminBadge, AdminShell } from "../../../../components/AdminShell";
+import FallbackImage from "../../../../components/FallbackImage";
 import { useAdminSession } from "../../../../hooks/useAdminSession";
 import { App, ApiError, zowkinsApi } from "../../../../lib/zowkins-api";
 import { defaultAppSettings } from "../../../../lib/app-settings";
+import { DEFAULT_HERO_IMAGES } from "../../../../lib/hero-images";
 import { resolveImageSource } from "../../../../lib/media";
 
 const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
@@ -17,6 +18,75 @@ type ApiConnection = {
 
 function normalizeToken(value: string) {
   return value.trim().replace(/^Bearer\s+/i, "");
+}
+
+type HeroSlotSelection = {
+  file: File | null;
+  previewUrl: string | null;
+};
+
+const HERO_SLOT_COUNT = 3;
+
+function createEmptyHeroSlots(): HeroSlotSelection[] {
+  return Array.from({ length: HERO_SLOT_COUNT }, () => ({
+    file: null,
+    previewUrl: null,
+  }));
+}
+
+function renameFile(file: File, fileName: string) {
+  const extension = file.type.includes("png")
+    ? "png"
+    : file.type.includes("webp")
+      ? "webp"
+      : file.type.includes("svg")
+        ? "svg"
+        : "jpg";
+
+  return new File([file], `${fileName}.${extension}`, {
+    type: file.type || "image/jpeg",
+  });
+}
+
+async function imageUrlToFile(imageUrl: string, fileName: string) {
+  const proxyUrl =
+    /^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("//")
+      ? `/api/image?src=${encodeURIComponent(imageUrl.startsWith("//") ? `https:${imageUrl}` : imageUrl)}`
+      : imageUrl;
+
+  const response = await fetch(proxyUrl);
+  if (!response.ok) {
+    throw new Error(`Could not load ${fileName}.`);
+  }
+
+  const blob = await response.blob();
+  const mimeType = blob.type || "image/jpeg";
+  const extension = mimeType.includes("png")
+    ? "png"
+    : mimeType.includes("webp")
+      ? "webp"
+      : mimeType.includes("svg")
+        ? "svg"
+        : "jpg";
+
+  return new File([blob], `${fileName}.${extension}`, { type: mimeType });
+}
+
+function extractHeroSlideUrls(
+  app: {
+    images?: unknown;
+    heroImages?: unknown;
+  } | null | undefined,
+) {
+  const source = Array.isArray(app?.heroImages)
+    ? app?.heroImages
+    : Array.isArray(app?.images)
+      ? app?.images
+      : [];
+
+  return source
+    .map((image) => resolveImageSource(image, ""))
+    .filter((image): image is string => Boolean(image));
 }
 
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
@@ -35,7 +105,7 @@ export default function AdminAppSettingsPage() {
   const [appSettings, setAppSettings] = useState<App | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadingHero, setUploadingHero] = useState(false);
-  const [selectedHeroFiles, setSelectedHeroFiles] = useState<File[]>([]);
+  const [heroSlots, setHeroSlots] = useState<HeroSlotSelection[]>(createEmptyHeroSlots());
   const [connectionMessage, setConnectionMessage] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -95,51 +165,65 @@ export default function AdminAppSettingsPage() {
     };
   }, [ready]);
 
-  const currentHeroImages = [
-    ...(Array.isArray(currentApp.images) ? currentApp.images : []),
-  ].filter(Boolean);
+  const backendHeroImages = extractHeroSlideUrls(currentApp).slice(0, HERO_SLOT_COUNT);
+  const currentHeroImages = Array.from({ length: HERO_SLOT_COUNT }, (_, index) => {
+    return (
+      backendHeroImages[index] ||
+      DEFAULT_HERO_IMAGES[index] ||
+      DEFAULT_HERO_IMAGES[0]
+    );
+  });
 
-  const handleHeroSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []).filter(Boolean);
-    if (!files.length) return;
+  useEffect(() => {
+    return () => {
+      heroSlots.forEach((slot) => {
+        if (slot.previewUrl) {
+          URL.revokeObjectURL(slot.previewUrl);
+        }
+      });
+    };
+  }, [heroSlots]);
 
-    const nextFiles = files.slice(0, 3);
-
-    if (nextFiles.some((file) => !ALLOWED_IMAGE_MIME_TYPES.has(file.type))) {
-      setError(
-        "Invalid file type. Please upload a PNG, JPEG, WebP, SVG, or PDF.",
-      );
+  const setHeroSlotFile = (slotIndex: number, file: File | null) => {
+    if (file && !ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
+      setError("Invalid file type. Please upload a PNG, JPEG, WebP, SVG, or PDF.");
       return;
     }
 
-    setSelectedHeroFiles(nextFiles);
-  };
+    const previousPreviewUrl = heroSlots[slotIndex]?.previewUrl ?? null;
+    const nextPreviewUrl = file ? URL.createObjectURL(file) : null;
 
-  const moveSelectedHeroFile = (index: number, direction: -1 | 1) => {
-    setSelectedHeroFiles((prev) => {
+    setHeroSlots((prev) => {
       const next = [...prev];
-      const target = index + direction;
-      if (target < 0 || target >= next.length) return prev;
-      const [item] = next.splice(index, 1);
-      next.splice(target, 0, item);
+      next[slotIndex] = {
+        file,
+        previewUrl: nextPreviewUrl,
+      };
       return next;
     });
+
+    if (previousPreviewUrl) {
+      URL.revokeObjectURL(previousPreviewUrl);
+    }
   };
 
-  const removeSelectedHeroFile = (index: number) => {
-    setSelectedHeroFiles((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
-  };
+  const clearHeroSlot = (slotIndex: number) => {
+    const previousPreviewUrl = heroSlots[slotIndex]?.previewUrl ?? null;
+    setHeroSlots((prev) => {
+      const next = [...prev];
+      next[slotIndex] = {
+        file: null,
+        previewUrl: null,
+      };
+      return next;
+    });
 
-  const clearHeroSelection = () => {
-    setSelectedHeroFiles([]);
+    if (previousPreviewUrl) {
+      URL.revokeObjectURL(previousPreviewUrl);
+    }
   };
 
   const uploadSelectedHeroImages = async () => {
-    if (!selectedHeroFiles.length) {
-      setError("Select at least one image before uploading.");
-      return;
-    }
-
     if (!apiReady) {
       setError("Connect an admin token before uploading images.");
       return;
@@ -150,23 +234,48 @@ export default function AdminAppSettingsPage() {
     setMessage("");
 
     try {
-      await zowkinsApi.uploadHeroImage(
-        apiConnection.accessToken.trim(),
-        selectedHeroFiles,
+      const token = apiConnection.accessToken.trim();
+      const files = await Promise.all(
+        Array.from({ length: HERO_SLOT_COUNT }, async (_, index) => {
+          const slot = heroSlots[index];
+          if (slot?.file) {
+            return renameFile(slot.file, `hero-slide-${index + 1}`);
+          }
+
+          const source =
+            currentHeroImages[index] ||
+            DEFAULT_HERO_IMAGES[index] ||
+            DEFAULT_HERO_IMAGES[0];
+
+          const sourceUrl = resolveImageSource(source, "");
+          if (!sourceUrl) {
+            throw new Error(`Slide ${index + 1} is missing an image.`);
+          }
+
+          return imageUrlToFile(sourceUrl, `hero-slide-${index + 1}`);
+        }),
       );
 
-      const refreshed = await zowkinsApi.getApp();
-      const refreshedApp = (refreshed as any).app || refreshed;
-      setAppSettings(refreshedApp);
-      setSelectedHeroFiles([]);
-      setMessage(
-        selectedHeroFiles.length > 1
-          ? `${selectedHeroFiles.length} hero images uploaded successfully.`
-          : "Hero image uploaded successfully.",
-      );
+      const hasSelectedFile = heroSlots.some((slot) => Boolean(slot.file));
+      if (!hasSelectedFile) {
+        setError("Choose at least one slide image before saving.");
+        return;
+      }
+
+      const uploadResponse = await zowkinsApi.uploadHeroImage(token, files);
+      const updatedApp = (uploadResponse as { app?: App }).app ?? null;
+      if (updatedApp) {
+        setAppSettings(updatedApp);
+      }
+      setHeroSlots(createEmptyHeroSlots());
+      setMessage("Hero carousel updated successfully.");
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : "Could not upload hero image.",
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Could not upload hero image.",
       );
     } finally {
       setUploadingHero(false);
@@ -241,141 +350,103 @@ export default function AdminAppSettingsPage() {
                       Hero carousel management
                     </h4>
                     <p className="mt-2 text-sm text-slate-600">
-                      Upload up to 3 images for your homepage carousel.
+                      Upload each slide individually, then save the carousel to
+                      update the homepage order.
                     </p>
-
-                    <div className="mt-6 rounded-[1.4rem] border border-dashed border-slate-300 bg-white p-4">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Upload hero images
-                          </p>
-                          <p className="mt-1 text-sm text-slate-600">
-                            Pick up to 3 images, reorder them, then upload the
-                            whole set to the homepage carousel.
-                          </p>
-                        </div>
-                        <label className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#0a2a78] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#08215f]">
-                          <span>{uploadingHero ? "Uploading..." : "Choose images"}</span>
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            multiple
-                            onChange={handleHeroSelection}
-                            disabled={uploadingHero || !canUpdate}
-                          />
-                        </label>
-                      </div>
-
-                      {selectedHeroFiles.length > 0 ? (
-                        <div className="mt-4 space-y-2">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                              Selected images
-                            </p>
-                            <button
-                              type="button"
-                              onClick={clearHeroSelection}
-                              className="text-xs font-semibold text-[#0a2a78] hover:underline"
-                            >
-                              Clear
-                            </button>
-                          </div>
-                          <div className="grid gap-2">
-                            {selectedHeroFiles.map((file, index) => (
-                              <div
-                                key={`${file.name}-${file.size}-${index}`}
-                                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
-                              >
-                                <div className="min-w-0">
-                                  <p className="truncate text-sm font-semibold text-slate-800">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-[11px] text-slate-500">
-                                    {Math.round(file.size / 1024)} KB
-                                  </p>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => moveSelectedHeroFile(index, -1)}
-                                    disabled={index === 0}
-                                    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                                  >
-                                    Up
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => moveSelectedHeroFile(index, 1)}
-                                    disabled={index === selectedHeroFiles.length - 1}
-                                    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                                  >
-                                    Down
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => removeSelectedHeroFile(index)}
-                                    className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      <div className="mt-4 flex flex-wrap gap-3">
-                        <button
-                          type="button"
-                          onClick={() => void uploadSelectedHeroImages()}
-                          disabled={uploadingHero || !canUpdate || selectedHeroFiles.length === 0}
-                          className="rounded-lg bg-[#0a2a78] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#08215f] disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Save carousel
-                        </button>
-                        <p className="text-xs text-slate-500">
-                          Current order maps to Slide 1, Slide 2, and Slide 3.
-                        </p>
-                      </div>
-                    </div>
 
                     <div className="mt-6 grid gap-6 sm:grid-cols-3">
                       {[0, 1, 2].map((index) => {
-                        const imgSource = currentHeroImages[index] || null;
-                        const resolvedImg = resolveImageSource(imgSource, "");
+                        const slot = heroSlots[index];
+                        const previewSource =
+                          slot.previewUrl ||
+                          resolveImageSource(currentHeroImages[index], "");
 
                         return (
-                          <div key={index} className="space-y-3">
-                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                              Slide {index + 1}
-                            </p>
+                          <div
+                            key={index}
+                            className="group rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_30px_rgba(15,23,42,0.08)]"
+                          >
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#0a2a78]">
+                                  Slide {index + 1}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                  This maps to `app.images[{index}]`
+                                </p>
+                              </div>
+                              {slot.file ? (
+                                <button
+                                  type="button"
+                                  onClick={() => clearHeroSlot(index)}
+                                  className="text-[11px] font-semibold text-[#0a2a78] hover:underline"
+                                  disabled={uploadingHero || !canUpdate}
+                                >
+                                  Clear
+                                </button>
+                              ) : null}
+                            </div>
 
-                            {resolvedImg ? (
-                              <div className="relative h-32 w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
-                                <Image
-                                  src={resolvedImg}
-                                  alt={`Hero ${index + 1}`}
-                                  fill
-                                  className="object-cover"
-                                />
+                            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-950">
+                              <FallbackImage
+                                src={previewSource}
+                                alt={`Hero ${index + 1}`}
+                                className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                                loading="lazy"
+                                fetchPriority="low"
+                              />
+                              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,15,28,0.08)_0%,rgba(8,15,28,0.46)_100%)]" />
+                              <div className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white backdrop-blur-sm">
+                                {slot.file ? "New upload" : "Current image"}
                               </div>
-                            ) : (
-                              <div className="flex h-32 w-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100/50 text-[10px] text-slate-400">
-                                No custom image
+                              <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/12 bg-black/50 px-3 py-2 text-[11px] text-white/90 backdrop-blur-sm">
+                                {slot.file ? slot.file.name : "Ready to replace this slot"}
                               </div>
-                            )}
+                            </div>
+
+                            <label
+                              className={`mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
+                                uploadingHero || !canUpdate
+                                  ? "cursor-not-allowed bg-slate-400"
+                                  : "bg-[#0a2a78] hover:bg-[#08215f]"
+                              }`}
+                            >
+                              <span>
+                                {slot.file ? "Replace slide image" : "Upload slide image"}
+                              </span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(event) => {
+                                  const file = event.target.files?.[0] ?? null;
+                                  if (file) {
+                                    setHeroSlotFile(index, file);
+                                  }
+                                  event.target.value = "";
+                                }}
+                                disabled={uploadingHero || !canUpdate}
+                              />
+                            </label>
                           </div>
                         );
                       })}
                     </div>
 
-                    <p className="mt-4 text-[11px] leading-relaxed text-slate-500 italic">
-                      Uploading a set replaces the carousel order on the
-                      homepage.
-                    </p>
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <button
+                        type="button"
+                        onClick={() => void uploadSelectedHeroImages()}
+                        disabled={uploadingHero || !canUpdate}
+                        className="inline-flex items-center justify-center rounded-xl bg-[#0a2a78] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#08215f] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {uploadingHero ? "Saving carousel..." : "Save carousel"}
+                      </button>
+                      <p className="max-w-2xl text-xs leading-5 text-slate-500">
+                        Saving sends the 3 files in order and updates the backend
+                        `app.images` array for Slide 1, Slide 2, and Slide 3.
+                      </p>
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -423,6 +494,40 @@ export default function AdminAppSettingsPage() {
                     {currentApp.branding?.logo ? "Configured" : "Missing"}
                   </p>
                 </div>
+              </div>
+            </section>
+
+            <section className="rounded-[1.8rem] border border-slate-200 bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                Hero payload
+              </p>
+              <h3 className="mt-2 font-display text-2xl font-bold text-slate-900">
+                Backend `app.images`
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                This is the exact array the backend returned for the hero
+                section.
+              </p>
+              <div className="mt-4 space-y-3">
+                {extractHeroSlideUrls(currentApp).length > 0 ? (
+                  extractHeroSlideUrls(currentApp).map((image, index) => (
+                    <div
+                      key={`${image}-${index}`}
+                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    >
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">
+                        Slide {index + 1}
+                      </p>
+                      <p className="mt-1 break-all text-xs font-semibold text-slate-900">
+                        {image}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                    No hero images returned yet.
+                  </div>
+                )}
               </div>
             </section>
 

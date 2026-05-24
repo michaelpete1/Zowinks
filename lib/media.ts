@@ -8,6 +8,16 @@ const API_ORIGIN = (() => {
   }
 })();
 const IMAGE_ORIGIN = "https://pub-8c6bb3ce4d88417e9f57a8967cf9363d.r2.dev";
+const PLACEHOLDER_HOSTS = new Set(["example.com", "www.example.com"]);
+
+function isPlaceholderImageUrl(raw: string): boolean {
+  try {
+    const url = new URL(raw.startsWith("//") ? `https:${raw}` : raw);
+    return PLACEHOLDER_HOSTS.has(url.hostname);
+  } catch {
+    return false;
+  }
+}
 
 function toProxiedImageUrl(src: string): string {
   return `/api/image?src=${encodeURIComponent(src)}`;
@@ -100,15 +110,25 @@ export function resolveApiMediaUrl(value?: unknown): string {
   }
 
   if (raw.startsWith("//")) {
-    return toProxiedImageUrl(`https:${raw}`);
+    const directUrl = `https:${raw}`;
+    if (isPlaceholderImageUrl(directUrl)) {
+      return "";
+    }
+    return directUrl;
   }
 
   if (/^(https?:)?\/\//i.test(raw)) {
-    return toProxiedImageUrl(raw);
+    if (isPlaceholderImageUrl(raw)) {
+      return "";
+    }
+    return raw;
   }
 
   if (/^[a-z0-9.-]+\.[a-z]{2,}(?::\d+)?(\/|$)/i.test(raw)) {
-    return toProxiedImageUrl(`https://${raw}`);
+    if (isPlaceholderImageUrl(`https://${raw}`)) {
+      return "";
+    }
+    return `https://${raw}`;
   }
 
   const resolved = raw.includes("/") ? `${IMAGE_ORIGIN}${raw.startsWith("/") ? "" : "/"}${raw}` : `${IMAGE_ORIGIN}/${raw}`;

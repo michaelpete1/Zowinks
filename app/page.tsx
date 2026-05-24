@@ -225,7 +225,7 @@ export default async function Home() {
       />
       <Navbar />
 
-      <HeroCarousel initialImages={app.images} />
+      <HeroCarousel initialHeroImages={app.heroImages ?? app.images} />
 
       <section className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8">
         <div className="grid gap-3 md:grid-cols-3">

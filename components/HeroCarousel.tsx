@@ -67,13 +67,20 @@ const options: EmblaOptionsType = {
 };
 
 interface HeroCarouselProps {
-  initialImages?: HeroImageSource[];
+  initialHeroImages?: HeroImageSource[];
 }
 
-export default function HeroCarousel({ initialImages }: HeroCarouselProps) {
+export default function HeroCarousel({ initialHeroImages }: HeroCarouselProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [heroImages, setHeroImages] = useState<HeroImageSource[]>(
-    initialImages || [],
+  const normalizeHeroImages = (input: unknown): HeroImageSource[] => {
+    if (input == null || !Array.isArray(input)) return [];
+    return input
+      .map((img) => (typeof img === "string" ? img : img))
+      .filter((img): img is HeroImageSource => Boolean(img));
+  };
+
+  const [heroImages, setHeroImages] = useState<HeroImageSource[]>(() =>
+    normalizeHeroImages(initialHeroImages),
   );
   const [isMounted, setIsMounted] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
@@ -82,42 +89,18 @@ export default function HeroCarousel({ initialImages }: HeroCarouselProps) {
 
   useEffect(() => {
     setIsMounted(true);
-    // If we already have initial images from SSR, we don't strictly need to fetch again,
-    // but we can refresh them in the background to ensure they are up to date.
+
     const fetchHero = async () => {
       try {
         const response = await zowkinsApi.getApp();
-        const app = (response as {
-          app?: { images?: HeroImageSource[]; heroImage?: HeroImageSource };
-        }).app;
-        const images: HeroImageSource[] = [];
-
-        // Try to use the images array first
-        if (Array.isArray(app?.images) && app.images.length > 0) {
-          images.push(...app.images);
-        }
-
-        // Also include heroImage if it exists and isn't already in the array
-        if (app?.heroImage) {
-          const heroUrl =
-            typeof app.heroImage === "string"
-              ? app.heroImage
-              : app.heroImage?.url;
-
-          if (
-            heroUrl &&
-            !images.some((img) => {
-              const url = typeof img === "string" ? img : img?.url;
-              return url === heroUrl;
-            })
-          ) {
-            images.push(app.heroImage);
+        const app = (
+          response as {
+            app?: { heroImages?: HeroImageSource[]; images?: HeroImageSource[] };
           }
-        }
-
-        const filtered = images.filter(Boolean);
-        if (filtered.length > 0) {
-          setHeroImages(filtered);
+        ).app;
+        const normalized = normalizeHeroImages(app?.heroImages || app?.images);
+        if (normalized.length > 0) {
+          setHeroImages(normalized);
         }
       } catch (error) {
         console.error("Failed to fetch hero image:", error);
@@ -129,10 +112,8 @@ export default function HeroCarousel({ initialImages }: HeroCarouselProps) {
 
   const heroSlides = useMemo(() => {
     return heroTemplates.map((slide, index) => {
-      // Use custom image for this index, or custom image 0, or default image for this index
-      const customImg = heroImages[index] || heroImages[0];
+      const customImg = heroImages[index];
       const defaultImg = DEFAULT_HERO_IMAGES[index] || DEFAULT_HERO_IMAGES[0];
-
       return {
         ...slide,
         img: resolveImageSource(customImg, defaultImg),
@@ -163,15 +144,15 @@ export default function HeroCarousel({ initialImages }: HeroCarouselProps) {
     // Return a simplified version during SSR to match initial HTML
     return (
       <div className="relative overflow-hidden bg-slate-900 min-h-[82svh] md:h-screen">
-            <div className="absolute inset-0">
-              <FallbackImage
-                src={heroSlides[0].img}
-                alt={heroSlides[0].title}
-                fallbackSrc={DEFAULT_HERO_IMAGES[0]}
-                className="absolute inset-0 h-full w-full object-cover object-[center_36%] brightness-[0.86] contrast-[1.03] saturate-[1.08]"
-                priority
-                fetchPriority="high"
-              />
+        <div className="absolute inset-0">
+          <FallbackImage
+            src={heroSlides[0].img}
+            alt={heroSlides[0].title}
+            fallbackSrc={DEFAULT_HERO_IMAGES[0]}
+            className="absolute inset-0 h-full w-full object-cover object-[center_36%] brightness-[0.86] contrast-[1.03] saturate-[1.08]"
+            priority
+            fetchPriority="high"
+          />
         </div>
       </div>
     );
@@ -191,7 +172,11 @@ export default function HeroCarousel({ initialImages }: HeroCarouselProps) {
                     DEFAULT_HERO_IMAGES[index] || DEFAULT_HERO_IMAGES[0]
                   }
                   className="absolute inset-0 h-full w-full object-cover brightness-[0.86] contrast-[1.03] saturate-[1.08] scale-[1.01]"
-                  style={{ objectPosition: slide.focalPosition } as React.CSSProperties}
+                  style={
+                    {
+                      objectPosition: slide.focalPosition,
+                    } as React.CSSProperties
+                  }
                   priority={index === 0}
                   fetchPriority={index === 0 ? "high" : "low"}
                   loading={index === 0 ? "eager" : "lazy"}
@@ -199,7 +184,9 @@ export default function HeroCarousel({ initialImages }: HeroCarouselProps) {
               ) : (
                 <div className="h-full w-full bg-slate-900" />
               )}
-              <div className={`absolute inset-0 bg-gradient-to-r ${slide.overlayStrength}`} />
+              <div
+                className={`absolute inset-0 bg-gradient-to-r ${slide.overlayStrength}`}
+              />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.14),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(243,199,77,0.10),transparent_22%)]" />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/45" />
             </div>

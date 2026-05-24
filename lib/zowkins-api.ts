@@ -535,6 +535,7 @@ export type App = {
   description: string;
   ratings: number;
   heroImage: string | ApiImage | null;
+  heroImages?: Array<string | ApiImage>;
   images: Array<string | ApiImage>;
   branding: {
     logo: string;
@@ -556,6 +557,7 @@ export type AppInput = {
   description: string;
   ratings: number;
   heroImage?: string | ApiImage | null;
+  heroImages?: Array<string | ApiImage>;
   images: Array<string | ApiImage>;
   branding: {
     logo: string;
@@ -577,6 +579,7 @@ export type AppUpdate = Partial<{
   description: string;
   ratings: number;
   heroImage: string | null;
+  heroImages?: string[];
   images: string[];
   branding: {
     logo: string;
@@ -798,6 +801,20 @@ async function readApiError(response: Response) {
   console.error("API ERROR TRACE", response.status, response.url, text, payload);
 
   const msg = Array.isArray(payload?.message) ? payload.message.join(", ") : payload?.message;
+  const details =
+    typeof payload?.details === "string" && payload.details.trim()
+      ? payload.details.trim()
+      : "";
+  const upstreamBody =
+    typeof payload?.upstreamBody === "string" && payload.upstreamBody.trim()
+      ? payload.upstreamBody.trim()
+      : "";
+  const upstreamStatus =
+    typeof payload?.upstreamStatus === "number" ? payload.upstreamStatus : null;
+
+  const extra = [details, upstreamStatus ? `Upstream status: ${upstreamStatus}` : "", upstreamBody]
+    .filter(Boolean)
+    .join(" ");
 
   if (response.status === 401) {
     return (
@@ -806,12 +823,22 @@ async function readApiError(response: Response) {
     );
   }
 
-  return msg || payload?.error || text || response.statusText || "Request failed";
+  return (
+    msg ||
+    (payload?.error === "Upstream API error" && extra
+      ? `Upstream API error: ${extra}`
+      : "") ||
+    payload?.error ||
+    text ||
+    response.statusText ||
+    "Request failed"
+  );
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(getApiRequestUrl(path), {
     ...init,
+    cache: init?.cache ?? "no-store",
     credentials: "include",
     headers: makeHeaders(init?.headers),
   });
