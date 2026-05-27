@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { zowkinsApi, AdminOrder, AdminOrderStatus, AdminPaymentStatus } from "../../../../lib/zowkins-api";
+import {
+  zowkinsApi,
+  AdminOrder,
+  AdminOrderStatus,
+  AdminPaymentStatus,
+} from "../../../../lib/zowkins-api";
 import { AdminShell, AdminBadge } from "../../../../components/AdminShell";
 
 export default function AdminOrderDetailPage() {
@@ -15,6 +20,10 @@ export default function AdminOrderDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState("");
+  const [linkCallbackUrl, setLinkCallbackUrl] = useState("");
 
   const [updateForm, setUpdateForm] = useState<{
     orderStatus?: AdminOrderStatus;
@@ -51,7 +60,9 @@ export default function AdminOrderDetailPage() {
   useEffect(() => {
     if (order) {
       setUpdateForm({
-        orderStatus: isAdminOrderStatus(order.orderStatus) ? order.orderStatus : undefined,
+        orderStatus: isAdminOrderStatus(order.orderStatus)
+          ? order.orderStatus
+          : undefined,
         paymentStatus: isAdminPaymentStatus(order.paymentStatus)
           ? order.paymentStatus
           : undefined,
@@ -70,7 +81,9 @@ export default function AdminOrderDetailPage() {
       const response = await zowkinsApi.getAdminOrder(token, orderId);
       setOrder(response.order);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch order details");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch order details",
+      );
     } finally {
       setLoading(false);
     }
@@ -87,8 +100,12 @@ export default function AdminOrderDetailPage() {
       if (!token) throw new Error("No admin token found");
 
       const payload = {
-        ...(updateForm.orderStatus ? { orderStatus: updateForm.orderStatus } : {}),
-        ...(updateForm.paymentStatus ? { paymentStatus: updateForm.paymentStatus } : {}),
+        ...(updateForm.orderStatus
+          ? { orderStatus: updateForm.orderStatus }
+          : {}),
+        ...(updateForm.paymentStatus
+          ? { paymentStatus: updateForm.paymentStatus }
+          : {}),
       };
 
       if (!payload.orderStatus && !payload.paymentStatus) {
@@ -96,7 +113,11 @@ export default function AdminOrderDetailPage() {
         return;
       }
 
-      const response = await zowkinsApi.updateAdminOrder(token, orderId, payload);
+      const response = await zowkinsApi.updateAdminOrder(
+        token,
+        orderId,
+        payload,
+      );
       setOrder(response.order);
       setMessage("Order updated successfully");
     } catch (err) {
@@ -117,6 +138,36 @@ export default function AdminOrderDetailPage() {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
 
+  const generateOrderPaymentLink = async () => {
+    if (!order) return;
+
+    setGeneratingLink(true);
+    setError(null);
+    setMessage("");
+    setGeneratedLink("");
+
+    try {
+      const token = localStorage.getItem("zowkins-admin-access-token");
+      if (!token)
+        throw new Error("Please sign in as admin to generate payment link");
+
+      const response = await zowkinsApi.generateAdminOrderPaymentLink(
+        token,
+        order.id,
+        linkCallbackUrl.trim() ? { callbackUrl: linkCallbackUrl.trim() } : undefined,
+      );
+
+      setGeneratedLink(response.paymentLink);
+      setMessage("Payment link generated successfully.");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not generate payment link.",
+      );
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
   if (loading) {
     return (
       <AdminShell title="Order Details" subtitle="Loading...">
@@ -131,9 +182,11 @@ export default function AdminOrderDetailPage() {
     return (
       <AdminShell title="Order Details" subtitle="Error">
         <div className="rounded-[2rem] border border-rose-200 bg-rose-50 p-8 text-center">
-          <p className="text-rose-700 font-medium">{error || "Order not found"}</p>
-          <Link 
-            href="/admin/orders" 
+          <p className="text-rose-700 font-medium">
+            {error || "Order not found"}
+          </p>
+          <Link
+            href="/admin/orders"
             className="mt-6 inline-block rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
           >
             ← Back to Orders
@@ -144,13 +197,13 @@ export default function AdminOrderDetailPage() {
   }
 
   return (
-    <AdminShell 
-      title={`Order #${order.orderNumber}`} 
+    <AdminShell
+      title={`Order #${order.orderNumber}`}
       subtitle={`Management for order ${order.id}`}
     >
       <div className="mb-6">
-        <Link 
-          href="/admin/orders" 
+        <Link
+          href="/admin/orders"
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
         >
           ← Back to Dashboard
@@ -159,13 +212,17 @@ export default function AdminOrderDetailPage() {
 
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="min-w-0 space-y-8 lg:col-span-2">
           {/* Status & Summary */}
           <div className="rounded-[2.5rem] bg-white p-8 shadow-[0_20px_50px_rgba(15,23,42,0.06)] border border-slate-100">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-6">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Overview</p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-900">Order Information</h2>
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Overview
+                </p>
+                <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                  Order Information
+                </h2>
               </div>
               <div className="flex gap-2">
                 <AdminBadge label={titleCase(order.orderStatus)} />
@@ -174,17 +231,27 @@ export default function AdminOrderDetailPage() {
             </div>
 
             <div className="mt-8 grid gap-8 sm:grid-cols-2">
-              <div className="space-y-4">
+              <div className="min-w-0 space-y-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Customer</p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">{order.customer.firstName} {order.customer.lastName}</p>
-                  <p className="text-sm text-slate-600">{order.customer.email}</p>
-                  <p className="text-sm text-slate-600">{order.customer.phoneNumber}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Customer
+                  </p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">
+                    {order.customer.firstName} {order.customer.lastName}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    {order.customer.email}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    {order.customer.phoneNumber}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Delivery Address</p>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                    {typeof order.deliveryAddress === 'object' 
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Delivery Address
+                  </p>
+                  <p className="mt-1 break-all text-sm leading-relaxed text-slate-600">
+                    {typeof order.deliveryAddress === "object"
                       ? `${order.deliveryAddress.street}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state}`
                       : order.deliveryAddress}
                   </p>
@@ -192,17 +259,29 @@ export default function AdminOrderDetailPage() {
               </div>
               <div className="space-y-4 text-right sm:text-left">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Created At</p>
-                  <p className="mt-1 text-slate-900 font-medium">{new Date(order.createdAt).toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Last Updated</p>
-                  <p className="mt-1 text-slate-900 font-medium">{new Date(order.updatedAt).toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Delivery Method</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Created At
+                  </p>
                   <p className="mt-1 text-slate-900 font-medium">
-                    {typeof order.deliveryMethod === 'object' ? order.deliveryMethod.name : order.deliveryMethod}
+                    {new Date(order.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Last Updated
+                  </p>
+                  <p className="mt-1 text-slate-900 font-medium">
+                    {new Date(order.updatedAt).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Delivery Method
+                  </p>
+                  <p className="mt-1 text-slate-900 font-medium">
+                    {typeof order.deliveryMethod === "object"
+                      ? order.deliveryMethod.name
+                      : order.deliveryMethod}
                   </p>
                 </div>
               </div>
@@ -211,27 +290,47 @@ export default function AdminOrderDetailPage() {
 
           {/* Products */}
           <div className="rounded-[2.5rem] bg-white p-8 shadow-[0_20px_50px_rgba(15,23,42,0.06)] border border-slate-100">
-            <h3 className="text-xl font-bold text-slate-900 mb-6">Order Items</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <h3 className="text-xl font-bold text-slate-900 mb-6">
+              Order Items
+            </h3>
+            <div className="overflow-x-auto -mx-8 px-8">
+              <table className="w-full min-w-[400px] text-left">
                 <thead>
                   <tr className="border-b border-slate-100 pb-4">
-                    <th className="pb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Product</th>
-                    <th className="pb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Qty</th>
-                    <th className="pb-4 text-right text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Price</th>
-                    <th className="pb-4 text-right text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total</th>
+                    <th className="pb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Product
+                    </th>
+                    <th className="pb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Qty
+                    </th>
+                    <th className="pb-4 text-right text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Price
+                    </th>
+                    <th className="pb-4 text-right text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Total
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {order.products.map((product, idx) => (
                     <tr key={idx}>
                       <td className="py-4">
-                        <p className="font-bold text-slate-900">{product.productName}</p>
-                        <p className="text-xs text-slate-500">{product.productId}</p>
+                        <p className="font-bold text-slate-900">
+                          {product.productName}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {product.productId}
+                        </p>
                       </td>
-                      <td className="py-4 text-center font-medium text-slate-900">{product.quantity}</td>
-                      <td className="py-4 text-right font-medium text-slate-900">{formatCurrency(product.price)}</td>
-                      <td className="py-4 text-right font-bold text-slate-900">{formatCurrency(product.amount)}</td>
+                      <td className="py-4 text-center font-medium text-slate-900">
+                        {product.quantity}
+                      </td>
+                      <td className="py-4 text-right font-medium text-slate-900">
+                        {formatCurrency(product.price)}
+                      </td>
+                      <td className="py-4 text-right font-bold text-slate-900">
+                        {formatCurrency(product.amount)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -241,14 +340,83 @@ export default function AdminOrderDetailPage() {
         </div>
 
         {/* Sidebar / Actions */}
-        <div className="space-y-8">
+        <div className="min-w-0 space-y-8">
+          {/* Payment Link Actions */}
+          <div className="rounded-[2.5rem] bg-slate-50 p-8 text-slate-900 shadow-[0_20px_50px_rgba(15,23,42,0.06)] border border-slate-100">
+            <h3 className="text-xl font-bold mb-2">Generate Payment Link</h3>
+            <p className="text-sm text-slate-600 mb-6">
+              Send a fresh payment link to the customer for this order.
+            </p>
+
+            <div className="space-y-4">
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Callback URL{" "}
+                  <span className="font-normal text-slate-400">(optional)</span>
+                </span>
+                <input
+                  value={linkCallbackUrl}
+                  onChange={(e) => setLinkCallbackUrl(e.target.value)}
+                  placeholder="https://your-site.com/orders"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                />
+              </label>
+
+              {generatedLink ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                    Payment link
+                  </p>
+                  <a
+                    href={generatedLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block break-all text-sm font-medium text-emerald-800 underline underline-offset-2 hover:text-emerald-600"
+                  >
+                    {generatedLink}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(generatedLink);
+                    }}
+                    className="rounded-full border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                  >
+                    Copy link
+                  </button>
+                </div>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => void generateOrderPaymentLink()}
+                disabled={generatingLink}
+                className="w-full rounded-2xl bg-[#0a2a78] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {generatingLink ? "Generating..." : "Generate payment link"}
+              </button>
+
+              {message ? (
+                <p className="text-xs text-emerald-700 font-medium">
+                  {message}
+                </p>
+              ) : null}
+              {error ? (
+                <p className="text-xs text-rose-700 font-medium">{error}</p>
+              ) : null}
+            </div>
+          </div>
+
           {/* Management Actions */}
           <div className="rounded-[2.5rem] bg-slate-950 p-8 text-white shadow-[0_20px_50px_rgba(15,23,42,0.15)]">
             <h3 className="text-xl font-bold mb-6">Manage Order</h3>
             <form onSubmit={updateOrder} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Order Status</label>
+                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  Order Status
+                </label>
                 <select
+                  aria-label="Order status"
                   value={updateForm.orderStatus ?? ""}
                   onChange={(e) =>
                     setUpdateForm({
@@ -263,14 +431,23 @@ export default function AdminOrderDetailPage() {
                   <option value="" className="bg-slate-900">
                     Keep current ({titleCase(order.orderStatus)})
                   </option>
-                  {orderStatusOptions.map(status => (
-                    <option key={status} value={status} className="bg-slate-900">{titleCase(status)}</option>
+                  {orderStatusOptions.map((status) => (
+                    <option
+                      key={status}
+                      value={status}
+                      className="bg-slate-900"
+                    >
+                      {titleCase(status)}
+                    </option>
                   ))}
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Payment Status</label>
+                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  Payment Status
+                </label>
                 <select
+                  aria-label="Payment status"
                   value={updateForm.paymentStatus ?? ""}
                   onChange={(e) =>
                     setUpdateForm({
@@ -285,14 +462,26 @@ export default function AdminOrderDetailPage() {
                   <option value="" className="bg-slate-900">
                     Keep current ({titleCase(order.paymentStatus)})
                   </option>
-                  {paymentStatusOptions.map(status => (
-                    <option key={status} value={status} className="bg-slate-900">{titleCase(status)}</option>
+                  {paymentStatusOptions.map((status) => (
+                    <option
+                      key={status}
+                      value={status}
+                      className="bg-slate-900"
+                    >
+                      {titleCase(status)}
+                    </option>
                   ))}
                 </select>
               </div>
-              
-              {message && <p className="text-xs text-emerald-400 font-medium">{message}</p>}
-              {error && <p className="text-xs text-rose-400 font-medium">{error}</p>}
+
+              {message && (
+                <p className="text-xs text-emerald-400 font-medium">
+                  {message}
+                </p>
+              )}
+              {error && (
+                <p className="text-xs text-rose-400 font-medium">{error}</p>
+              )}
 
               <button
                 type="submit"
@@ -306,19 +495,27 @@ export default function AdminOrderDetailPage() {
 
           {/* Financial Summary */}
           <div className="rounded-[2.5rem] bg-white p-8 shadow-[0_20px_50px_rgba(15,23,42,0.06)] border border-slate-100">
-            <h3 className="text-xl font-bold text-slate-900 mb-6">Financial Summary</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-6">
+              Financial Summary
+            </h3>
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500 font-medium">Subtotal</span>
-                <span className="text-slate-900 font-bold">{formatCurrency(order.transaction.subTotal)}</span>
+                <span className="text-slate-900 font-bold">
+                  {formatCurrency(order.transaction.subTotal)}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500 font-medium">Delivery Fee</span>
-                <span className="text-slate-900 font-bold">{formatCurrency(order.transaction.deliveryFee)}</span>
+                <span className="text-slate-900 font-bold">
+                  {formatCurrency(order.transaction.deliveryFee)}
+                </span>
               </div>
               <div className="border-t border-slate-100 pt-4 flex justify-between">
                 <span className="text-slate-900 font-bold">Total Amount</span>
-                <span className="text-2xl font-black text-[#0a2a78]">{formatCurrency(order.transaction.totalAmount)}</span>
+                <span className="text-2xl font-black text-[#0a2a78]">
+                  {formatCurrency(order.transaction.totalAmount)}
+                </span>
               </div>
             </div>
           </div>

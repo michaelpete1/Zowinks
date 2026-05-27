@@ -263,6 +263,7 @@ export type PortalOrder = {
     phoneNumber: string;
   };
   products: PortalOrderItem[];
+  quoteDetails?: PortalQuoteDetails;
   transaction: {
     deliveryFee: number;
     totalAmount: number;
@@ -316,6 +317,11 @@ export type PortalOrderListResponse = {
   orders: PortalOrder[];
 };
 
+export type PortalCreateOrderResponse = {
+  success: true;
+  paymentLink: string;
+};
+
 export type PortalOrderDetailResponse = {
   success: true;
   order: PortalOrder;
@@ -328,6 +334,8 @@ export type PortalOrderStatsResponse = {
 
 export type CreatePortalOrderInput = {
   customer: PortalOrderCustomerInput;
+  callbackUrl?: string;
+  generatePaymentLink?: boolean;
   from?: {
     email: string;
   };
@@ -440,6 +448,15 @@ export type AdminOrderCreateInput = {
 export type AdminOrderUpdateInput = {
   orderStatus?: AdminOrderStatus;
   paymentStatus?: AdminPaymentStatus;
+};
+
+export type AdminGeneratePaymentLinkInput = {
+  callbackUrl?: string;
+};
+
+export type AdminGeneratePaymentLinkResponse = {
+  success: true;
+  paymentLink: string;
 };
 
 export type AdminOrderProductsUpdateInput = {
@@ -640,12 +657,17 @@ type ApiEntityWithId = {
   _id?: string;
 };
 
-const normalizeEntityId = <T extends ApiEntityWithId>(entity: T): T & { id: string } => ({
-  ...entity,
-  id: MONGO_OBJECT_ID_PATTERN.test(entity._id || "")
-    ? entity._id!
-    : entity.id || "",
-});
+const normalizeEntityId = <T extends ApiEntityWithId>(entity: T): T & { id: string } => {
+  if (entity == null || typeof entity !== "object") {
+    return { id: "" } as unknown as T & { id: string };
+  }
+  return {
+    ...entity,
+    id: MONGO_OBJECT_ID_PATTERN.test(entity._id || "")
+      ? entity._id!
+      : entity.id || "",
+  };
+};
 
 const normalizeAdminTeamMember = (
   member: AdminTeamMember & { _id?: string },
@@ -655,7 +677,10 @@ const normalizeOrder = (order: PortalOrder & { _id?: string }): PortalOrder =>
   normalizeEntityId(order);
 
 const normalizeOrders = (orders: (PortalOrder & { _id?: string })[]): PortalOrder[] =>
-  (orders || []).map(normalizeOrder).filter((order) => Boolean(order.id));
+  (orders || [])
+    .filter((order): order is PortalOrder & { _id?: string } => order != null)
+    .map(normalizeOrder)
+    .filter((order) => Boolean(order.id));
 
 const normalizeProductImage = (product: {
   image?: unknown;
@@ -801,38 +826,52 @@ async function readApiError(response: Response) {
   console.error("API ERROR TRACE", response.status, response.url, text, payload);
 
   const msg = Array.isArray(payload?.message) ? payload.message.join(", ") : payload?.message;
-  const details =
-    typeof payload?.details === "string" && payload.details.trim()
-      ? payload.details.trim()
-      : "";
-  const upstreamBody =
-    typeof payload?.upstreamBody === "string" && payload.upstreamBody.trim()
-      ? payload.upstreamBody.trim()
-      : "";
-  const upstreamStatus =
-    typeof payload?.upstreamStatus === "number" ? payload.upstreamStatus : null;
-
-  const extra = [details, upstreamStatus ? `Upstream status: ${upstreamStatus}` : "", upstreamBody]
-    .filter(Boolean)
-    .join(" ");
 
   if (response.status === 401) {
-    return (
-      msg ||
-      "Unauthorized. Please sign in again or save a valid admin bearer token in settings."
-    );
+    return "Your session has expired. Please sign in again.";
   }
 
-  return (
-    msg ||
-    (payload?.error === "Upstream API error" && extra
-      ? `Upstream API error: ${extra}`
-      : "") ||
-    payload?.error ||
-    text ||
-    response.statusText ||
-    "Request failed"
-  );
+  if (response.status === 403) {
+    return "You do not have permission to perform this action.";
+  }
+
+  if (response.status === 404) {
+    return "We could not find the requested item.";
+  }
+
+  if (response.status === 409) {
+    return "That item already exists.";
+  }
+
+  if (response.status === 429) {
+    return "Too many requests. Please wait a moment and try again.";
+  }
+
+  if (response.status === 400 || response.status === 422) {
+    const validationLike = Boolean(
+      payload?.errors ||
+        Array.isArray(payload?.message) ||
+        /zod|validation|required|invalid|expected/i.test(
+          [
+            typeof payload?.message === "string" ? payload.message : "",
+            typeof payload?.error === "string" ? payload.error : "",
+            typeof text === "string" ? text : "",
+          ].join(" "),
+        ),
+    );
+
+    if (validationLike) {
+      return "Please review the form fields and try again.";
+    }
+
+    return "We could not complete that request. Please check your input and try again.";
+  }
+
+  if (response.status >= 500) {
+    return "Something went wrong on the server. Please try again.";
+  }
+
+  return msg || "We could not complete your request. Please try again.";
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
@@ -1250,7 +1289,7 @@ export const zowkinsApi = {
       },
     }).then((res) => ({
       ...res,
-      order: normalizeOrder(res.order as AdminOrder & { _id?: string }),
+      order: normalizeOrder((res.order ?? {}) as AdminOrder & { _id?: string }),
     }));
   },
   updateAdminOrder(token: string, orderId: string, payload: AdminOrderUpdateInput) {
@@ -1263,7 +1302,7 @@ export const zowkinsApi = {
       body: JSON.stringify(payload),
     }).then((res) => ({
       ...res,
-      order: normalizeOrder(res.order as AdminOrder & { _id?: string }),
+      order: normalizeOrder((res.order ?? {}) as AdminOrder & { _id?: string }),
     }));
   },
   updateAdminOrderProducts(token: string, orderId: string, payload: AdminOrderProductsUpdateInput) {
@@ -1276,8 +1315,33 @@ export const zowkinsApi = {
       body: JSON.stringify(payload),
     }).then((res) => ({
       ...res,
-      order: normalizeOrder(res.order as AdminOrder & { _id?: string }),
+      order: normalizeOrder((res.order ?? {}) as AdminOrder & { _id?: string }),
     }));
+  },
+  generateAdminOrderPaymentLink(token: string, orderId: string, payload?: AdminGeneratePaymentLinkInput) {
+    const raw = payload?.callbackUrl?.trim();
+    let callbackUrl: string;
+    if (raw) {
+      try {
+        new URL(raw);
+        callbackUrl = raw;
+      } catch {
+        callbackUrl = typeof window !== "undefined" ? window.location.origin + "/admin/orders" : "https://zowkins.com/admin/orders";
+      }
+    } else {
+      callbackUrl = typeof window !== "undefined" ? window.location.origin + "/admin/orders" : "https://zowkins.com/admin/orders";
+    }
+    return apiRequest<AdminGeneratePaymentLinkResponse>(
+      `/admin/orders/${encodeURIComponent(orderId)}/generate-payment-link`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ callbackUrl }),
+      },
+    );
   },
   listAdminTeam(token: string) {
     return apiRequest<AdminTeamMember[]>("/admin/team", {
@@ -1493,17 +1557,37 @@ export const zowkinsApi = {
     // Ensure from and argument are populated if missing, as they seem to be required by some backends
     const finalPayload = {
       ...payload,
+      generatePaymentLink: payload.generatePaymentLink ?? true,
       from: payload.from || { email: payload.customer.email },
       argument: payload.argument || { from: { email: payload.customer.email } },
     };
 
-    return apiRequest<{ success: true; order: PortalOrder }>("/portal/orders", {
+    return apiRequest<
+      PortalCreateOrderResponse & {
+        order?: PortalOrder;
+        paymentUrl?: string;
+        authorizationUrl?: string;
+        authorization_url?: string;
+        link?: string;
+        url?: string;
+        data?: {
+          authorization_url?: string;
+          authorizationUrl?: string;
+          paymentLink?: string;
+          paymentUrl?: string;
+          link?: string;
+          url?: string;
+        };
+      }
+    >("/portal/orders", {
       method: "POST",
       headers,
       body: JSON.stringify(finalPayload),
     }).then((res) => ({
       ...res,
-      order: normalizeOrder(res.order as PortalOrder & { _id?: string }),
+      order: res.order
+        ? normalizeOrder(res.order as PortalOrder & { _id?: string })
+        : undefined,
     }));
   },
   listPortalOrders(token: string, query?: { sortBy?: string; limit?: number; page?: number }) {
@@ -1529,7 +1613,7 @@ export const zowkinsApi = {
       },
     }).then((res) => ({
       ...res,
-      order: normalizeOrder(res.order as PortalOrder & { _id?: string }),
+      order: normalizeOrder((res.order ?? {}) as PortalOrder & { _id?: string }),
     }));
   },
   getRecentPortalOrders(token: string) {

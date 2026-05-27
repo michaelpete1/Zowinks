@@ -290,7 +290,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
                         {key}
                       </p>
-                      <p className="mt-1 text-sm font-semibold leading-6 text-white break-words [overflow-wrap:anywhere]">
+                      <p className="mt-1 text-sm font-semibold leading-6 text-white [overflow-wrap:anywhere]">
                         {formatSpecValue(value)}
                       </p>
                     </div>
@@ -442,7 +442,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
                     {key}
                   </p>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-white break-words [overflow-wrap:anywhere]">
+                  <p className="mt-2 text-sm font-semibold leading-6 text-white [overflow-wrap:anywhere]">
                     {formatSpecValue(value)}
                   </p>
                 </div>

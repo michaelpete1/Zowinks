@@ -13,10 +13,13 @@ import {
   normalizeOrderGender,
 } from "../../lib/zowkins-api";
 import { resolveImageSource } from "../../lib/media";
+import { getSiteUrl } from "../../lib/site-url";
 
 type OrderStage = "form" | "processing" | "success";
 
 const MONGO_OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/;
+
+type PaymentType = "pay_now" | "pay_on_delivery";
 
 type OrderFormState = {
   name: string;
@@ -31,6 +34,7 @@ type OrderFormState = {
   pickupPoint: string;
   note: string;
   deliveryMethod: string;
+  paymentType: PaymentType;
 };
 
 const emptyFormState: OrderFormState = {
@@ -46,6 +50,7 @@ const emptyFormState: OrderFormState = {
   pickupPoint: "",
   note: "",
   deliveryMethod: "",
+  paymentType: "pay_now",
 };
 
 function currency(value: number) {
@@ -101,6 +106,17 @@ export default function Cart() {
       current.filter((id) => items.some((item) => item.id === id)),
     );
   }, [items]);
+
+  // Detect return from payment gateway via ?payment=success query param
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") === "success") {
+      setStage("success");
+      clearCart();
+      window.history.replaceState({}, "", "/cart");
+    }
+  }, [clearCart]);
 
   const [retryCount, setRetryCount] = useState(0);
 
@@ -224,8 +240,46 @@ export default function Cart() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const getPaymentLink = (response: Record<string, unknown>) => {
+    const candidates = [
+      response.paymentLink,
+      response.paymentUrl,
+      response.authorizationUrl,
+      response.authorization_url,
+      response.link,
+      response.url,
+    ];
+
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" && candidate.trim()) {
+        return candidate.trim();
+      }
+    }
+
+    const data = response.data as Record<string, unknown> | undefined;
+    if (data) {
+      const nestedCandidates = [
+        data.authorization_url,
+        data.authorizationUrl,
+        data.paymentLink,
+        data.paymentUrl,
+        data.link,
+        data.url,
+      ];
+
+      for (const candidate of nestedCandidates) {
+        if (typeof candidate === "string" && candidate.trim()) {
+          return candidate.trim();
+        }
+      }
+    }
+
+    return "";
+  };
+
   const submitOrder = async () => {
     const nameParts = formData.name.trim().split(/\s+/).filter(Boolean);
+
     const firstName = nameParts[0] || formData.name.trim();
     const lastName = nameParts.slice(1).join(" ") || "";
     const street =
@@ -273,6 +327,8 @@ export default function Cart() {
         country: formData.country.trim() || "Nigeria",
         postalCode: formData.postalCode.trim(),
       },
+      callbackUrl: `${getSiteUrl()}/cart?payment=success`,
+      generatePaymentLink: formData.paymentType === "pay_now",
       deliveryMethod: selectedDeliveryMethod,
     };
 
@@ -281,7 +337,7 @@ export default function Cart() {
       payload,
     );
 
-    return response.order;
+    return response;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -309,8 +365,19 @@ export default function Cart() {
 
     try {
       setStage("processing");
-      const order = await submitOrder();
-      setOrderReference(order.orderNumber || order.id);
+      const response = await submitOrder();
+
+      const paymentLink = getPaymentLink(response as Record<string, unknown>);
+      if (paymentLink) {
+        window.location.assign(paymentLink);
+        return;
+      }
+
+      const order = (response as any).order as {
+        orderNumber?: string;
+        id?: string;
+      };
+      setOrderReference(order?.orderNumber || order?.id || "");
       setStage("success");
       clearCart();
     } catch (err) {
@@ -804,6 +871,49 @@ export default function Cart() {
                       ) : null}
                     </div>
 
+                    {/* Payment method toggle */}
+                    <div className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 sm:p-6">
+                      <label className="block text-sm font-semibold text-white">
+                        Payment method
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, paymentType: "pay_now" })
+                          }
+                          className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                            formData.paymentType === "pay_now"
+                              ? "border-[#f3c74d]/60 bg-[#f3c74d]/10 text-[#f3c74d]"
+                              : "border-white/10 bg-white/5 text-white hover:border-white/20 hover:bg-white/10"
+                          }`}
+                        >
+                          Pay Now
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              paymentType: "pay_on_delivery",
+                            })
+                          }
+                          className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                            formData.paymentType === "pay_on_delivery"
+                              ? "border-[#f3c74d]/60 bg-[#f3c74d]/10 text-[#f3c74d]"
+                              : "border-white/10 bg-white/5 text-white hover:border-white/20 hover:bg-white/10"
+                          }`}
+                        >
+                          Pay on Delivery
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        {formData.paymentType === "pay_now"
+                          ? "You'll be redirected to our secure payment gateway to complete your purchase."
+                          : "Pay when your order arrives at your delivery address."}
+                      </p>
+                    </div>
+
                     {error ? (
                       <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
                         {error}
@@ -815,7 +925,11 @@ export default function Cart() {
                       disabled={submitting}
                       className="w-full rounded-full bg-[#0b1d3b] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#0b1d3b]/20 transition hover:bg-[#12386a] sm:px-8 sm:py-4"
                     >
-                      {submitting ? "Submitting..." : "Place order"}
+                      {submitting
+                        ? "Submitting..."
+                        : formData.paymentType === "pay_now"
+                          ? "Place order & pay now"
+                          : "Place order"}
                     </button>
                   </form>
                 </div>

@@ -30,14 +30,24 @@ type OrderItemForm = {
 };
 
 type CreateOrderForm = {
+  customerMode: "select" | "manual";
   customer: string;
+  customerFirstName: string;
+  customerLastName: string;
+  customerEmail: string;
+  customerPhone: string;
   deliveryAddress: string;
   deliveryMethod: string;
   items: OrderItemForm[];
 };
 
 const emptyCreateForm = (): CreateOrderForm => ({
+  customerMode: "manual",
   customer: "",
+  customerFirstName: "",
+  customerLastName: "",
+  customerEmail: "",
+  customerPhone: "",
   deliveryAddress: "",
   deliveryMethod: "",
   items: [{ productId: "", quantity: "1" }],
@@ -165,6 +175,10 @@ export default function OrdersPage() {
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
 
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState("");
+  const [linkCallbackUrl, setLinkCallbackUrl] = useState("");
+
   useEffect(() => {
     if (!session?.accessToken || typeof window === "undefined") return;
 
@@ -276,6 +290,8 @@ export default function OrdersPage() {
   useEffect(() => {
     if (!selectedOrder) return;
 
+    setGeneratedLink("");
+    setLinkCallbackUrl("");
     setUpdateForm({
       orderStatus: normalizeOrderStatus(selectedOrder.orderStatus),
       paymentStatus: normalizePaymentStatus(selectedOrder.paymentStatus),
@@ -341,31 +357,48 @@ export default function OrdersPage() {
       return;
     }
 
-    const payload = {
-      customer: createForm.customer.trim(),
+    const items = createForm.items
+      .map((item) => ({
+        productId: item.productId.trim(),
+        quantity: Number(item.quantity),
+      }))
+      .filter(
+        (item) =>
+          item.productId &&
+          Number.isFinite(item.quantity) &&
+          item.quantity > 0,
+      );
+
+    const customerId = createForm.customerMode === "select"
+      ? createForm.customer.trim()
+      : createForm.customerEmail.trim();
+
+    const payload: Record<string, unknown> = {
+      customer: customerId,
+      ...(createForm.customerMode === "manual" && {
+        customerFirstName: createForm.customerFirstName.trim(),
+        customerLastName: createForm.customerLastName.trim(),
+        customerPhone: createForm.customerPhone.trim(),
+      }),
       deliveryAddress: createForm.deliveryAddress.trim(),
       deliveryMethod: createForm.deliveryMethod.trim(),
-      items: createForm.items
-        .map((item) => ({
-          productId: item.productId.trim(),
-          quantity: Number(item.quantity),
-        }))
-        .filter(
-          (item) =>
-            item.productId &&
-            Number.isFinite(item.quantity) &&
-            item.quantity > 0,
-        ),
+      items,
     };
 
+    const customerValid = createForm.customerMode === "select"
+      ? Boolean(createForm.customer.trim())
+      : Boolean(createForm.customerEmail.trim());
+
     if (
-      !payload.customer ||
+      !customerValid ||
       !payload.deliveryAddress ||
       !payload.deliveryMethod ||
       payload.items.length === 0
     ) {
       setError(
-        "Fill out the customer, delivery address, delivery method, and at least one product.",
+        createForm.customerMode === "select"
+          ? "Fill out the customer, delivery address, delivery method, and at least one product."
+          : "Fill out the customer email, delivery address, delivery method, and at least one product.",
       );
       return;
     }
@@ -377,10 +410,12 @@ export default function OrdersPage() {
     try {
       const response = await zowkinsApi.createAdminOrder(
         apiConnection.accessToken.trim(),
-        payload,
+        payload as Parameters<typeof zowkinsApi.createAdminOrder>[1],
       );
+
       setMessage("Order created successfully.");
       setSelectedOrder(response.order);
+
       setCreateForm(emptyCreateForm());
       await loadOrders();
     } catch (err) {
@@ -485,6 +520,31 @@ export default function OrdersPage() {
     }
   };
 
+  const generateOrderPaymentLink = async () => {
+    if (!apiReady || !selectedOrder) return;
+    setGeneratingLink(true);
+    setError("");
+    setMessage("");
+    setGeneratedLink("");
+    try {
+      const response = await zowkinsApi.generateAdminOrderPaymentLink(
+        apiConnection.accessToken.trim(),
+        selectedOrder.id,
+        linkCallbackUrl.trim() ? { callbackUrl: linkCallbackUrl.trim() } : undefined,
+      );
+      setGeneratedLink(response.paymentLink);
+      setMessage("Payment link generated successfully.");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Could not generate payment link.",
+      );
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
   const addItemRow = () =>
     setUpdateItems((current) => [...current, { productId: "", quantity: "1" }]);
   const removeItemRow = (index: number) =>
@@ -501,7 +561,7 @@ export default function OrdersPage() {
       searchPlaceholder="Search orders..."
     >
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
+        <section className="min-w-0 rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
@@ -514,7 +574,7 @@ export default function OrdersPage() {
             <AdminBadge label={apiReady ? "Visible" : "Hidden"} />
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
             <div className="rounded-[1.2rem] bg-slate-50 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Total
@@ -577,8 +637,8 @@ export default function OrdersPage() {
           ) : null}
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <label className="sr-only">
-              Order status
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              <span>Order status</span>
               <select
                 value={filterOrderStatus}
                 onChange={(event) => {
@@ -595,8 +655,8 @@ export default function OrdersPage() {
                 ))}
               </select>
             </label>
-            <label className="sr-only">
-              Payment status
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              <span>Payment status</span>
               <select
                 value={filterPaymentStatus}
                 onChange={(event) => {
@@ -676,14 +736,14 @@ export default function OrdersPage() {
             {filteredOrders.map((order) => (
               <article
                 key={order.id}
-                className={`rounded-[1.4rem] border p-4 md:p-5 ${selectedOrder?.id === order.id ? "border-[#0a2a78] bg-[#f6f9ff]" : "border-slate-100 bg-slate-50"}`}
+                className={`min-w-0 rounded-[1.4rem] border p-4 md:p-5 ${selectedOrder?.id === order.id ? "border-[#0a2a78] bg-[#f6f9ff]" : "border-slate-100 bg-slate-50"}`}
               >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="font-semibold text-slate-900">
+                <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-slate-900">
                       {getOrderTitle(order)}
                     </p>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="mt-1 truncate text-sm text-slate-600">
                       {order.orderNumber}
                     </p>
                   </div>
@@ -712,7 +772,7 @@ export default function OrdersPage() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-xs uppercase tracking-[0.24em] text-slate-500">
+                  <span className="text-xs text-slate-500">
                     Updated {new Date(order.updatedAt).toLocaleString()}
                   </span>
                   <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
@@ -741,7 +801,7 @@ export default function OrdersPage() {
           </div>
         </section>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <section className="rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">
               Admin access
@@ -793,7 +853,7 @@ export default function OrdersPage() {
             </div>
           </section>
 
-          <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
+          <section className="min-w-0 overflow-hidden rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
               Create order
             </p>
@@ -801,26 +861,95 @@ export default function OrdersPage() {
               Create a new admin order
             </h2>
             <form onSubmit={createOrder} className="mt-6 space-y-4">
-              <label className="grid gap-2 text-sm font-medium text-slate-700">
-                <span>Customer</span>
-                <select
-                  value={createForm.customer}
-                  onChange={(event) =>
-                    setCreateForm((current) => ({
-                      ...current,
-                      customer: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+              {/* Customer mode toggle */}
+              <div className="flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
+                <button
+                  type="button"
+                  onClick={() => setCreateForm((c) => ({ ...c, customerMode: "manual" }))}
+                  className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
+                    createForm.customerMode === "manual"
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
                 >
-                  <option value="">Select customer</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {getCustomerLabel(customer)} - {customer.email}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  Enter details
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreateForm((c) => ({ ...c, customerMode: "select" }))}
+                  className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
+                    createForm.customerMode === "select"
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  Select saved
+                </button>
+              </div>
+
+              {createForm.customerMode === "manual" ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="grid gap-2 text-sm font-medium text-slate-700">
+                    <span>First name</span>
+                    <input
+                      value={createForm.customerFirstName}
+                      onChange={(e) => setCreateForm((c) => ({ ...c, customerFirstName: e.target.value }))}
+                      placeholder="John"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium text-slate-700">
+                    <span>Last name</span>
+                    <input
+                      value={createForm.customerLastName}
+                      onChange={(e) => setCreateForm((c) => ({ ...c, customerLastName: e.target.value }))}
+                      placeholder="Doe"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+                    <span>Email <span className="text-rose-500">*</span></span>
+                    <input
+                      value={createForm.customerEmail}
+                      onChange={(e) => setCreateForm((c) => ({ ...c, customerEmail: e.target.value }))}
+                      placeholder="john@example.com"
+                      type="email"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+                    <span>Phone number</span>
+                    <input
+                      value={createForm.customerPhone}
+                      onChange={(e) => setCreateForm((c) => ({ ...c, customerPhone: e.target.value }))}
+                      placeholder="+2348012345678"
+                      type="tel"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                    />
+                  </label>
+                </div>
+              ) : (
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  <span>Customer</span>
+                  <select
+                    value={createForm.customer}
+                    onChange={(event) =>
+                      setCreateForm((current) => ({
+                        ...current,
+                        customer: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                  >
+                    <option value="">Select customer</option>
+                    {customers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {getCustomerLabel(customer)} - {customer.email}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 <span>Delivery address</span>
                 <input
@@ -860,31 +989,33 @@ export default function OrdersPage() {
                 {createForm.items.map((item, index) => (
                   <div
                     key={index}
-                    className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[minmax(0,1fr)_120px_minmax(0,auto)]"
+                    className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4"
                   >
                     <label className="grid gap-2 text-sm font-medium text-slate-700">
                       <span>Product</span>
-                      <select
-                        value={item.productId}
-                        onChange={(event) =>
-                          setCreateForm((current) => ({
-                            ...current,
-                            items: current.items.map((row, rowIndex) =>
-                              rowIndex === index
-                                ? { ...row, productId: event.target.value }
-                                : row,
-                            ),
-                          }))
-                        }
-                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                      >
-                        <option value="">Select product</option>
-                        {products.map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.name} ({product.slug})
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative overflow-hidden rounded-2xl" style={{maxWidth: '100%'}}>
+                        <select
+                          value={item.productId}
+                          onChange={(event) =>
+                            setCreateForm((current) => ({
+                              ...current,
+                              items: current.items.map((row, rowIndex) =>
+                                rowIndex === index
+                                  ? { ...row, productId: event.target.value }
+                                  : row,
+                              ),
+                            }))
+                          }
+                          className="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-3 py-5 text-sm leading-tight outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                        >
+                          <option value="">Select product</option>
+                          {products.map((product) => (
+                            <option key={product.id} value={product.id}>
+                              {product.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </label>
                     <label className="grid gap-2 text-sm font-medium text-slate-700">
                       <span>Quantity</span>
@@ -902,7 +1033,7 @@ export default function OrdersPage() {
                         }
                         type="number"
                         min="1"
-                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
                       />
                     </label>
                     <button
@@ -918,7 +1049,7 @@ export default function OrdersPage() {
                               : current.items,
                         }))
                       }
-                      className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                      className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                     >
                       Remove
                     </button>
@@ -955,7 +1086,7 @@ export default function OrdersPage() {
 
           <section
             id="order-details"
-            className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8"
+            className="min-w-0 overflow-hidden rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
               Selected order
@@ -1107,6 +1238,57 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
+                {/* Generate Payment Link */}
+                <div className="rounded-[1.4rem] bg-slate-50 p-4 space-y-3">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Generate Payment Link
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Send a fresh payment link to the customer for this order.
+                  </p>
+                  <label className="grid gap-2 text-sm font-medium text-slate-700">
+                    <span>Callback URL <span className="font-normal text-slate-500">(optional)</span></span>
+                    <input
+                      value={linkCallbackUrl}
+                      onChange={(e) => setLinkCallbackUrl(e.target.value)}
+                      placeholder="https://your-site.com/orders"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                    />
+                  </label>
+                  {generatedLink ? (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                        Payment link
+                      </p>
+                      <a
+                        href={generatedLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block break-all text-sm font-medium text-emerald-800 underline underline-offset-2 hover:text-emerald-600"
+                      >
+                        {generatedLink}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(generatedLink);
+                        }}
+                        className="rounded-full border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                      >
+                        Copy link
+                      </button>
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => void generateOrderPaymentLink()}
+                    disabled={generatingLink}
+                    className="w-full rounded-2xl bg-[#0a2a78] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {generatingLink ? "Generating..." : "Generate payment link"}
+                  </button>
+                </div>
+
                 <form
                   onSubmit={updateOrder}
                   className="grid gap-4 md:grid-cols-2"
@@ -1167,30 +1349,32 @@ export default function OrdersPage() {
                     {updateItems.map((item, index) => (
                       <div
                         key={index}
-                        className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-[minmax(0,1fr)_120px_minmax(0,auto)]"
+                        className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4"
                       >
                         <label className="grid gap-2 text-sm font-medium text-slate-700">
                           <span>Product</span>
-                          <select
-                            value={item.productId}
-                            onChange={(event) =>
-                              setUpdateItems((current) =>
-                                current.map((row, rowIndex) =>
-                                  rowIndex === index
-                                    ? { ...row, productId: event.target.value }
-                                    : row,
-                                ),
-                              )
-                            }
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                          >
-                            <option value="">Select product</option>
-                            {products.map((product) => (
-                              <option key={product.id} value={product.id}>
-                                {product.name} ({product.slug})
-                              </option>
-                            ))}
-                          </select>
+                          <div className="relative overflow-hidden rounded-2xl" style={{maxWidth: '100%'}}>
+                            <select
+                              value={item.productId}
+                              onChange={(event) =>
+                                setUpdateItems((current) =>
+                                  current.map((row, rowIndex) =>
+                                    rowIndex === index
+                                      ? { ...row, productId: event.target.value }
+                                      : row,
+                                  ),
+                                )
+                              }
+                              className="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-3 py-5 text-sm leading-tight outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                            >
+                              <option value="">Select product</option>
+                              {products.map((product) => (
+                                <option key={product.id} value={product.id}>
+                                  {product.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </label>
                         <label className="grid gap-2 text-sm font-medium text-slate-700">
                           <span>Quantity</span>
@@ -1207,13 +1391,13 @@ export default function OrdersPage() {
                             }
                             type="number"
                             min="1"
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
                           />
                         </label>
                         <button
                           type="button"
                           onClick={() => removeItemRow(index)}
-                          className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                          className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                         >
                           Remove
                         </button>

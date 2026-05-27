@@ -8,6 +8,43 @@ import PortalNavbar from "../../../../components/PortalNavbar";
 
 const MONGO_OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/;
 
+function getPaymentLink(response: Record<string, unknown>) {
+  const candidates = [
+    response.paymentLink,
+    response.paymentUrl,
+    response.authorizationUrl,
+    response.authorization_url,
+    response.link,
+    response.url,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  const data = response.data as Record<string, unknown> | undefined;
+  if (data) {
+    const nestedCandidates = [
+      data.authorization_url,
+      data.authorizationUrl,
+      data.paymentLink,
+      data.paymentUrl,
+      data.link,
+      data.url,
+    ];
+
+    for (const candidate of nestedCandidates) {
+      if (typeof candidate === "string" && candidate.trim()) {
+        return candidate.trim();
+      }
+    }
+  }
+
+  return "";
+}
+
 export default function CreatePortalOrderPage() {
   const router = useRouter();
 
@@ -165,6 +202,7 @@ export default function CreatePortalOrderPage() {
           },
         },
         items: selectedProducts,
+        callbackUrl: `${window.location.origin}/portal/orders`,
         deliveryAddress: {
           phoneNumber: selectedAddressData.phoneNumber,
           street: selectedAddressData.street,
@@ -177,9 +215,14 @@ export default function CreatePortalOrderPage() {
       };
 
       const response = await zowkinsApi.createPortalOrder(token, orderData);
-      
-      // Redirect to order details
-      router.push(`/portal/orders/${response.order.id}`);
+      const paymentLink = getPaymentLink(response as Record<string, unknown>);
+
+      if (paymentLink) {
+        window.location.assign(paymentLink);
+        return;
+      }
+
+      router.push(`/portal/orders/${response.order?.id ?? ""}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create order");
     } finally {

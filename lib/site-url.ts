@@ -1,4 +1,8 @@
 export const getSiteUrl = () => {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
   const url =
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_VERCEL_URL ||
