@@ -329,6 +329,7 @@ export default function OrdersPage() {
     );
   }, [orders, query]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const saveConnection = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (typeof window === "undefined") return;
@@ -373,7 +374,7 @@ export default function OrdersPage() {
       ? createForm.customer.trim()
       : createForm.customerEmail.trim();
 
-    const payload: Record<string, unknown> = {
+    const payload = {
       customer: customerId,
       ...(createForm.customerMode === "manual" && {
         customerFirstName: createForm.customerFirstName.trim(),
@@ -393,7 +394,7 @@ export default function OrdersPage() {
       !customerValid ||
       !payload.deliveryAddress ||
       !payload.deliveryMethod ||
-      payload.items.length === 0
+      items.length === 0
     ) {
       setError(
         createForm.customerMode === "select"
@@ -410,7 +411,7 @@ export default function OrdersPage() {
     try {
       const response = await zowkinsApi.createAdminOrder(
         apiConnection.accessToken.trim(),
-        payload as Parameters<typeof zowkinsApi.createAdminOrder>[1],
+        payload as { customer: string; deliveryAddress: string; deliveryMethod: string; items: { productId: string; quantity: number }[] },
       );
 
       setMessage("Order created successfully.");
