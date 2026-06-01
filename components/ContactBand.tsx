@@ -13,8 +13,8 @@ const officeMapsUrl =
 const contacts = [
   {
     label: "Phone",
-    value: "08064667917",
-    href: "tel:08064667917",
+    value: "07036359024",
+    href: "tel:07036359024",
     icon: (
       <svg
         viewBox="0 0 24 24"

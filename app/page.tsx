@@ -315,7 +315,7 @@ export default async function Home() {
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <a
-                href="tel:08064667917"
+                href="tel:07036359024"
                 className="group flex items-center gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08]"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]">
@@ -336,7 +336,7 @@ export default async function Home() {
                     Phone
                   </p>
                   <p className="mt-1 text-sm font-semibold text-white md:text-base">
-                    08064667917
+                    07036359024
                   </p>
                 </div>
               </a>

@@ -44,8 +44,8 @@ export type AppSettingsResponse = {
 const fallback: App = {
   name: "Zowkins Enterprise",
   address: "Wuse Zone 3, No 7 Maputo Street, Abuja, FCT, Nigeria",
-phoneNumber: "08064667917",
-whatsAppNumber: "08064667917",
+  phoneNumber: "07036359024",
+  whatsAppNumber: "08064667917",
   email: "contact@zowkins.com",
   status: {
     portal: "online",
@@ -60,6 +60,7 @@ whatsAppNumber: "08064667917",
     logomarkLight: "/icon.png",
   },
 };
+
 
 function normalizeApp(input: Partial<App> | null | undefined): App {
   return {

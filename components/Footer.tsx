@@ -132,10 +132,10 @@ export default function Footer() {
 
           <div className="flex flex-col items-start gap-2 text-xs text-slate-400 md:items-end">
             <a
-              href="tel:08064667917"
+              href="tel:07036359024"
               className="transition-colors hover:text-[#f3c74d]"
             >
-              08064667917
+              07036359024
             </a>
             <a
               href="https://wa.me/message/6U6S7AJM4GECJ1"
@@ -173,7 +173,7 @@ export default function Footer() {
 
             <div className="flex flex-wrap gap-3">
               <a
-                href="tel:08064667917"
+                href="tel:07036359024"
                 className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#050b16] px-4 py-2 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:text-[#f3c74d]"
               >
                 <span aria-hidden="true">📞</span>
