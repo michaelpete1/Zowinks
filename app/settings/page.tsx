@@ -40,7 +40,9 @@ export default async function AppSettingsPage() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <span className={`rounded-full border px-4 py-2 text-sm font-semibold ${statusTone(app.status.portal)}`}>
+              <span
+                className={`rounded-full border px-4 py-2 text-sm font-semibold ${statusTone(app.status.portal)}`}
+              >
                 {app.status.portal}
               </span>
               <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white">
@@ -62,7 +64,10 @@ export default async function AppSettingsPage() {
                   <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
                     Email
                   </p>
-                  <a className="mt-2 block break-words text-sm font-semibold text-white" href={`mailto:${app.email}`}>
+                  <a
+                    className="mt-2 block break-words text-sm font-semibold text-white"
+                    href={`mailto:${app.email}`}
+                  >
                     {app.email}
                   </a>
                 </div>
@@ -70,7 +75,10 @@ export default async function AppSettingsPage() {
                   <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
                     Phone
                   </p>
-                  <a className="mt-2 block text-sm font-semibold text-white" href={`tel:${app.phoneNumber}`}>
+                  <a
+                    className="mt-2 block text-sm font-semibold text-white"
+                    href={`tel:${app.phoneNumber}`}
+                  >
                     {app.phoneNumber}
                   </a>
                 </div>
@@ -80,7 +88,7 @@ export default async function AppSettingsPage() {
                   </p>
                   <a
                     className="mt-2 block text-sm font-semibold text-white"
-                    href={`https://wa.me/${app.whatsAppNumber.replace(/\D/g, "")}`}
+                    href="https://wa.me/message/6U6S7AJM4GECJ1"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -105,7 +113,10 @@ export default async function AppSettingsPage() {
                 </p>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   {app.images.slice(0, 4).map((image, index) => (
-                    <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                    <div
+                      key={`${image}-${index}`}
+                      className="overflow-hidden rounded-2xl border border-white/10 bg-black/20"
+                    >
                       <img
                         src={image}
                         alt={`${app.name} ${index + 1}`}
@@ -128,7 +139,7 @@ export default async function AppSettingsPage() {
               Email Us
             </a>
             <a
-              href={`https://wa.me/${app.whatsAppNumber.replace(/\D/g, "")}`}
+              href="https://wa.me/message/6U6S7AJM4GECJ1"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-sm font-semibold text-white transition hover:border-[#f3c74d]/40 hover:bg-white/10"

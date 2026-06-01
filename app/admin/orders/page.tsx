@@ -3,10 +3,10 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminBadge, AdminShell } from "../../../components/AdminShell";
+import { NIGERIA_36_STATES, STATE_TO_CITIES } from "../../../lib/location-data";
 import { useAdminSession } from "../../../hooks/useAdminSession";
 import {
   AdminOrder,
-  AdminCustomer,
   AdminOrderProductUpdateItem,
   AdminOrderStatus,
   AdminPaymentStatus,
@@ -30,25 +30,31 @@ type OrderItemForm = {
 };
 
 type CreateOrderForm = {
-  customerMode: "select" | "manual";
-  customer: string;
   customerFirstName: string;
   customerLastName: string;
   customerEmail: string;
   customerPhone: string;
   deliveryAddress: string;
+  deliveryAddressPhoneNumber: string;
+  deliveryAddressCity: string;
+  deliveryAddressState: string;
+  deliveryAddressCountry: string;
+  deliveryAddressPostalCode: string;
   deliveryMethod: string;
   items: OrderItemForm[];
 };
 
 const emptyCreateForm = (): CreateOrderForm => ({
-  customerMode: "manual",
-  customer: "",
   customerFirstName: "",
   customerLastName: "",
   customerEmail: "",
   customerPhone: "",
   deliveryAddress: "",
+  deliveryAddressPhoneNumber: "",
+  deliveryAddressCity: "",
+  deliveryAddressState: "",
+  deliveryAddressCountry: "",
+  deliveryAddressPostalCode: "",
   deliveryMethod: "",
   items: [{ productId: "", quantity: "1" }],
 });
@@ -67,11 +73,13 @@ const paymentStatusOptions: AdminPaymentStatus[] = [
   "reversed",
 ];
 
-const titleCase = (value: string) =>
-  value
+const titleCase = (value: string | undefined | null) => {
+  if (!value || typeof value !== "string") return "Unknown";
+  return value
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+};
 
 const extractArray = <T,>(response: unknown, keys: string[]): T[] => {
   if (Array.isArray(response)) return response;
@@ -108,15 +116,24 @@ const formatCurrency = (value: number) =>
   }).format(value);
 
 function getOrderTitle(order: AdminOrder) {
-  return (
-    `${order.customer.firstName} ${order.customer.lastName}`.trim() ||
-    order.customer.email ||
-    order.orderNumber
-  );
+  const firstName =
+    typeof order.customer === "object" ? order.customer.firstName : "";
+  const lastName =
+    typeof order.customer === "object" ? order.customer.lastName : "";
+  const email = typeof order.customer === "object" ? order.customer.email : "";
+  const customerName = `${firstName} ${lastName}`.trim();
+
+  return customerName || email || order.orderNumber;
 }
 
 function getOrderAddress(order: AdminOrder) {
   if (typeof order.deliveryAddress === "string") return order.deliveryAddress;
+  if (
+    order.deliveryAddress == null ||
+    typeof order.deliveryAddress !== "object"
+  ) {
+    return "Address not available";
+  }
   return [
     order.deliveryAddress.street,
     order.deliveryAddress.city,
@@ -128,6 +145,13 @@ function getOrderAddress(order: AdminOrder) {
 
 function getOrderMethod(order: AdminOrder) {
   if (typeof order.deliveryMethod === "string") return order.deliveryMethod;
+  if (
+    order.deliveryMethod == null ||
+    typeof order.deliveryMethod !== "object" ||
+    typeof order.deliveryMethod.name !== "string"
+  ) {
+    return "Unknown delivery method";
+  }
   return order.deliveryMethod.name;
 }
 
@@ -147,7 +171,6 @@ export default function OrdersPage() {
     totalRevenue: 0,
   });
   const [products, setProducts] = useState<ProductDetails[]>([]);
-  const [customers, setCustomers] = useState<AdminCustomer[]>([]);
   const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>([]);
   const [createForm, setCreateForm] =
     useState<CreateOrderForm>(emptyCreateForm());
@@ -209,7 +232,6 @@ export default function OrdersPage() {
         statsResponse,
         productsResponse,
         methodsResponse,
-        customersResponse,
       ] = await Promise.all([
         zowkinsApi.listAdminOrders(apiConnection.accessToken.trim(), {
           orderStatus: filterOrderStatus || undefined,
@@ -228,7 +250,6 @@ export default function OrdersPage() {
         zowkinsApi.getAdminOrderStats(apiConnection.accessToken.trim()),
         zowkinsApi.listAdminProducts(apiConnection.accessToken.trim()),
         zowkinsApi.listDeliveryMethods(),
-        zowkinsApi.listAdminCustomers(apiConnection.accessToken.trim()),
       ]);
 
       setOrders(ordersResponse.orders || []);
@@ -247,13 +268,6 @@ export default function OrdersPage() {
         extractArray<DeliveryMethod>(methodsResponse, [
           "deliveryMethods",
           "methods",
-          "data",
-        ]),
-      );
-      setCustomers(
-        extractArray<AdminCustomer>(customersResponse, [
-          "customers",
-          "users",
           "data",
         ]),
       );
@@ -296,9 +310,10 @@ export default function OrdersPage() {
       orderStatus: normalizeOrderStatus(selectedOrder.orderStatus),
       paymentStatus: normalizePaymentStatus(selectedOrder.paymentStatus),
     });
+    const selectedOrderProducts = selectedOrder.products ?? [];
     setUpdateItems(
-      selectedOrder.products.length
-        ? selectedOrder.products.map((product) => ({
+      selectedOrderProducts.length
+        ? selectedOrderProducts.map((product) => ({
             productId: product.productId,
             quantity: String(product.quantity),
           }))
@@ -306,27 +321,36 @@ export default function OrdersPage() {
     );
   }, [selectedOrder]);
 
-  const getCustomerLabel = (customer: AdminCustomer) =>
-    `${customer.firstName} ${customer.lastName}`.trim() ||
-    customer.email ||
-    customer.id;
+  const deliveryCityOptions = useMemo(
+    () =>
+      STATE_TO_CITIES[createForm.deliveryAddressState] ??
+      ([] as readonly string[]),
+    [createForm.deliveryAddressState],
+  );
 
   const filteredOrders = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return orders;
-    return orders.filter((order) =>
-      [
+    return orders.filter((order) => {
+      const customerFirstName =
+        typeof order.customer === "object" ? order.customer.firstName : "";
+      const customerLastName =
+        typeof order.customer === "object" ? order.customer.lastName : "";
+      const customerEmail =
+        typeof order.customer === "object" ? order.customer.email : "";
+
+      return [
         order.id,
         order.orderNumber,
-        order.customer.firstName,
-        order.customer.lastName,
-        order.customer.email,
+        customerFirstName,
+        customerLastName,
+        customerEmail,
         order.orderStatus,
         order.paymentStatus,
         getOrderMethod(order),
         getOrderAddress(order),
-      ].some((value) => value.toLowerCase().includes(needle)),
-    );
+      ].some((value) => value.toLowerCase().includes(needle));
+    });
   }, [orders, query]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -365,44 +389,61 @@ export default function OrdersPage() {
       }))
       .filter(
         (item) =>
-          item.productId &&
-          Number.isFinite(item.quantity) &&
-          item.quantity > 0,
+          item.productId && Number.isFinite(item.quantity) && item.quantity > 0,
       );
 
-    const customerId = createForm.customerMode === "select"
-      ? createForm.customer.trim()
-      : createForm.customerEmail.trim();
+    const customerValid = Boolean(
+      createForm.customerFirstName.trim() &&
+        createForm.customerLastName.trim() &&
+        createForm.customerEmail.trim() &&
+        createForm.customerPhone.trim(),
+    );
 
-    const payload = {
-      customer: customerId,
-      ...(createForm.customerMode === "manual" && {
-        customerFirstName: createForm.customerFirstName.trim(),
-        customerLastName: createForm.customerLastName.trim(),
-        customerPhone: createForm.customerPhone.trim(),
-      }),
-      deliveryAddress: createForm.deliveryAddress.trim(),
-      deliveryMethod: createForm.deliveryMethod.trim(),
-      items,
-    };
+    const deliveryAddressValid = Boolean(
+      createForm.deliveryAddress.trim() &&
+      createForm.deliveryAddressPhoneNumber.trim() &&
+      createForm.deliveryAddressCity.trim() &&
+      createForm.deliveryAddressState.trim() &&
+      createForm.deliveryAddressCountry.trim() &&
+      createForm.deliveryAddressPostalCode.trim(),
+    );
 
-    const customerValid = createForm.customerMode === "select"
-      ? Boolean(createForm.customer.trim())
-      : Boolean(createForm.customerEmail.trim());
+    if (!customerValid) {
+      const reason =
+        "Please fill out all customer details (first name, last name, email, phone).";
+      setError(reason);
+      return;
+    }
 
     if (
-      !customerValid ||
-      !payload.deliveryAddress ||
-      !payload.deliveryMethod ||
+      !deliveryAddressValid ||
+      !createForm.deliveryMethod.trim() ||
       items.length === 0
     ) {
       setError(
-        createForm.customerMode === "select"
-          ? "Fill out the customer, delivery address, delivery method, and at least one product."
-          : "Fill out the customer email, delivery address, delivery method, and at least one product.",
+        "Fill out the delivery address, delivery method, and add at least one product.",
       );
       return;
     }
+
+    const payload: Parameters<typeof zowkinsApi.createAdminOrder>[1] = {
+      customer: {
+        firstName: createForm.customerFirstName.trim(),
+        lastName: createForm.customerLastName.trim(),
+        email: createForm.customerEmail.trim(),
+        phoneNumber: createForm.customerPhone.trim(),
+      },
+      deliveryAddress: {
+        phoneNumber: createForm.deliveryAddressPhoneNumber.trim(),
+        street: createForm.deliveryAddress.trim(),
+        city: createForm.deliveryAddressCity.trim(),
+        state: createForm.deliveryAddressState.trim(),
+        country: createForm.deliveryAddressCountry.trim(),
+        postalCode: createForm.deliveryAddressPostalCode.trim(),
+      },
+      deliveryMethod: createForm.deliveryMethod.trim(),
+      items,
+    };
 
     setCreating(true);
     setError("");
@@ -411,14 +452,21 @@ export default function OrdersPage() {
     try {
       const response = await zowkinsApi.createAdminOrder(
         apiConnection.accessToken.trim(),
-        payload as { customer: string; deliveryAddress: string; deliveryMethod: string; items: { productId: string; quantity: number }[] },
+        payload,
       );
 
       setMessage("Order created successfully.");
       setSelectedOrder(response.order);
-
       setCreateForm(emptyCreateForm());
       await loadOrders();
+
+      // Scroll to order details section
+      setTimeout(() => {
+        const orderDetailsSection = document.getElementById("order-details");
+        if (orderDetailsSection) {
+          orderDetailsSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : "Could not create order.",
@@ -531,7 +579,9 @@ export default function OrdersPage() {
       const response = await zowkinsApi.generateAdminOrderPaymentLink(
         apiConnection.accessToken.trim(),
         selectedOrder.id,
-        linkCallbackUrl.trim() ? { callbackUrl: linkCallbackUrl.trim() } : undefined,
+        linkCallbackUrl.trim()
+          ? { callbackUrl: linkCallbackUrl.trim() }
+          : undefined,
       );
       setGeneratedLink(response.paymentLink);
       setMessage("Payment link generated successfully.");
@@ -575,52 +625,58 @@ export default function OrdersPage() {
             <AdminBadge label={apiReady ? "Visible" : "Hidden"} />
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-            <div className="rounded-[1.2rem] bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-slate-100 bg-white px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+              <div className="absolute inset-x-0 top-0 h-1 bg-slate-200" />
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-500">
                 Total
               </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
+              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">
                 {stats.totalOrders}
               </p>
             </div>
-            <div className="rounded-[1.2rem] bg-amber-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
+            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-amber-100 bg-amber-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+              <div className="absolute inset-x-0 top-0 h-1 bg-amber-300" />
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-amber-700">
                 Processing
               </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
+              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">
                 {stats.processing}
               </p>
             </div>
-            <div className="rounded-[1.2rem] bg-emerald-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-emerald-100 bg-emerald-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+              <div className="absolute inset-x-0 top-0 h-1 bg-emerald-300" />
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-emerald-700">
                 Delivered
               </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
+              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">
                 {stats.delivered}
               </p>
             </div>
-            <div className="rounded-[1.2rem] bg-rose-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-700">
+            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-rose-100 bg-rose-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+              <div className="absolute inset-x-0 top-0 h-1 bg-rose-300" />
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-rose-700">
                 Cancelled
               </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
+              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">
                 {stats.cancelled}
               </p>
             </div>
-            <div className="rounded-[1.2rem] bg-cyan-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">
+            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-cyan-100 bg-cyan-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+              <div className="absolute inset-x-0 top-0 h-1 bg-cyan-300" />
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-cyan-700">
                 Transit
               </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
+              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">
                 {stats.inTransit}
               </p>
             </div>
-            <div className="rounded-[1.2rem] bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-slate-100 bg-slate-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)] sm:col-span-2 xl:col-span-5">
+              <div className="absolute inset-x-0 top-0 h-1 bg-slate-300" />
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-500">
                 Revenue
               </p>
-              <p className="mt-2 text-lg font-bold text-slate-900">
+              <p className="mt-3 break-words text-2xl font-bold leading-none tracking-tight text-slate-900 sm:text-3xl">
                 {formatCurrency(stats.totalRevenue)}
               </p>
             </div>
@@ -755,13 +811,13 @@ export default function OrdersPage() {
                   <span>
                     Products:{" "}
                     <strong className="text-slate-900">
-                      {order.products.length}
+                      {order.products?.length ?? 0}
                     </strong>
                   </span>
                   <span>
                     Total:{" "}
                     <strong className="text-slate-900">
-                      {formatCurrency(order.transaction.totalAmount)}
+                      {formatCurrency(order.transaction?.totalAmount ?? 0)}
                     </strong>
                   </span>
                   <span>
@@ -862,95 +918,66 @@ export default function OrdersPage() {
               Create a new admin order
             </h2>
             <form onSubmit={createOrder} className="mt-6 space-y-4">
-              {/* Customer mode toggle */}
-              <div className="flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
-                <button
-                  type="button"
-                  onClick={() => setCreateForm((c) => ({ ...c, customerMode: "manual" }))}
-                  className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-                    createForm.customerMode === "manual"
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  Enter details
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCreateForm((c) => ({ ...c, customerMode: "select" }))}
-                  className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-                    createForm.customerMode === "select"
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  Select saved
-                </button>
-              </div>
-
-              {createForm.customerMode === "manual" ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="grid gap-2 text-sm font-medium text-slate-700">
-                    <span>First name</span>
-                    <input
-                      value={createForm.customerFirstName}
-                      onChange={(e) => setCreateForm((c) => ({ ...c, customerFirstName: e.target.value }))}
-                      placeholder="John"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-slate-700">
-                    <span>Last name</span>
-                    <input
-                      value={createForm.customerLastName}
-                      onChange={(e) => setCreateForm((c) => ({ ...c, customerLastName: e.target.value }))}
-                      placeholder="Doe"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
-                    <span>Email <span className="text-rose-500">*</span></span>
-                    <input
-                      value={createForm.customerEmail}
-                      onChange={(e) => setCreateForm((c) => ({ ...c, customerEmail: e.target.value }))}
-                      placeholder="john@example.com"
-                      type="email"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
-                    <span>Phone number</span>
-                    <input
-                      value={createForm.customerPhone}
-                      onChange={(e) => setCreateForm((c) => ({ ...c, customerPhone: e.target.value }))}
-                      placeholder="+2348012345678"
-                      type="tel"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                    />
-                  </label>
-                </div>
-              ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
                 <label className="grid gap-2 text-sm font-medium text-slate-700">
-                  <span>Customer</span>
-                  <select
-                    value={createForm.customer}
+                  <span>First name</span>
+                  <input
+                    value={createForm.customerFirstName}
                     onChange={(event) =>
                       setCreateForm((current) => ({
                         ...current,
-                        customer: event.target.value,
+                        customerFirstName: event.target.value,
                       }))
                     }
+                    placeholder="John"
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                  >
-                    <option value="">Select customer</option>
-                    {customers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {getCustomerLabel(customer)} - {customer.email}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </label>
-              )}
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  <span>Last name</span>
+                  <input
+                    value={createForm.customerLastName}
+                    onChange={(event) =>
+                      setCreateForm((current) => ({
+                        ...current,
+                        customerLastName: event.target.value,
+                      }))
+                    }
+                    placeholder="Doe"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+                  <span>Email</span>
+                  <input
+                    value={createForm.customerEmail}
+                    onChange={(event) =>
+                      setCreateForm((current) => ({
+                        ...current,
+                        customerEmail: event.target.value,
+                      }))
+                    }
+                    placeholder="john@example.com"
+                    type="email"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+                  <span>Phone number</span>
+                  <input
+                    value={createForm.customerPhone}
+                    onChange={(event) =>
+                      setCreateForm((current) => ({
+                        ...current,
+                        customerPhone: event.target.value,
+                      }))
+                    }
+                    placeholder="+2348012345678"
+                    type="tel"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                  />
+                </label>
+              </div>
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 <span>Delivery address</span>
                 <input
@@ -962,6 +989,103 @@ export default function OrdersPage() {
                     }))
                   }
                   placeholder="Delivery address"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                <span>Delivery phone number</span>
+                <input
+                  value={createForm.deliveryAddressPhoneNumber}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({
+                      ...current,
+                      deliveryAddressPhoneNumber: event.target.value,
+                    }))
+                  }
+                  placeholder="+2348012345678"
+                  type="tel"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                <span>City</span>
+                <select
+                  value={createForm.deliveryAddressCity}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({
+                      ...current,
+                      deliveryAddressCity: event.target.value,
+                    }))
+                  }
+                  disabled={!createForm.deliveryAddressState}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                >
+                  <option value="">
+                    {createForm.deliveryAddressState
+                      ? "Select city"
+                      : "Select state first"}
+                  </option>
+                  {deliveryCityOptions.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                <span>State</span>
+                <select
+                  value={createForm.deliveryAddressState}
+                  onChange={(event) =>
+                    setCreateForm((current) => {
+                      const nextState = event.target.value;
+                      const cities = STATE_TO_CITIES[nextState] ?? [];
+                      return {
+                        ...current,
+                        deliveryAddressState: nextState,
+                        deliveryAddressCity: cities.includes(
+                          current.deliveryAddressCity,
+                        )
+                          ? current.deliveryAddressCity
+                          : "",
+                      };
+                    })
+                  }
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                >
+                  <option value="">Select state</option>
+                  {NIGERIA_36_STATES.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                <span>Country</span>
+                <input
+                  value={createForm.deliveryAddressCountry}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({
+                      ...current,
+                      deliveryAddressCountry: event.target.value,
+                    }))
+                  }
+                  placeholder="Nigeria"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                <span>Postal code</span>
+                <input
+                  value={createForm.deliveryAddressPostalCode}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({
+                      ...current,
+                      deliveryAddressPostalCode: event.target.value,
+                    }))
+                  }
+                  placeholder="100001"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
                 />
               </label>
@@ -994,7 +1118,7 @@ export default function OrdersPage() {
                   >
                     <label className="grid gap-2 text-sm font-medium text-slate-700">
                       <span>Product</span>
-                      <div className="relative overflow-hidden rounded-2xl" style={{maxWidth: '100%'}}>
+                      <div className="relative overflow-hidden rounded-2xl max-w-full">
                         <select
                           value={item.productId}
                           onChange={(event) =>
@@ -1106,10 +1230,10 @@ export default function OrdersPage() {
                     Order: <strong>{selectedOrder.orderNumber}</strong>
                   </p>
                   <p className="mt-2 text-sm text-slate-600">
-                    {selectedOrder.customer.email}
+                    {selectedOrder.customer?.email ?? "No customer email"}
                   </p>
                   <p className="text-sm text-slate-600">
-                    {selectedOrder.customer.phoneNumber}
+                    {selectedOrder.customer?.phoneNumber ?? "No customer phone"}
                   </p>
                 </div>
 
@@ -1164,18 +1288,20 @@ export default function OrdersPage() {
                   <p className="mt-2 text-sm text-slate-600">
                     <strong>Method:</strong> {getOrderMethod(selectedOrder)}
                   </p>
-                  {typeof selectedOrder.deliveryMethod !== "string" && (
-                    <>
-                      <p className="mt-1 text-sm text-slate-600">
-                        <strong>Fee:</strong>{" "}
-                        {formatCurrency(selectedOrder.deliveryMethod.fee)}
-                      </p>
-                      <p className="text-sm text-slate-600">
-                        <strong>Estimated:</strong>{" "}
-                        {selectedOrder.deliveryMethod.estimatedDeliveryTime}
-                      </p>
-                    </>
-                  )}
+                  {typeof selectedOrder.deliveryMethod === "object" &&
+                    selectedOrder.deliveryMethod != null &&
+                    typeof selectedOrder.deliveryMethod.fee === "number" && (
+                      <>
+                        <p className="mt-1 text-sm text-slate-600">
+                          <strong>Fee:</strong>{" "}
+                          {formatCurrency(selectedOrder.deliveryMethod.fee)}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          <strong>Estimated:</strong>{" "}
+                          {selectedOrder.deliveryMethod.estimatedDeliveryTime}
+                        </p>
+                      </>
+                    )}
                 </div>
 
                 {/* Products Summary */}
@@ -1184,7 +1310,7 @@ export default function OrdersPage() {
                     Order Items
                   </p>
                   <div className="space-y-2">
-                    {selectedOrder.products.map((product, idx) => (
+                    {(selectedOrder.products ?? []).map((product, idx) => (
                       <div
                         key={idx}
                         className="flex justify-between text-sm border-b border-slate-200 pb-2 last:border-0"
@@ -1219,13 +1345,13 @@ export default function OrdersPage() {
                     <div className="flex justify-between">
                       <span className="text-slate-600">Subtotal:</span>
                       <span className="text-slate-900 font-medium">
-                        {formatCurrency(selectedOrder.transaction.subTotal)}
+                        {formatCurrency(selectedOrder.transaction?.subTotal ?? 0)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Delivery Fee:</span>
                       <span className="text-slate-900 font-medium">
-                        {formatCurrency(selectedOrder.transaction.deliveryFee)}
+                        {formatCurrency(selectedOrder.transaction?.deliveryFee ?? 0)}
                       </span>
                     </div>
                     <div className="flex justify-between border-t border-blue-200 pt-2 mt-2">
@@ -1233,7 +1359,7 @@ export default function OrdersPage() {
                         Total:
                       </span>
                       <span className="text-lg font-bold text-blue-600">
-                        {formatCurrency(selectedOrder.transaction.totalAmount)}
+                        {formatCurrency(selectedOrder.transaction?.totalAmount ?? 0)}
                       </span>
                     </div>
                   </div>
@@ -1248,7 +1374,12 @@ export default function OrdersPage() {
                     Send a fresh payment link to the customer for this order.
                   </p>
                   <label className="grid gap-2 text-sm font-medium text-slate-700">
-                    <span>Callback URL <span className="font-normal text-slate-500">(optional)</span></span>
+                    <span>
+                      Callback URL{" "}
+                      <span className="font-normal text-slate-500">
+                        (optional)
+                      </span>
+                    </span>
                     <input
                       value={linkCallbackUrl}
                       onChange={(e) => setLinkCallbackUrl(e.target.value)}
@@ -1354,14 +1485,17 @@ export default function OrdersPage() {
                       >
                         <label className="grid gap-2 text-sm font-medium text-slate-700">
                           <span>Product</span>
-                          <div className="relative overflow-hidden rounded-2xl" style={{maxWidth: '100%'}}>
+                          <div className="relative overflow-hidden rounded-2xl max-w-full">
                             <select
                               value={item.productId}
                               onChange={(event) =>
                                 setUpdateItems((current) =>
                                   current.map((row, rowIndex) =>
                                     rowIndex === index
-                                      ? { ...row, productId: event.target.value }
+                                      ? {
+                                          ...row,
+                                          productId: event.target.value,
+                                        }
                                       : row,
                                   ),
                                 )

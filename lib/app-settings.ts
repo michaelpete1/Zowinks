@@ -44,8 +44,8 @@ export type AppSettingsResponse = {
 const fallback: App = {
   name: "Zowkins Enterprise",
   address: "Wuse Zone 3, No 7 Maputo Street, Abuja, FCT, Nigeria",
-  phoneNumber: "+971 54 389 5126",
-  whatsAppNumber: "+971 54 389 5126",
+phoneNumber: "08064667917",
+whatsAppNumber: "08064667917",
   email: "contact@zowkins.com",
   status: {
     portal: "online",

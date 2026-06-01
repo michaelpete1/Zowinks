@@ -32,7 +32,7 @@ type QuoteRequestFormProps = {
   whatsappNumber?: string;
 };
 
-const DEFAULT_WHATSAPP_NUMBER = "971543895126";
+const DEFAULT_WHATSAPP_NUMBER = "08064667917";
 
 function createProductRow() {
   return {

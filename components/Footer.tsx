@@ -17,11 +17,16 @@ export default function Footer() {
 
   const socialLinks = [
     {
-      href: "https://wa.me/message/QL4N3SVOVCUZH1",
+      href: "https://wa.me/message/6U6S7AJM4GECJ1",
       label: "WhatsApp",
       title: "Chat on WhatsApp",
       icon: (
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          fill="currentColor"
+          aria-hidden="true"
+        >
           <path d="M19.11 4.93A10.94 10.94 0 0 0 11.41 2a10.84 10.84 0 0 0-9.22 16.56L1 22l3.58-1.15A10.84 10.84 0 0 0 11.4 22h.01A10.93 10.93 0 0 0 19.11 4.93Zm-7.7 16a9 9 0 0 1-4.59-1.25l-.33-.2-2.13.69.7-2.07-.21-.34A8.98 8.98 0 1 1 20 13.07a8.87 8.87 0 0 1-8.59 7.86Zm5.23-6.76c-.29-.15-1.72-.85-1.99-.95-.27-.1-.46-.15-.66.15-.2.3-.76.95-.93 1.14-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.32-1.43-.86-.77-1.43-1.72-1.6-2.01-.17-.29-.02-.44.13-.59.13-.12.29-.32.44-.48.15-.16.2-.27.3-.45.1-.17.05-.34-.02-.48-.07-.15-.66-1.58-.9-2.16-.24-.58-.49-.5-.66-.51h-.56c-.19 0-.48.07-.73.34-.25.27-.95.93-.95 2.26s.98 2.62 1.12 2.8c.15.19 1.9 2.91 4.61 4.08.64.28 1.14.45 1.53.58.64.21 1.23.18 1.69.11.51-.08 1.72-.7 1.96-1.37.24-.68.24-1.26.17-1.38-.07-.12-.27-.19-.56-.34Z" />
         </svg>
       ),
@@ -31,7 +36,12 @@ export default function Footer() {
       label: "Instagram",
       title: "Visit Instagram",
       icon: (
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          fill="currentColor"
+          aria-hidden="true"
+        >
           <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm10 2H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3Zm-5 3.5A4.5 4.5 0 1 1 7.5 12 4.51 4.51 0 0 1 12 7.5Zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5ZM17.75 6.75a1.25 1.25 0 1 1-1.25 1.25 1.25 1.25 0 0 1 1.25-1.25Z" />
         </svg>
       ),
@@ -41,7 +51,12 @@ export default function Footer() {
       label: "LinkedIn",
       title: "Visit LinkedIn",
       icon: (
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          fill="currentColor"
+          aria-hidden="true"
+        >
           <path d="M4.98 3.5A2.49 2.49 0 1 1 2.5 5.99 2.49 2.49 0 0 1 4.98 3.5ZM3 8.75h4v12H3v-12Zm7 0h3.84v1.64h.05a4.2 4.2 0 0 1 3.79-2.08c4.05 0 4.8 2.66 4.8 6.12v6.32h-4v-5.6c0-1.34-.02-3.07-1.87-3.07-1.87 0-2.16 1.46-2.16 2.97v5.7h-4v-12Z" />
         </svg>
       ),
@@ -51,7 +66,12 @@ export default function Footer() {
       label: "Facebook",
       title: "Visit Facebook",
       icon: (
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          fill="currentColor"
+          aria-hidden="true"
+        >
           <path d="M13.5 22v-8h2.7l.4-3h-3.1V9.05c0-.87.24-1.46 1.49-1.46h1.62V5.01c-.28-.04-1.23-.13-2.34-.13-2.3 0-3.87 1.4-3.87 3.96V11H7.7v3h2.7v8h3.1Z" />
         </svg>
       ),
@@ -118,9 +138,9 @@ export default function Footer() {
               08064667917
             </a>
             <a
-              href="https://wa.me/message/QL4N3SVOVCUZH1"
+              href="https://wa.me/message/6U6S7AJM4GECJ1"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="transition-colors hover:text-[#5ab214]"
             >
               WhatsApp

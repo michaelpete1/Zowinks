@@ -150,28 +150,30 @@ export default async function ProductsPage({
   const liveBrands = Array.from(
     new Map(
       categories.flatMap((category) =>
-        (category.subcategories ?? []).map((subcategory: { name: string; slug: string }) => {
-          const label = String(subcategory.name || "").trim();
-          const slug = String(subcategory.slug || slugify(label));
-          const categorySlug = String(category.slug || "");
-          const categoryName = formatDisplayName(
-            String(category.name || "Category"),
-            "Category",
-          );
-          return [
-            slug,
-            {
-              label: formatDisplayName(label, label),
+        (category.subcategories ?? []).map(
+          (subcategory: { name: string; slug: string }) => {
+            const label = String(subcategory.name || "").trim();
+            const slug = String(subcategory.slug || slugify(label));
+            const categorySlug = String(category.slug || "");
+            const categoryName = formatDisplayName(
+              String(category.name || "Category"),
+              "Category",
+            );
+            return [
               slug,
-              categorySlug,
-              categoryName,
-              image:
-                BRAND_IMAGE_MAP[slug] ||
-                BRAND_IMAGE_MAP[slugify(label)] ||
-                "/desktop.jpg",
-            },
-          ] as const;
-        }),
+              {
+                label: formatDisplayName(label, label),
+                slug,
+                categorySlug,
+                categoryName,
+                image:
+                  BRAND_IMAGE_MAP[slug] ||
+                  BRAND_IMAGE_MAP[slugify(label)] ||
+                  "/desktop.jpg",
+              },
+            ] as const;
+          },
+        ),
       ),
     ).values(),
   ).filter((brand) => brand.label && brand.slug);
@@ -209,7 +211,7 @@ export default async function ProductsPage({
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 
   const topProducts = displayProducts.slice(0, 3);
-  const whatsappHref = "https://wa.me/message/QL4N3SVOVCUZH1";
+  const whatsappHref = "https://wa.me/message/6U6S7AJM4GECJ1";
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">

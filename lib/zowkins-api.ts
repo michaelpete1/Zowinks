@@ -439,9 +439,14 @@ export type AdminOrderStatsResponse = {
 };
 
 export type AdminOrderCreateInput = {
-  customer: string;
+  customer: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+  };
   items: Array<{ productId: string; quantity: number }>;
-  deliveryAddress: string;
+  deliveryAddress: PortalOrderDeliveryAddressInput;
   deliveryMethod: string;
 };
 

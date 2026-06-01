@@ -46,21 +46,14 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
   const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (2 minutes)
 
   const contentType = request.headers.get("content-type") || "";
-  const hasBody = !["GET", "HEAD"].includes(request.method) && Boolean(request.body);
+  const hasBody = !["GET", "HEAD"].includes(request.method);
   let body: BodyInit | undefined;
-  let useDuplex = false;
 
   if (hasBody) {
-    if (
-      contentType.includes("multipart/form-data") ||
-      contentType.includes("application/x-www-form-urlencoded")
-    ) {
-      const bodyBuffer = Buffer.from(await request.arrayBuffer());
+    const bodyBuffer = Buffer.from(await request.arrayBuffer());
+    if (bodyBuffer.byteLength > 0) {
       body = bodyBuffer;
       headers.set("content-length", String(bodyBuffer.byteLength));
-    } else {
-      body = request.body ?? undefined;
-      useDuplex = Boolean(request.body);
     }
   }
 
@@ -69,14 +62,10 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
     headers,
     redirect: "follow",
     signal: controller.signal,
-  } as RequestInit & { duplex?: "half" | "full" };
+  } as RequestInit;
 
   if (body) {
     init.body = body;
-  }
-
-  if (useDuplex) {
-    init.duplex = "half";
   }
 
   try {
