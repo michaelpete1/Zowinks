@@ -20,15 +20,7 @@ function AdminResetPasswordPageContent() {
   const [resetting, setResetting] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
   const [settingPassword, setSettingPassword] = useState(false);
-  const [sessionMessage, setSessionMessage] = useState("");
   const searchParams = useSearchParams();
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const storedToken = window.localStorage.getItem(ADMIN_API_TOKEN_KEY);
-    if (!storedToken) return;
-    setSessionMessage("A token is already stored locally.");
-  }, []);
 
   useEffect(() => {
     if (!searchParams) return;
@@ -137,12 +129,6 @@ function AdminResetPasswordPageContent() {
               Use this page to request a reset email and to complete the reset
               with the token from the backend flow.
             </p>
-
-            {sessionMessage ? (
-              <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-                {sessionMessage}
-              </div>
-            ) : null}
 
             <div className="grid gap-3 rounded-[1.5rem] bg-slate-50 px-5 py-4 text-sm text-slate-700">
               <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
