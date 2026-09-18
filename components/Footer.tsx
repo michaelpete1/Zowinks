@@ -4,12 +4,43 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { zowkinsApi } from "../lib/zowkins-api";
 
 const hiddenPaths = ["/admin"];
 
 export default function Footer() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isPortalSession, setIsPortalSession] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const syncSession = () => setIsPortalSession(Boolean(localStorage.getItem("portalToken")));
+    syncSession();
+    window.addEventListener("storage", syncSession);
+    window.addEventListener("portal-session-expired", syncSession);
+    return () => {
+      window.removeEventListener("storage", syncSession);
+      window.removeEventListener("portal-session-expired", syncSession);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await zowkinsApi.logoutPortal();
+    } catch {
+      // Clear the local session even if the server session has already expired.
+    } finally {
+      localStorage.removeItem("portalToken");
+      localStorage.removeItem("portalUser");
+      setIsPortalSession(false);
+      setLoggingOut(false);
+      router.push("/portal/auth/login");
+    }
+  };
 
   if (hiddenPaths.some((path) => pathname.startsWith(path))) {
     return null;
@@ -157,6 +188,16 @@ export default function Footer() {
             >
               Terms and Conditions
             </Link>
+            {pathname.startsWith("/portal") && isPortalSession && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="mt-1 rounded-full border border-rose-400/30 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:border-rose-300 hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loggingOut ? "Logging out..." : "Log out"}
+              </button>
+            )}
           </div>
         </div>
 

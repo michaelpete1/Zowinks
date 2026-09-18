@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Navbar from "../../components/NewNavbar";
 import { useCart, type CartItem } from "../../hooks/useCart";
@@ -11,6 +12,7 @@ import {
   type DeliveryMethod,
   type CreatePortalOrderInput,
   normalizeOrderGender,
+  ApiError,
 } from "../../lib/zowkins-api";
 import { resolveImageSource } from "../../lib/media";
 import { getSiteUrl } from "../../lib/site-url";
@@ -64,6 +66,7 @@ function currency(value: number) {
 
 export default function Cart() {
   const items = useCart((state): CartItem[] => state.items);
+  const router = useRouter();
   const clearCart = useCart((state) => state.clearCart);
   const removeItem = useCart((state) => state.removeItem);
   const [formData, setFormData] = useState<OrderFormState>(emptyFormState);
@@ -83,6 +86,15 @@ export default function Cart() {
     Partial<Record<keyof OrderFormState, string>>
   >({});
   const [submitting, setSubmitting] = useState(false);
+  const [retryUntil, setRetryUntil] = useState<number | null>(null);
+  const [retryLabel, setRetryLabel] = useState<string | null>(null);
+  const [showCreateAccountPrompt, setShowCreateAccountPrompt] = useState(false);
+  const [guestPrefill, setGuestPrefill] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+  } | null>(null);
 
   const subtotal = useMemo(
     () => items.reduce((sum, item) => sum + item.price * item.qty, 0),
@@ -361,6 +373,29 @@ export default function Cart() {
       tax,
       total,
     });
+    // Capture login state before submitting so we can detect guest orders
+    const tokenAtStart =
+      typeof window !== "undefined"
+        ? localStorage.getItem("portalToken")
+        : null;
+
+    // If the user is not signed in, redirect them to signup (prefill form)
+    if (!tokenAtStart) {
+      const nameParts = formData.name.trim().split(/\s+/).filter(Boolean);
+      const firstName = nameParts[0] || formData.name.trim();
+      const lastName = nameParts.slice(1).join(" ") || "";
+      const params = new URLSearchParams();
+      if (firstName) params.set("firstName", firstName);
+      if (lastName) params.set("lastName", lastName);
+      if (formData.email) params.set("email", formData.email.trim());
+      if (formData.phone) params.set("phoneNumber", formData.phone.trim());
+      // preserve where to return after signup
+      params.set("next", "/cart");
+
+      router.push(`/portal/auth/signup?${params.toString()}`);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -380,13 +415,110 @@ export default function Cart() {
       setOrderReference(order?.orderNumber || order?.id || "");
       setStage("success");
       clearCart();
+
+      // If this was a guest order, prompt them to create an account
+      if (!tokenAtStart) {
+        const nameParts = formData.name.trim().split(/\s+/).filter(Boolean);
+        const firstName = nameParts[0] || formData.name.trim();
+        const lastName = nameParts.slice(1).join(" ") || "";
+        setGuestPrefill({
+          firstName,
+          lastName,
+          email: formData.email.trim(),
+          phoneNumber: formData.phone.trim(),
+        });
+        setShowCreateAccountPrompt(true);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to place order");
+      const msg = err instanceof Error ? err.message : "Failed to place order";
+      setError(msg);
+      if (
+        err instanceof ApiError &&
+        err.status === 429 &&
+        typeof err.retryAfter === "number"
+      ) {
+        setRetryUntil(Date.now() + err.retryAfter * 1000);
+      }
+
+      // Parse field-level validation messages returned as "field.name: message"
+      try {
+        const parts = String(msg)
+          .split(/,\s*/)
+          .map((p) => p.trim())
+          .filter(Boolean);
+        const newFieldErrors: Partial<Record<keyof OrderFormState, string>> =
+          {};
+
+        parts.forEach((part) => {
+          const idx = part.indexOf(":");
+          if (idx === -1) return;
+          const key = part.slice(0, idx).trim().toLowerCase();
+          const messageText = part.slice(idx + 1).trim();
+
+          if (key.includes("email")) newFieldErrors.email = messageText;
+          else if (/(phone|phonenumber)/.test(key))
+            newFieldErrors.phone = messageText;
+          else if (
+            key.includes("deliveryaddress.street") ||
+            key.includes("street")
+          )
+            newFieldErrors.deliveryAddress = messageText;
+          else if (key.includes("deliveryaddress.city") || key.includes("city"))
+            newFieldErrors.city = messageText;
+          else if (
+            key.includes("deliveryaddress.state") ||
+            key.includes("state")
+          )
+            newFieldErrors.state = messageText;
+          else if (
+            key.includes("customer.firstname") ||
+            key.includes("firstName".toLowerCase())
+          )
+            newFieldErrors.name = messageText;
+        });
+
+        if (Object.keys(newFieldErrors).length) {
+          setFieldErrors((current) => ({ ...current, ...newFieldErrors }));
+        }
+      } catch {
+        // ignore parsing errors
+      }
+
       setStage("form");
     } finally {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!retryUntil) {
+      setRetryLabel(null);
+      return;
+    }
+
+    let id: number | null = null;
+    const tick = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((retryUntil - Date.now()) / 1000),
+      );
+      if (remaining <= 0) {
+        setRetryLabel(null);
+        setRetryUntil(null);
+        if (id) window.clearInterval(id);
+        return;
+      }
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      setRetryLabel(mins > 0 ? `${mins}m ${secs}s` : `${secs}s`);
+    };
+
+    tick();
+    id = window.setInterval(tick, 1000);
+    return () => {
+      if (id) window.clearInterval(id);
+    };
+  }, [retryUntil]);
 
   const resetFlow = () => {
     setFormData(emptyFormState);
@@ -920,9 +1052,15 @@ export default function Cart() {
                       </p>
                     ) : null}
 
+                    {retryLabel && (
+                      <p className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
+                        Too many requests. Try again in {retryLabel}.
+                      </p>
+                    )}
+
                     <button
                       type="submit"
-                      disabled={submitting}
+                      disabled={submitting || Boolean(retryUntil)}
                       className="w-full rounded-full bg-[#0b1d3b] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#0b1d3b]/20 transition hover:bg-[#12386a] sm:px-8 sm:py-4"
                     >
                       {submitting
@@ -1004,6 +1142,29 @@ export default function Cart() {
                     Your order has been submitted successfully and the selected
                     products are ready for processing.
                   </p>
+                  {showCreateAccountPrompt && guestPrefill ? (
+                    <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
+                      <p>
+                        Create an account with{" "}
+                        <strong className="text-white">
+                          {guestPrefill.email}
+                        </strong>{" "}
+                        to track this order and see order history.
+                      </p>
+                      <div className="mt-3 flex justify-center">
+                        <a
+                          href={`/portal/auth/signup?email=${encodeURIComponent(guestPrefill.email)}&firstName=${encodeURIComponent(
+                            guestPrefill.firstName,
+                          )}&lastName=${encodeURIComponent(guestPrefill.lastName)}&phoneNumber=${encodeURIComponent(
+                            guestPrefill.phoneNumber,
+                          )}`}
+                          className="rounded-full bg-[#f3c74d] px-5 py-2 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
+                        >
+                          Create account
+                        </a>
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <Link
                       href="/laptops"

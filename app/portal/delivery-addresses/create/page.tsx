@@ -3,19 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { zowkinsApi } from "../../../../lib/zowkins-api";
-import PortalNavbar from "../../../../components/PortalNavbar";
+import { zowkinsApi, PortalUser, ApiError } from "../../../../lib/zowkins-api";
 
 export default function CreateDeliveryAddressPage() {
   const router = useRouter();
-
-  const [user, setUser] = useState<Record<string, any> | null>(null);
+  const [user, setUser] = useState<PortalUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<typeof formData>>({});
 
-  // Form state
   const [formData, setFormData] = useState({
     label: "",
     phoneNumber: "",
@@ -27,27 +24,26 @@ export default function CreateDeliveryAddressPage() {
   });
 
   useEffect(() => {
-    fetchUser();
-  }, []);
-
-  const fetchUser = async () => {
-    try {
+    const load = async () => {
       const token = localStorage.getItem("portalToken");
-      if (!token) {
-        setError("Please sign in to create a delivery address");
-        return;
+      if (!token) { router.replace("/portal/auth/login"); return; }
+      try {
+        const portalUser = await zowkinsApi.getPortalMe(token);
+        setUser(portalUser);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          localStorage.removeItem("portalToken");
+          localStorage.removeItem("portalUser");
+          router.replace("/portal/auth/login");
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Failed to fetch user information");
+      } finally {
+        setLoading(false);
       }
-
-      const userResponse = await zowkinsApi.getPortalMe(token);
-      setUser(userResponse);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch user information",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    void load();
+  }, [router]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -76,27 +72,17 @@ export default function CreateDeliveryAddressPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
-
-    if (!user) {
-      setError("User information not available");
-      return;
-    }
-
-    if (!validateForm()) {
-      setError("Please fix the errors in the form");
-      return;
-    }
+    if (!user) { setError("User information not available"); return; }
+    if (!validateForm()) { setError("Please fix the errors in the form"); return; }
 
     setSubmitting(true);
     setError(null);
 
     try {
       const token = localStorage.getItem("portalToken");
-      if (!token) {
-        throw new Error("Please sign in to create a delivery address");
-      }
+      if (!token) { router.replace("/portal/auth/login"); return; }
 
-      const addressData = {
+      await zowkinsApi.createDeliveryAddress(token, user.id, {
         label: formData.label.trim(),
         phoneNumber: formData.phoneNumber.trim(),
         street: formData.street.trim(),
@@ -104,18 +90,11 @@ export default function CreateDeliveryAddressPage() {
         state: formData.state.trim(),
         country: formData.country,
         postalCode: formData.postalCode.trim(),
-      };
+      });
 
-      await zowkinsApi.createDeliveryAddress(token, user.id, addressData);
-
-      // Redirect to addresses list
       router.push("/portal/delivery-addresses");
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to create delivery address",
-      );
+      setError(err instanceof Error ? err.message : "Failed to create delivery address");
     } finally {
       setSubmitting(false);
     }
@@ -123,19 +102,14 @@ export default function CreateDeliveryAddressPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="text-center">Loading...</div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-      <PortalNavbar />
-      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+    <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
         <div className="mb-8">
           <Link
             href="/portal/delivery-addresses"
@@ -407,6 +381,5 @@ export default function CreateDeliveryAddressPage() {
           </div>
         </form>
       </main>
-    </div>
   );
 }

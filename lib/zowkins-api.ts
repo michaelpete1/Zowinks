@@ -481,6 +481,30 @@ export type PortalCreateAccountInput = {
   password: string;
   gender: "male" | "female" | "other" | string;
   dateOfBirth?: string;
+  referralCode?: string;
+};
+
+export type PortalEmailVerificationPending = {
+  requiresEmailVerification: true;
+  verificationToken: string;
+  email: string;
+  expiresInMinutes: number;
+  resendAvailableInSeconds: number;
+};
+
+export type PortalVerifyEmailInput = {
+  verificationToken: string;
+  otp: string;
+};
+
+export type PortalResendOtpInput = {
+  verificationToken: string;
+};
+
+export type PortalResendOtpResponse = {
+  expiresInMinutes: number;
+  resendAvailableInSeconds: number;
+  resendsRemaining: number;
 };
 
 export type PortalLoginInput = {
@@ -620,6 +644,9 @@ export type AppContactUpdate = {
 
 export class ApiError extends Error {
   status: number;
+  retryAfter?: number | null;
+  rateLimit?: string | null;
+  rateLimitPolicy?: string | null;
 
   constructor(message: string, status: number) {
     super(message);
@@ -644,6 +671,35 @@ const makeHeaders = (headers?: HeadersInit) => {
 
   return next;
 };
+
+let portalTokenRefreshInFlight: Promise<string | null> | null = null;
+
+async function refreshPortalAccessToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  if (portalTokenRefreshInFlight) return portalTokenRefreshInFlight;
+
+  portalTokenRefreshInFlight = (async () => {
+    try {
+      const response = await fetch(getApiRequestUrl("/portal/auth/refresh-tokens"), {
+        method: "POST",
+        credentials: "include",
+        headers: makeHeaders(),
+      });
+      if (!response.ok) return null;
+
+      const payload = (await response.json()) as PortalRefreshResponse;
+      if (!payload?.accessToken) return null;
+      window.localStorage.setItem("portalToken", payload.accessToken);
+      return payload.accessToken;
+    } catch {
+      return null;
+    } finally {
+      portalTokenRefreshInFlight = null;
+    }
+  })();
+
+  return portalTokenRefreshInFlight;
+}
 
 const MONGO_OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/;
 
@@ -828,15 +884,20 @@ async function readApiError(response: Response) {
   const text = await response.text().catch(() => "");
   let payload = null;
   try { payload = text ? JSON.parse(text) : null; } catch(e) {}
-  console.error("API ERROR TRACE", response.status, response.url, text, payload);
-
   const msg = Array.isArray(payload?.message) ? payload.message.join(", ") : payload?.message;
 
+  // Prefer machine-provided message when available for validation/login flows
   if (response.status === 401) {
+    if (typeof payload?.message === "string" && payload.message.trim()) {
+      return payload.message;
+    }
     return "Your session has expired. Please sign in again.";
   }
 
   if (response.status === 403) {
+    if (payload?.requiresEmailVerification === true) {
+      return payload.message || "Please verify your email to continue.";
+    }
     return "You do not have permission to perform this action.";
   }
 
@@ -849,10 +910,19 @@ async function readApiError(response: Response) {
   }
 
   if (response.status === 429) {
+    if (typeof payload?.message === "string" && payload.message.trim()) {
+      return payload.message;
+    }
     return "Too many requests. Please wait a moment and try again.";
   }
 
   if (response.status === 400 || response.status === 422) {
+    // If the API returned a specific message, surface it directly so the UI
+    // can display field-level validation messages like "customer.email: ..."
+    if (typeof payload?.message === "string" && payload.message.trim()) {
+      return payload.message;
+    }
+
     const validationLike = Boolean(
       payload?.errors ||
         Array.isArray(payload?.message) ||
@@ -880,15 +950,69 @@ async function readApiError(response: Response) {
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(getApiRequestUrl(path), {
+  let response = await fetch(getApiRequestUrl(path), {
     ...init,
     cache: init?.cache ?? "no-store",
     credentials: "include",
     headers: makeHeaders(init?.headers),
   });
 
+  const isPortalRefreshRequest = path === "/portal/auth/refresh-tokens";
+  const requestAuthorization = new Headers(init?.headers).get("Authorization");
+  if (
+    response.status === 401 &&
+    path.startsWith("/portal/") &&
+    !isPortalRefreshRequest &&
+    requestAuthorization &&
+    typeof window !== "undefined"
+  ) {
+    const refreshedToken = await refreshPortalAccessToken();
+    if (refreshedToken) {
+      const headers = new Headers(init?.headers);
+      headers.set("Authorization", `Bearer ${refreshedToken}`);
+      response = await fetch(getApiRequestUrl(path), {
+        ...init,
+        cache: init?.cache ?? "no-store",
+        credentials: "include",
+        headers: makeHeaders(headers),
+      });
+    }
+  }
+
+  if (
+    response.status === 401 &&
+    path.startsWith("/portal/") &&
+    typeof window !== "undefined"
+  ) {
+    window.localStorage.removeItem("portalToken");
+    window.localStorage.removeItem("portalUser");
+    window.dispatchEvent(new Event("portal-session-expired"));
+  }
+
+  // For login 403 with requiresEmailVerification, return the raw payload instead of throwing
+  if (response.status === 403 && path === "/portal/auth/login") {
+    const text2 = await response.text().catch(() => "");
+    try {
+      const payload2 = text2 ? JSON.parse(text2) : null;
+      if (payload2?.requiresEmailVerification === true) {
+        return payload2 as T;
+      }
+    } catch {}
+  }
+
   if (!response.ok) {
-    throw new ApiError(await readApiError(response), response.status);
+    const message = await readApiError(response);
+
+    const retryAfterHeader = response.headers.get("Retry-After");
+    const rateLimitHeader = response.headers.get("RateLimit");
+    const rateLimitPolicyHeader = response.headers.get("RateLimit-Policy");
+
+    const err = new ApiError(message, response.status);
+    err.retryAfter = retryAfterHeader ? Number(retryAfterHeader) : null;
+    err.rateLimit = rateLimitHeader;
+    err.rateLimitPolicy = rateLimitPolicyHeader;
+
+    throw err;
   }
 
   if (response.status === 204) {
@@ -1464,7 +1588,25 @@ export const zowkinsApi = {
     }));
   },
   createPortalAccount(payload: PortalCreateAccountInput) {
-    return apiRequest<PortalAuthResponse>("/portal/auth/create-account", {
+    return apiRequest<PortalEmailVerificationPending>("/portal/auth/create-account", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  },
+  verifyPortalEmail(payload: PortalVerifyEmailInput) {
+    return apiRequest<PortalAuthResponse>("/portal/auth/verify-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  },
+  resendPortalOtp(payload: PortalResendOtpInput) {
+    return apiRequest<PortalResendOtpResponse>("/portal/auth/resend-otp", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1473,7 +1615,7 @@ export const zowkinsApi = {
     });
   },
   loginPortal(payload: PortalLoginInput) {
-    return apiRequest<PortalAuthResponse>("/portal/auth/login", {
+    return apiRequest<PortalAuthResponse | PortalEmailVerificationPending>("/portal/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

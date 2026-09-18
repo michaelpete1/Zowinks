@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAdminSession } from "../../hooks/useAdminSession";
 import { ApiError, zowkinsApi } from "../../lib/zowkins-api";
+import { persistAdminAuth } from "../../lib/admin-auth";
 
 const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
 
@@ -18,23 +19,6 @@ const emptyLogin: LoginForm = {
   email: "",
   password: "",
 };
-
-function persistAuth(
-  sessionTools: ReturnType<typeof useAdminSession>,
-  accessToken: string,
-  user: { id: string; firstName: string; lastName: string; email: string },
-) {
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(ADMIN_API_TOKEN_KEY, accessToken);
-  }
-
-  sessionTools.signInAdmin(
-    `${user.firstName} ${user.lastName}`.trim() || "Admin",
-    user.email,
-    accessToken,
-    user.id,
-  );
-}
 
 export default function SignInPage() {
   const router = useRouter();
@@ -85,7 +69,7 @@ export default function SignInPage() {
         email: loginForm.email.trim(),
         password: loginForm.password,
       });
-      persistAuth(sessionTools, response.accessToken, response.user);
+      persistAdminAuth(sessionTools, response.accessToken, response.user);
       setMessage("Signed in successfully.");
       router.push("/admin");
     } catch (err) {

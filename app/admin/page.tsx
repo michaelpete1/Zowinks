@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AdminBadge, AdminIcon, AdminShell } from "../../components/AdminShell";
 import { useAdminSession } from "../../hooks/useAdminSession";
@@ -74,7 +75,8 @@ const extractArray = <T,>(response: unknown, keys: string[]): T[] => {
 };
 
 export default function AdminDashboardPage() {
-  const { session } = useAdminSession();
+  const router = useRouter();
+  const { session, ready } = useAdminSession();
   const [productCount, setProductCount] = useState(0);
   const [visibleProductCount, setVisibleProductCount] = useState(0);
   const [categoryCount, setCategoryCount] = useState(0);
@@ -92,6 +94,10 @@ export default function AdminDashboardPage() {
       : null);
 
   useEffect(() => {
+    if (ready && !accessToken) {
+      router.replace("/signin");
+      return;
+    }
     if (!accessToken) return;
 
     let cancelled = false;

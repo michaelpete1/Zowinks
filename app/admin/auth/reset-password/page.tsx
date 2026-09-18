@@ -7,25 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAdminSession } from "../../../../hooks/useAdminSession";
 import { getSiteUrl } from "../../../../lib/site-url";
 import { ApiError, zowkinsApi } from "../../../../lib/zowkins-api";
-
-const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
-
-function persistAuth(
-  sessionTools: ReturnType<typeof useAdminSession>,
-  accessToken: string,
-  user: { id: string; firstName: string; lastName: string; email: string },
-) {
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(ADMIN_API_TOKEN_KEY, accessToken);
-  }
-
-  sessionTools.signInAdmin(
-    `${user.firstName} ${user.lastName}`.trim() || "Admin",
-    user.email,
-    accessToken,
-    user.id,
-  );
-}
+import { persistAdminAuth } from "../../../../lib/admin-auth";
 
 function AdminResetPasswordPageContent() {
   const router = useRouter();
@@ -102,7 +84,7 @@ function AdminResetPasswordPageContent() {
           password: newPassword,
         },
       );
-      persistAuth(sessionTools, response.accessToken, response.user);
+      persistAdminAuth(sessionTools, response.accessToken, response.user);
       setMessage("Password reset successful.");
       router.push("/admin");
     } catch (err: unknown) {

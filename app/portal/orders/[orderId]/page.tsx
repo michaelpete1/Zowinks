@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { zowkinsApi, PortalOrder } from "../../../../lib/zowkins-api";
-import PortalNavbar from "../../../../components/PortalNavbar";
 
 export default function PortalOrderDetailPage() {
   const params = useParams();
@@ -25,7 +24,7 @@ export default function PortalOrderDetailPage() {
     try {
       const token = localStorage.getItem("portalToken");
       if (!token) {
-        setError("Please sign in to view order details");
+        window.location.replace("/portal/auth/login");
         return;
       }
 
@@ -73,57 +72,40 @@ export default function PortalOrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="text-center">Loading...</div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
-            <p className="text-red-400">{error}</p>
-            <Link
-              href="/portal/orders"
-              className="mt-4 inline-block text-[#f3c74d] hover:underline"
-            >
-              ← Back to Orders
-            </Link>
-          </div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+          <p className="text-red-400">{error}</p>
+          <Link href="/portal/orders" className="mt-4 inline-block text-[#f3c74d] hover:underline">
+            ← Back to Orders
+          </Link>
+        </div>
+      </main>
     );
   }
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="text-center">
-            <p className="text-slate-300">Order not found</p>
-            <Link
-              href="/portal/orders"
-              className="mt-4 inline-block text-[#f3c74d] hover:underline"
-            >
-              ← Back to Orders
-            </Link>
-          </div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="text-center">
+          <p className="text-slate-300">Order not found</p>
+          <Link href="/portal/orders" className="mt-4 inline-block text-[#f3c74d] hover:underline">
+            ← Back to Orders
+          </Link>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-      <PortalNavbar />
-      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+    <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
         {/* Header */}
         <div className="mb-8">
           <Link
@@ -313,6 +295,5 @@ export default function PortalOrderDetailPage() {
           </div>
         </div>
       </main>
-    </div>
   );
 }

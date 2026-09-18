@@ -1,481 +1,142 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { zowkinsApi, DeliveryMethod, DeliveryAddress, ProductDetails, PortalUser, CreatePortalOrderInput, normalizeOrderGender } from "../../../../lib/zowkins-api";
-import PortalNavbar from "../../../../components/PortalNavbar";
+import { useRouter } from "next/navigation";
+import { ApiError, CreatePortalOrderInput, DeliveryAddress, DeliveryMethod, normalizeOrderGender, PortalUser, ProductDetails, zowkinsApi } from "../../../../lib/zowkins-api";
 
 const MONGO_OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/;
 
 function getPaymentLink(response: Record<string, unknown>) {
-  const candidates = [
-    response.paymentLink,
-    response.paymentUrl,
-    response.authorizationUrl,
-    response.authorization_url,
-    response.link,
-    response.url,
-  ];
-
-  for (const candidate of candidates) {
-    if (typeof candidate === "string" && candidate.trim()) {
-      return candidate.trim();
-    }
-  }
-
   const data = response.data as Record<string, unknown> | undefined;
-  if (data) {
-    const nestedCandidates = [
-      data.authorization_url,
-      data.authorizationUrl,
-      data.paymentLink,
-      data.paymentUrl,
-      data.link,
-      data.url,
-    ];
-
-    for (const candidate of nestedCandidates) {
-      if (typeof candidate === "string" && candidate.trim()) {
-        return candidate.trim();
-      }
-    }
-  }
-
-  return "";
+  const candidates = [response.paymentLink, response.paymentUrl, response.authorizationUrl, response.authorization_url, response.link, response.url, data?.paymentLink, data?.paymentUrl, data?.authorizationUrl, data?.authorization_url, data?.link, data?.url];
+  return candidates.find((value): value is string => typeof value === "string" && Boolean(value.trim()))?.trim() ?? "";
 }
 
 export default function CreatePortalOrderPage() {
   const router = useRouter();
-
   const [products, setProducts] = useState<ProductDetails[]>([]);
-  const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>([]);
-  const [deliveryAddresses, setDeliveryAddresses] = useState<DeliveryAddress[]>([]);
+  const [methods, setMethods] = useState<DeliveryMethod[]>([]);
+  const [addresses, setAddresses] = useState<DeliveryAddress[]>([]);
   const [user, setUser] = useState<PortalUser | null>(null);
+  const [items, setItems] = useState<{ productId: string; quantity: number }[]>([]);
+  const [addressId, setAddressId] = useState("");
+  const [methodId, setMethodId] = useState("");
+  const [gender, setGender] = useState<"male" | "female">("male");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form state
-  const [selectedProducts, setSelectedProducts] = useState<{ productId: string; quantity: number }[]>([]);
-  const [selectedDeliveryAddress, setSelectedDeliveryAddress] = useState<string>("");
-  const [selectedDeliveryMethod, setSelectedDeliveryMethod] = useState<string>("");
-  const [selectedGender, setSelectedGender] = useState<"male" | "female">("male");
-
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
+    const load = async () => {
       const token = localStorage.getItem("portalToken");
-      if (!token) {
-        setError("Please sign in to create an order");
-        return;
-      }
-
-      const [productsResponse, deliveryMethodsResponse, userResponse] = await Promise.all([
-        fetch("/api/zowkins/v1/products").then(res => res.json()),
-        zowkinsApi.listDeliveryMethods(),
-        zowkinsApi.getPortalMe(token),
-      ]);
-
-      // Filter only visible and in-stock products
-      const availableProducts = productsResponse.filter((product: ProductDetails) => 
-        product.visible && product.inStock
-      );
-      setProducts(availableProducts);
-      const availableDeliveryMethods = deliveryMethodsResponse.filter(
-        (method) =>
-          method.isActive &&
-          method.visibility &&
-          MONGO_OBJECT_ID_PATTERN.test(method.id),
-      );
-      setDeliveryMethods(availableDeliveryMethods);
-      setUser(userResponse);
-      setSelectedGender(normalizeOrderGender(userResponse.gender));
-
-      // Fetch delivery addresses for the user
-      const addresses = await zowkinsApi.listDeliveryAddresses(token, userResponse.id);
-      setDeliveryAddresses(addresses);
-
-      // Set default selections
-      if (addresses.length > 0) {
-        setSelectedDeliveryAddress(addresses[0].id);
-      }
-      if (availableDeliveryMethods.length > 0) {
-        setSelectedDeliveryMethod(availableDeliveryMethods[0].id);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleProductQuantityChange = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      setSelectedProducts(prev => prev.filter(p => p.productId !== productId));
-    } else {
-      setSelectedProducts(prev => {
-        const existing = prev.find(p => p.productId === productId);
-        if (existing) {
-          return prev.map(p => p.productId === productId ? { ...p, quantity } : p);
-        } else {
-          return [...prev, { productId, quantity }];
+      if (!token) return router.replace("/portal/auth/login");
+      try {
+        const [productResponse, methodResponse] = await Promise.all([
+          fetch("/api/zowkins/v1/products").then(async (response) => {
+            if (!response.ok) throw new Error("Unable to load products");
+            return response.json() as Promise<ProductDetails[]>;
+          }),
+          zowkinsApi.listDeliveryMethods(),
+        ]);
+        let activeToken = token;
+        let portalUser: PortalUser;
+        try {
+          portalUser = await zowkinsApi.getPortalMe(activeToken);
+        } catch (cause) {
+          if (!(cause instanceof ApiError) || cause.status !== 401) throw cause;
+          const refreshed = await zowkinsApi.refreshPortalTokens();
+          activeToken = refreshed.accessToken;
+          localStorage.setItem("portalToken", activeToken);
+          portalUser = await zowkinsApi.getPortalMe(activeToken);
         }
-      });
-    }
-  };
+        localStorage.setItem("portalUser", JSON.stringify(portalUser));
+        const availableMethods = methodResponse.filter((method) => method.isActive && method.visibility && MONGO_OBJECT_ID_PATTERN.test(method.id));
+        const deliveryAddresses = await zowkinsApi.listDeliveryAddresses(activeToken, portalUser.id);
+        setProducts(productResponse.filter((product) => product.visible && product.inStock));
+        setMethods(availableMethods);
+        setAddresses(deliveryAddresses);
+        setUser(portalUser);
+        setGender(normalizeOrderGender(portalUser.gender));
+        setAddressId(deliveryAddresses[0]?.id ?? "");
+        setMethodId(availableMethods[0]?.id ?? "");
+      } catch (cause) {
+        if (cause instanceof ApiError && cause.status === 401) {
+          localStorage.removeItem("portalToken");
+          localStorage.removeItem("portalUser");
+          router.replace("/portal/auth/login");
+          return;
+        }
+        setError(cause instanceof Error ? cause.message : "Failed to load order details");
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, [router]);
 
-  const calculateSubtotal = () => {
-    return selectedProducts.reduce((total, { productId, quantity }) => {
-      const product = products.find(p => p.id === productId);
-      return total + (product ? product.price * quantity : 0);
-    }, 0);
-  };
+  const changeQuantity = (productId: string, quantity: number) => setItems((current) => {
+    if (quantity <= 0) return current.filter((item) => item.productId !== productId);
+    return current.some((item) => item.productId === productId)
+      ? current.map((item) => item.productId === productId ? { ...item, quantity } : item)
+      : [...current, { productId, quantity }];
+  });
+  const subtotal = items.reduce((total, item) => total + (products.find((product) => product.id === item.productId)?.price ?? 0) * item.quantity, 0);
+  const fee = methods.find((method) => method.id === methodId)?.fee ?? 0;
 
-  const calculateDeliveryFee = () => {
-    const method = deliveryMethods.find(m => m.id === selectedDeliveryMethod);
-    return method ? method.fee : 0;
-  };
-
-  const calculateTotal = () => {
-    return calculateSubtotal() + calculateDeliveryFee();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (selectedProducts.length === 0) {
-      setError("Please select at least one product");
-      return;
-    }
-
-    if (!selectedDeliveryAddress) {
-      setError("Please select a delivery address");
-      return;
-    }
-
-    if (!selectedDeliveryMethod) {
-      setError("Please select a delivery method");
-      return;
-    }
-
-    if (!MONGO_OBJECT_ID_PATTERN.test(selectedDeliveryMethod)) {
-      setError("Please select a valid delivery method");
-      return;
-    }
-
-    setSubmitting(true);
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
-
+    const address = addresses.find((item) => item.id === addressId);
+    if (!items.length || !user || !address || !MONGO_OBJECT_ID_PATTERN.test(methodId)) {
+      setError("Select at least one product, a delivery address, and a delivery method.");
+      return;
+    }
+    const token = localStorage.getItem("portalToken");
+    if (!token) return router.replace("/portal/auth/login");
+    setSubmitting(true);
     try {
-      const token = localStorage.getItem("portalToken");
-      if (!token) {
-        throw new Error("Please sign in to create an order");
-      }
-
-      if (!user) {
-        throw new Error("Customer information is not loaded yet");
-      }
-
-      const selectedAddressData = deliveryAddresses.find((address) => address.id === selectedDeliveryAddress);
-      if (!selectedAddressData) {
-        throw new Error("Please select a valid delivery address");
-      }
-
-      const orderData: CreatePortalOrderInput = {
-        customer: {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          gender: selectedGender,
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-        },
-        from: {
-          email: user.email,
-        },
-        argument: {
-          from: {
-            email: user.email,
-          },
-        },
-        items: selectedProducts,
+      const input: CreatePortalOrderInput = {
+        customer: { firstName: user.firstName, lastName: user.lastName, gender, email: user.email, phoneNumber: user.phoneNumber },
+        items,
         callbackUrl: `${window.location.origin}/portal/orders`,
-        deliveryAddress: {
-          phoneNumber: selectedAddressData.phoneNumber,
-          street: selectedAddressData.street,
-          city: selectedAddressData.city,
-          state: selectedAddressData.state,
-          country: selectedAddressData.country,
-          postalCode: selectedAddressData.postalCode,
-        },
-        deliveryMethod: selectedDeliveryMethod,
+        deliveryAddress: { phoneNumber: address.phoneNumber, street: address.street, city: address.city, state: address.state, country: address.country, postalCode: address.postalCode },
+        deliveryMethod: methodId,
       };
-
-      const response = await zowkinsApi.createPortalOrder(token, orderData);
+      const response = await zowkinsApi.createPortalOrder(token, input);
       const paymentLink = getPaymentLink(response as Record<string, unknown>);
-
-      if (paymentLink) {
-        window.location.assign(paymentLink);
+      if (paymentLink) window.location.assign(paymentLink);
+      else router.push(response.order?.id ? `/portal/orders/${response.order.id}` : "/portal/orders");
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 401) {
+        localStorage.removeItem("portalToken");
+        localStorage.removeItem("portalUser");
+        router.replace("/portal/auth/login");
         return;
       }
-
-      router.push(`/portal/orders/${response.order?.id ?? ""}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create order");
+      setError(cause instanceof Error ? cause.message : "Failed to create order");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
-    );
-  }
-
+  if (loading) return <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16"><p className="text-center">Loading...</p></main>;
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-      <PortalNavbar />
-      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-        <div className="mb-8">
-          <Link 
-            href="/portal/orders" 
-            className="mb-4 inline-block text-[#f3c74d] hover:underline"
-          >
-            ← Back to Orders
-          </Link>
-          <h1 className="text-3xl font-bold text-white md:text-4xl">Create New Order</h1>
-          <p className="mt-2 text-slate-300">Select products and delivery options</p>
-        </div>
-
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4">
-            <p className="text-red-400">{error}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="rounded-lg border border-white/10 bg-white/5 p-6">
-            <h2 className="mb-4 text-xl font-semibold text-white">Customer Details</h2>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">First name</label>
-                <input
-                  value={user?.firstName || ""}
-                  readOnly
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">Last name</label>
-                <input
-                  value={user?.lastName || ""}
-                  readOnly
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">Email</label>
-                <input
-                  value={user?.email || ""}
-                  readOnly
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">Phone number</label>
-                <input
-                  value={user?.phoneNumber || ""}
-                  readOnly
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">Gender</label>
-                <select
-                  value={selectedGender}
-                  onChange={(event) =>
-                    setSelectedGender(event.target.value === "female" ? "female" : "male")
-                  }
-                  className="w-full rounded-lg border border-white/10 bg-[#0a1020] px-4 py-3 text-white outline-none"
-                >
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Products Selection */}
-          <div className="rounded-lg border border-white/10 bg-white/5 p-6">
-            <h2 className="mb-4 text-xl font-semibold text-white">Select Products</h2>
-            {products.length === 0 ? (
-              <p className="text-slate-300">No available products found.</p>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {products.map((product) => {
-                  const selectedProduct = selectedProducts.find(p => p.productId === product.id);
-                  const quantity = selectedProduct?.quantity || 0;
-                  
-                  return (
-                    <div key={product.id} className="rounded-lg border border-white/10 bg-white/5 p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-white">{product.name}</h3>
-                          <p className="text-sm text-slate-300 line-clamp-2">{product.description}</p>
-                          <p className="mt-2 font-semibold text-[#f3c74d]">₦{product.price.toLocaleString()}</p>
-                        </div>
-                        <div className="ml-4 flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleProductQuantityChange(product.id, Math.max(0, quantity - 1))}
-                            className="rounded-full border border-white/10 bg-white/5 p-1 text-white transition hover:bg-white/10"
-                          >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                            </svg>
-                          </button>
-                          <span className="w-8 text-center text-white">{quantity}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleProductQuantityChange(product.id, quantity + 1)}
-                            className="rounded-full border border-white/10 bg-white/5 p-1 text-white transition hover:bg-white/10"
-                          >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Delivery Options */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Delivery Address */}
-            <div className="rounded-lg border border-white/10 bg-white/5 p-6">
-              <h2 className="mb-4 text-xl font-semibold text-white">Delivery Address</h2>
-              {deliveryAddresses.length === 0 ? (
-                <div>
-                  <p className="mb-4 text-slate-300">No delivery addresses found.</p>
-                  <Link 
-                    href="/portal/profile" 
-                    className="inline-block rounded-full bg-[#f3c74d] px-4 py-2 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
-                  >
-                    Add Delivery Address
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {deliveryAddresses.map((address) => (
-                    <label key={address.id} className="flex cursor-pointer items-start space-x-3">
-                      <input
-                        type="radio"
-                        name="deliveryAddress"
-                        value={address.id}
-                        checked={selectedDeliveryAddress === address.id}
-                        onChange={(e) => setSelectedDeliveryAddress(e.target.value)}
-                        className="mt-1 h-4 w-4 text-[#f3c74d] focus:ring-[#f3c74d]"
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium text-white">{address.label}</p>
-                        <p className="text-sm text-slate-300">
-                          {address.street}, {address.city}, {address.state}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          {address.country}, {address.postalCode} • {address.phoneNumber}
-                        </p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Delivery Method */}
-            <div className="rounded-lg border border-white/10 bg-white/5 p-6">
-              <h2 className="mb-4 text-xl font-semibold text-white">Delivery Method</h2>
-              {deliveryMethods.length === 0 ? (
-                <p className="text-slate-300">No delivery methods available.</p>
-              ) : (
-                <div className="space-y-3">
-                  {deliveryMethods
-                    .filter(method => method.isActive && method.visibility)
-                    .map((method) => (
-                      <label key={method.id} className="flex cursor-pointer items-start space-x-3">
-                        <input
-                          type="radio"
-                          name="deliveryMethod"
-                          value={method.id}
-                          checked={selectedDeliveryMethod === method.id}
-                          onChange={(e) => setSelectedDeliveryMethod(e.target.value)}
-                          className="mt-1 h-4 w-4 text-[#f3c74d] focus:ring-[#f3c74d]"
-                        />
-                        <div className="flex-1">
-                          <p className="font-medium text-white">{method.name}</p>
-                          <p className="text-sm text-slate-300">{method.estimatedDeliveryTime}</p>
-                          <p className="text-sm font-medium text-[#f3c74d]">₦{method.fee.toLocaleString()}</p>
-                        </div>
-                      </label>
-                    ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Order Summary */}
-          {selectedProducts.length > 0 && (
-            <div className="rounded-lg border border-white/10 bg-white/5 p-6">
-              <h2 className="mb-4 text-xl font-semibold text-white">Order Summary</h2>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-300">Subtotal ({selectedProducts.reduce((sum, p) => sum + p.quantity, 0)} items):</span>
-                  <span className="text-white">₦{calculateSubtotal().toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-300">Delivery Fee:</span>
-                  <span className="text-white">₦{calculateDeliveryFee().toLocaleString()}</span>
-                </div>
-                <div className="border-t border-white/10 pt-2">
-                  <div className="flex justify-between">
-                    <span className="font-medium text-white">Total:</span>
-                    <span className="text-xl font-bold text-[#f3c74d]">₦{calculateTotal().toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <div className="flex justify-end gap-4">
-            <Link
-              href="/portal/orders"
-              className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={submitting || selectedProducts.length === 0}
-              className="rounded-full bg-[#f3c74d] px-6 py-3 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? "Creating Order..." : "Create Order"}
-            </button>
-          </div>
-        </form>
-      </main>
-    </div>
+    <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+      <Link href="/portal/orders" className="mb-4 inline-block text-[#f3c74d] hover:underline">← Back to Orders</Link>
+      <h1 className="text-3xl font-bold text-white md:text-4xl">Create New Order</h1>
+      <p className="mt-2 text-slate-300">Select products and delivery options.</p>
+      {error && <p className="mt-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-400">{error}</p>}
+      <form onSubmit={submit} className="mt-8 space-y-8">
+        <section className="rounded-lg border border-white/10 bg-white/5 p-6"><h2 className="mb-4 text-xl font-semibold text-white">Customer Details</h2><div className="grid gap-4 md:grid-cols-2">
+          {[["First name", user?.firstName], ["Last name", user?.lastName], ["Email", user?.email], ["Phone number", user?.phoneNumber]].map(([label, value]) => <label key={label as string} className="text-sm text-slate-300">{label}<input value={value ?? ""} readOnly className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white" /></label>)}
+          <label className="text-sm text-slate-300">Gender<select value={gender} onChange={(event) => setGender(event.target.value === "female" ? "female" : "male")} className="mt-2 w-full rounded-lg border border-white/10 bg-[#0a1020] px-4 py-3 text-white"><option value="male">Male</option><option value="female">Female</option></select></label>
+        </div></section>
+        <section className="rounded-lg border border-white/10 bg-white/5 p-6"><h2 className="mb-4 text-xl font-semibold text-white">Select Products</h2>{products.length ? <div className="grid gap-4 md:grid-cols-2">{products.map((product) => { const quantity = items.find((item) => item.productId === product.id)?.quantity ?? 0; return <div key={product.id} className="rounded-lg border border-white/10 bg-white/5 p-4"><h3 className="font-medium text-white">{product.name}</h3><p className="mt-1 line-clamp-2 text-sm text-slate-300">{product.description}</p><div className="mt-3 flex items-center justify-between"><b className="text-[#f3c74d]">₦{product.price.toLocaleString()}</b><span className="flex items-center gap-3"><button type="button" onClick={() => changeQuantity(product.id, quantity - 1)} className="rounded border border-white/10 px-2 text-white">−</button>{quantity}<button type="button" onClick={() => changeQuantity(product.id, quantity + 1)} className="rounded border border-white/10 px-2 text-white">+</button></span></div></div>; })}</div> : <p className="text-slate-300">No available products found.</p>}</section>
+        <div className="grid gap-6 lg:grid-cols-2"><section className="rounded-lg border border-white/10 bg-white/5 p-6"><h2 className="mb-4 text-xl font-semibold text-white">Delivery Address</h2>{addresses.map((address) => <label key={address.id} className="mb-3 flex gap-3 text-slate-300"><input type="radio" checked={addressId === address.id} onChange={() => setAddressId(address.id)} /><span><b className="text-white">{address.label}</b><br />{address.street}, {address.city}, {address.state}</span></label>)}{!addresses.length && <Link href="/portal/delivery-addresses/create" className="text-[#f3c74d] hover:underline">Add a delivery address</Link>}</section><section className="rounded-lg border border-white/10 bg-white/5 p-6"><h2 className="mb-4 text-xl font-semibold text-white">Delivery Method</h2>{methods.map((method) => <label key={method.id} className="mb-3 flex gap-3 text-slate-300"><input type="radio" checked={methodId === method.id} onChange={() => setMethodId(method.id)} /><span><b className="text-white">{method.name}</b><br />{method.estimatedDeliveryTime} · ₦{method.fee.toLocaleString()}</span></label>)}</section></div>
+        {!!items.length && <section className="rounded-lg border border-white/10 bg-white/5 p-6"><h2 className="mb-4 text-xl font-semibold text-white">Order Summary</h2><p className="flex justify-between text-slate-300"><span>Subtotal</span><span>₦{subtotal.toLocaleString()}</span></p><p className="mt-2 flex justify-between text-slate-300"><span>Delivery fee</span><span>₦{fee.toLocaleString()}</span></p><p className="mt-2 flex justify-between border-t border-white/10 pt-2 text-lg font-bold text-white"><span>Total</span><span className="text-[#f3c74d]">₦{(subtotal + fee).toLocaleString()}</span></p></section>}
+        <div className="flex justify-end gap-4"><Link href="/portal/orders" className="rounded-full border border-white/10 px-6 py-3 font-semibold text-white">Cancel</Link><button disabled={submitting || !items.length} className="rounded-full bg-[#f3c74d] px-6 py-3 font-semibold text-[#050b16] disabled:opacity-50">{submitting ? "Creating Order..." : "Create Order"}</button></div>
+      </form>
+    </main>
   );
 }

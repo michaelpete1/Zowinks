@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { zowkinsApi, PortalAuthResponse } from "../../../../../lib/zowkins-api";
-import PortalNavbar from "../../../../../components/PortalNavbar";
 
 export default function PortalSetNewPasswordPage() {
   const router = useRouter();
@@ -89,10 +88,7 @@ export default function PortalSetNewPasswordPage() {
 
   if (tokenValid === false) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        
-        <main className="mx-auto max-w-md px-4 py-12 md:px-8">
+      <main className="mx-auto max-w-md px-4 py-12 md:px-8">
           <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
             <div className="text-center">
               <h1 className="text-3xl font-bold text-white">Invalid Reset Link</h1>
@@ -109,15 +105,11 @@ export default function PortalSetNewPasswordPage() {
             </div>
           </div>
         </main>
-      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-      <PortalNavbar />
-      
-      <main className="mx-auto max-w-md px-4 py-12 md:px-8">
+    <main className="mx-auto max-w-md px-4 py-12 md:px-8">
         <div className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-white">Set New Password</h1>
@@ -187,6 +179,5 @@ export default function PortalSetNewPasswordPage() {
           </div>
         </div>
       </main>
-    </div>
   );
 }

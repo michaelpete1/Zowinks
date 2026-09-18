@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { zowkinsApi, PortalUser } from "../../../lib/zowkins-api";
-import PortalNavbar from "../../../components/PortalNavbar";
 
 export default function PortalProfilePage() {
   const router = useRouter();
@@ -129,13 +128,17 @@ export default function PortalProfilePage() {
       newErrors.currentPassword = "Current password is required";
     if (!passwordForm.newPassword) {
       newErrors.newPassword = "New password is required";
-    } else if (passwordForm.newPassword.length < 6) {
-      newErrors.newPassword = "Password must be at least 6 characters";
+    } else if (passwordForm.newPassword.length < 8) {
+      newErrors.newPassword = "Password must be at least 8 characters";
+    } else if (
+      !/[A-Za-z]/.test(passwordForm.newPassword) ||
+      !/[0-9]/.test(passwordForm.newPassword)
+    ) {
+      newErrors.newPassword = "Password must include at least one letter and one number";
     }
     if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
       newErrors.confirmNewPassword = "Passwords do not match";
     }
-
     setPasswordFieldErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -171,7 +174,12 @@ export default function PortalProfilePage() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await zowkinsApi.logoutPortal();
+    } catch {
+      // ignore — clear session regardless
+    }
     localStorage.removeItem("portalToken");
     localStorage.removeItem("portalUser");
     router.push("/portal/auth/login");
@@ -179,38 +187,27 @@ export default function PortalProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="text-center">Loading...</div>
+      </main>
     );
   }
 
   if (error && !user) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
-            <p className="text-red-400">{error}</p>
-            <Link
-              href="/portal/auth/login"
-              className="mt-4 inline-block text-[#f3c74d] hover:underline"
-            >
-              ← Back to Login
-            </Link>
-          </div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+          <p className="text-red-400">{error}</p>
+          <Link href="/portal/auth/login" className="mt-4 inline-block text-[#f3c74d] hover:underline">
+            ← Back to Login
+          </Link>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-      <PortalNavbar />
-      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+    <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white md:text-4xl">Profile</h1>
           <p className="mt-2 text-slate-300">Manage your account information</p>
@@ -660,6 +657,5 @@ export default function PortalProfilePage() {
           </div>
         )}
       </main>
-    </div>
   );
 }

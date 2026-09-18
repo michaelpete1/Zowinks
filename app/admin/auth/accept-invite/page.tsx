@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
 
-export default function AdminAcceptInviteRedirectPage({
+export default async function AdminAcceptInviteRedirectPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const token = Array.isArray(searchParams.token)
-    ? searchParams.token[0]
-    : searchParams.token;
+  const params = await searchParams;
+  const token = Array.isArray(params.token) ? params.token[0] : params.token;
 
   if (token) {
     redirect(`/admin/auth/accept-invite/${encodeURIComponent(token)}`);

@@ -7,17 +7,61 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "../hooks/useCart";
+import { ApiError, zowkinsApi } from "../lib/zowkins-api";
 
 export default function Navbar() {
   const items = useCart((state) => state.items);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [user, setUser] = useState<any>(null);
   const [pathname, setPathname] = useState("/");
   const router = useRouter();
   const isHome = pathname === "/";
 
   useEffect(() => {
     setPathname(window.location.pathname);
+    const restoreSession = async () => {
+      const token = localStorage.getItem("portalToken");
+      if (!token) return;
+
+      try {
+        const profile = await zowkinsApi.getPortalMe(token);
+        const activeToken = localStorage.getItem("portalToken") || token;
+        localStorage.setItem("portalUser", JSON.stringify(profile));
+        setUser({ token: activeToken, user: profile });
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          localStorage.removeItem("portalToken");
+          localStorage.removeItem("portalUser");
+          setUser(null);
+        }
+      }
+    };
+
+    void restoreSession();
+  }, []);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "portalUser" || e.key === "portalToken") {
+        try {
+          const userData = localStorage.getItem("portalUser");
+          const token = localStorage.getItem("portalToken");
+          if (userData) setUser({ token, user: JSON.parse(userData) });
+          else setUser(null);
+        } catch (err) {
+          setUser(null);
+        }
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    const onSessionExpired = () => setUser(null);
+    window.addEventListener("portal-session-expired", onSessionExpired);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("portal-session-expired", onSessionExpired);
+    };
   }, []);
 
   const links = [
@@ -68,18 +112,34 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden items-center justify-center gap-6 lg:flex">
-            {links.map((link) => (
+            {links.map((link, i) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={navLinkClassName}
+                className={`${navLinkClassName} animate-nav-slide-down`}
+                style={{ animationDelay: `${i * 60}ms` }}
               >
                 {link.label}
               </Link>
             ))}
           </div>
 
-          <div className="hidden items-center gap-3 lg:flex">
+          <div className="hidden items-center gap-3 lg:flex animate-nav-slide-down" style={{ animationDelay: '360ms' }}>
+            {user ? (
+              <Link href="/portal" className="inline-flex items-center gap-2">
+                <div className="mr-2 rounded-full bg-white/5 px-3 py-2 text-sm font-medium text-slate-100">
+                  Hi, {user.user?.firstName || user.user?.email || "Member"}
+                </div>
+              </Link>
+            ) : (
+              <Link
+                href="/portal/auth/login"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white hover:bg-white/10"
+              >
+                Sign in
+              </Link>
+            )}
+
             <Link
               href="/cart"
               className="relative rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:border-[#f3c74d]/45 hover:bg-white/10"
@@ -146,7 +206,7 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
           />
           <div
-            className={`fixed inset-0 z-[10001] overflow-y-auto shadow-2xl transition-transform duration-300 ease-out lg:hidden ${isHome ? "bg-[linear-gradient(180deg,#07142a_0%,#050b16_100%)] text-slate-100" : "bg-[#050b16] text-slate-100"} animate-[rise_0.45s_ease-out]`}
+            className={`fixed inset-0 z-[10001] overflow-y-auto shadow-2xl lg:hidden ${isHome ? "bg-[linear-gradient(180deg,#07142a_0%,#050b16_100%)] text-slate-100" : "bg-[#050b16] text-slate-100"} animate-menu-slide-in`}
           >
             <div
               className={`flex items-center justify-between border-b px-4 py-3 backdrop-blur-xl ${isHome ? "border-white/10 bg-[#07142a]/95" : "border-white/10 bg-[#050b16]/95"}`}
@@ -219,7 +279,7 @@ export default function Navbar() {
                 </button>
               </form>
 
-              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 animate-[fadeIn_0.35s_ease-out]">
+              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 animate-fade-in" style={{ animationDelay: '80ms' }}>
                 {links.map((link) => (
                   <Link
                     key={link.href}
@@ -232,7 +292,25 @@ export default function Navbar() {
                 ))}
               </div>
 
-              <div className="space-y-3 border-t border-white/10 pt-4 animate-[fadeIn_0.45s_ease-out]">
+              <div className="space-y-3 border-t border-white/10 pt-4 animate-fade-in" style={{ animationDelay: '160ms' }}>
+                {user ? (
+                  <Link
+                    href="/portal"
+                    className="block rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-white/10"
+                    onClick={() => setOpen(false)}
+                  >
+                    Hi, {user.user?.firstName || user.user?.email || "Member"}
+                  </Link>
+                ) : (
+                  <Link
+                    href="/portal/auth/login"
+                    className="block rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-white/10"
+                    onClick={() => setOpen(false)}
+                  >
+                    Sign in
+                  </Link>
+                )}
+
                 <Link
                   href="/cart"
                   className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:border-[#f3c74d]/45 hover:bg-white/10"

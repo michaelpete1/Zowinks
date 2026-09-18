@@ -1,55 +1,48 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { zowkinsApi, DeliveryAddress } from "../../../lib/zowkins-api";
-import PortalNavbar from "../../../components/PortalNavbar";
+import { zowkinsApi, DeliveryAddress, PortalUser, ApiError } from "../../../lib/zowkins-api";
 
 export default function PortalDeliveryAddressesPage() {
+  const router = useRouter();
   const [addresses, setAddresses] = useState<DeliveryAddress[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<PortalUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchAddresses();
-  }, []);
-
-  const fetchAddresses = async () => {
-    try {
+    const load = async () => {
       const token = localStorage.getItem("portalToken");
-      if (!token) {
-        setError("Please sign in to view your delivery addresses");
-        return;
+      if (!token) { router.replace("/portal/auth/login"); return; }
+      try {
+        const portalUser = await zowkinsApi.getPortalMe(token);
+        const portalAddresses = await zowkinsApi.listDeliveryAddresses(token, portalUser.id);
+        setUser(portalUser);
+        setAddresses(portalAddresses);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          localStorage.removeItem("portalToken");
+          localStorage.removeItem("portalUser");
+          router.replace("/portal/auth/login");
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Failed to fetch delivery addresses");
+      } finally {
+        setLoading(false);
       }
-
-      // Get user info first
-      const userResponse = await zowkinsApi.getPortalMe(token);
-      setUser(userResponse);
-
-      // Then fetch addresses
-      const addressesResponse = await zowkinsApi.listDeliveryAddresses(token, userResponse.id);
-      setAddresses(addressesResponse);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch delivery addresses");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    void load();
+  }, [router]);
 
   const handleDelete = async (addressId: string) => {
-    if (!confirm("Are you sure you want to delete this delivery address?")) {
-      return;
-    }
-
+    if (!confirm("Are you sure you want to delete this delivery address?")) return;
+    const token = localStorage.getItem("portalToken");
+    if (!token || !user) return;
     try {
-      const token = localStorage.getItem("portalToken");
-      if (!token || !user) return;
-
       await zowkinsApi.deleteDeliveryAddress(token, user.id, addressId);
-      
-      // Refresh the list
-      fetchAddresses();
+      setAddresses((prev) => prev.filter((a) => a.id !== addressId));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete delivery address");
     }
@@ -57,32 +50,24 @@ export default function PortalDeliveryAddressesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="text-center">Loading...</div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
-            <p className="text-red-400">{error}</p>
-          </div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+          <p className="text-red-400">{error}</p>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-      <PortalNavbar />
-      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+    <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
         <div className="mb-8 flex flex-col justify-between md:flex-row md:items-center">
           <div>
             <h1 className="text-3xl font-bold text-white md:text-4xl">Delivery Addresses</h1>
@@ -165,6 +150,5 @@ export default function PortalDeliveryAddressesPage() {
           </div>
         )}
       </main>
-    </div>
   );
 }

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAdminSession } from "../../../../hooks/useAdminSession";
 import { ApiError, zowkinsApi } from "../../../../lib/zowkins-api";
+import { persistAdminAuth } from "../../../../lib/admin-auth";
 
 const ADMIN_API_TOKEN_KEY = "zowkins-admin-access-token";
 
@@ -79,7 +80,7 @@ export default function CreateAdminAccountPage() {
         phoneNumber: createForm.phoneNumber.trim() || undefined,
       });
 
-      persistAuth(sessionTools, response.accessToken, response.user);
+      persistAdminAuth(sessionTools, response.accessToken, response.user);
       setMessage("Admin account created successfully.");
       router.push("/admin");
     } catch (err: unknown) {

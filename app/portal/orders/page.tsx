@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { zowkinsApi, PortalOrder, PortalOrderStats } from "../../../lib/zowkins-api";
-import PortalNavbar from "../../../components/PortalNavbar";
 
 export default function PortalOrdersPage() {
   const [orders, setOrders] = useState<PortalOrder[]>([]);
@@ -19,7 +18,7 @@ export default function PortalOrdersPage() {
     try {
       const token = localStorage.getItem("portalToken");
       if (!token) {
-        setError("Please sign in to view your orders");
+        window.location.replace("/portal/auth/login");
         return;
       }
 
@@ -67,32 +66,24 @@ export default function PortalOrdersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="text-center">Loading...</div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-        <PortalNavbar />
-        <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
-            <p className="text-red-400">{error}</p>
-          </div>
-        </main>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+          <p className="text-red-400">{error}</p>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-      <PortalNavbar />
-      <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
+    <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white md:text-4xl">Your Orders</h1>
           <p className="mt-2 text-slate-300">Manage and track your orders</p>
@@ -174,6 +165,5 @@ export default function PortalOrdersPage() {
           </div>
         )}
       </main>
-    </div>
   );
 }
