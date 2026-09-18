@@ -61,10 +61,10 @@ export default function PortalResetPasswordPage() {
     setRequestError(null);
 
     try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zowkins.com";
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zowkins.vercel.app";
       await zowkinsApi.resetPortalPassword({
         email: email.trim(),
-        redirectUrl: `${siteUrl}/portal/auth/reset-password`,
+        redirectUrl: `${siteUrl}/portal/reset-password`,
       });
       setRequestSuccess(true);
     } catch (err) {

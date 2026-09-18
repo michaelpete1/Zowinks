@@ -1643,10 +1643,7 @@ export const zowkinsApi = {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        ...payload,
-        argument: { redirectUrl: payload.redirectUrl },
-      }),
+      body: JSON.stringify({ email: payload.email }),
     });
   },
   setNewPortalPassword(token: string, payload: PortalSetNewPasswordInput) {
