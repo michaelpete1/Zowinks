@@ -9,6 +9,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
 
   useEffect(() => {
+    const path = window.location.pathname;
+    const publicPaths = ["/portal/reset-password", "/portal/auth"];
+    if (publicPaths.some((p) => path.startsWith(p))) return;
     const token = localStorage.getItem("portalToken");
     if (!token) router.replace("/portal/auth/login");
   }, [router]);
