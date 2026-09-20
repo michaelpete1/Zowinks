@@ -602,26 +602,9 @@ export default function ProductsPage() {
     setError("");
     setMessage("");
 
-    console.log("selectedProduct:", selectedProduct);
-    console.log(
-      "selectedProduct id:",
-      selectedProduct?.id,
-      (selectedProduct as any)?._id,
-    );
-    console.log(
-      "payload booleans:",
-      payloadBase.visible,
-      payloadBase.inStock,
-      typeof payloadBase.visible,
-      typeof payloadBase.inStock,
-      "payload keys:",
-      Object.keys(payloadBase),
-    );
-
     try {
       const productId = selectedProduct?.id || (selectedProduct as any)?._id;
       const isValidProduct = Boolean(selectedProduct && productId);
-      console.log("isValidProduct:", isValidProduct, "productId:", productId);
 
       let finalFiles = selectedFiles;
       if (isValidProduct && finalFiles.length === 0) {
@@ -682,8 +665,6 @@ export default function ProductsPage() {
             apiConnection.accessToken.trim(),
             payload,
           );
-
-      console.log("saved:", saved);
 
       setMessage(
         selectedProduct

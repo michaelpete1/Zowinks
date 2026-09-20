@@ -154,8 +154,14 @@ export default function Footer() {
               About
             </Link>
             <Link
-              href="/request-quote"
+              href="/contact"
               className="transition-colors hover:text-[#5ab214]"
+            >
+              Contact
+            </Link>
+            <Link
+              href="/request-quote"
+              className="transition-colors hover:text-[#f3c74d]"
             >
               Request a Quote
             </Link>

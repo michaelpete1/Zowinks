@@ -16,6 +16,19 @@ const ALLOWED_HOST_SUFFIXES = [
 
 const IMAGE_CACHE_TTL_MS = 5 * 60 * 1000;
 
+const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL || "https://zowkins.vercel.app";
+
+function corsHeaders(origin: string | null): Record<string, string> {
+  const allowed =
+    origin &&
+    (origin === ALLOWED_ORIGIN ||
+      origin.endsWith(".vercel.app") ||
+      origin === "http://localhost:3000")
+      ? origin
+      : ALLOWED_ORIGIN;
+  return { "access-control-allow-origin": allowed, vary: "Origin, Accept-Encoding" };
+}
+
 type CachedImage = {
   body: ArrayBuffer;
   contentType: string | null;
@@ -33,6 +46,7 @@ const isAllowedHost = (hostname: string) => {
 };
 
 export async function GET(request: NextRequest) {
+  const origin = request.headers.get("origin");
   const src = request.nextUrl.searchParams.get("src");
   if (!src) {
     return new Response("Missing src", { status: 400 });
@@ -55,8 +69,8 @@ export async function GET(request: NextRequest) {
     const cachedHeaders = new Headers();
     if (cached.contentType) cachedHeaders.set("content-type", cached.contentType);
     cachedHeaders.set("cache-control", cached.cacheControl);
-    cachedHeaders.set("access-control-allow-origin", "*");
-    cachedHeaders.set("vary", "Accept-Encoding");
+    const cors = corsHeaders(origin);
+    Object.entries(cors).forEach(([k, v]) => cachedHeaders.set(k, v));
 
     return new Response(cached.body.slice(0), {
       status: 200,
@@ -71,13 +85,9 @@ export async function GET(request: NextRequest) {
       "Referer": url.origin,
     },
     cache: "force-cache",
-  }).catch((err) => {
-    console.error("FETCH ERROR", url.toString(), err);
-    return null;
-  });
+  }).catch(() => null);
 
   if (!upstream?.ok) {
-    console.error("UPSTREAM FAILED", url.toString(), upstream?.status, upstream?.statusText);
     return new Response(`Upstream image fetch failed: ${upstream?.status || "Unknown error"}`, {
       status: upstream?.status || 502,
     });
@@ -94,8 +104,8 @@ export async function GET(request: NextRequest) {
 
   const cacheControl = upstream.headers.get("cache-control") || "public, max-age=3600";
   headers.set("cache-control", cacheControl);
-  headers.set("access-control-allow-origin", "*");
-  headers.set("vary", "Accept-Encoding");
+  const cors = corsHeaders(origin);
+  Object.entries(cors).forEach(([k, v]) => headers.set(k, v));
 
   imageCache.set(cacheKey, {
     body,

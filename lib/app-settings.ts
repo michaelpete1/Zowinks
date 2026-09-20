@@ -82,11 +82,26 @@ function normalizeApp(input: Partial<App> | null | undefined): App {
   };
 }
 
+const ALLOWED_API_HOST = new URL("https://zowkins-api.onrender.com").hostname;
+
+function getSafeApiBase(): string {
+  const base = ZOWKINS_API_BASE.startsWith("http")
+    ? ZOWKINS_API_BASE
+    : SERVER_ZOWKINS_API_BASE;
+  try {
+    const { hostname } = new URL(base);
+    if (hostname !== ALLOWED_API_HOST && hostname !== "localhost" && hostname !== "127.0.0.1") {
+      return `https://${ALLOWED_API_HOST}/v1`;
+    }
+  } catch {
+    return `https://${ALLOWED_API_HOST}/v1`;
+  }
+  return base;
+}
+
 export async function getAppSettings() {
   try {
-    const base = ZOWKINS_API_BASE.startsWith("http")
-      ? ZOWKINS_API_BASE
-      : SERVER_ZOWKINS_API_BASE;
+    const base = getSafeApiBase();
 
     const response = await fetch(`${base}/app`, {
       headers: {

@@ -688,9 +688,11 @@ async function refreshPortalAccessToken(): Promise<string | null> {
       if (!response.ok) return null;
 
       const payload = (await response.json()) as PortalRefreshResponse;
-      if (!payload?.accessToken) return null;
-      window.localStorage.setItem("portalToken", payload.accessToken);
-      return payload.accessToken;
+      const token = payload?.accessToken;
+      // Validate it looks like a JWT (three base64url segments) before storing
+      if (!token || !/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return null;
+      window.localStorage.setItem("portalToken", token);
+      return token;
     } catch {
       return null;
     } finally {

@@ -27,10 +27,26 @@ const isRetriableFetchError = (error: unknown): boolean => {
   );
 };
 
+const ALLOWED_UPSTREAM_HOST = new URL(UPSTREAM_BASE).hostname;
+
+function buildUpstreamUrl(pathSegments: string[], search: string): URL {
+  const segments = pathSegments[0] === "v1" ? pathSegments.slice(1) : pathSegments;
+  // Sanitise each segment — strip anything that isn't a safe path character
+  const safePath = segments
+    .map((s) => encodeURIComponent(decodeURIComponent(s)))
+    .join("/");
+  const url = new URL(`${UPSTREAM_BASE.replace(/\/$/, "")}/${safePath}`);
+  // Only copy through known-safe query params (forward the raw search but
+  // ensure the host cannot be overridden via a crafted path)
+  url.search = search;
+  if (url.hostname !== ALLOWED_UPSTREAM_HOST) {
+    throw new Error("Upstream host mismatch — possible SSRF attempt blocked.");
+  }
+  return url;
+}
+
 async function proxy(request: NextRequest, pathSegments: string[]) {
-  const upstreamSegments = pathSegments[0] === "v1" ? pathSegments.slice(1) : pathSegments;
-  const upstreamUrl = new URL(`${UPSTREAM_BASE.replace(/\/$/, "")}/${upstreamSegments.join("/")}`);
-  upstreamUrl.search = request.nextUrl.search;
+  const upstreamUrl = buildUpstreamUrl(pathSegments, request.nextUrl.search);
 
   const headers = new Headers(request.headers);
   headers.delete("host");
@@ -45,7 +61,6 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (2 minutes)
 
-  const contentType = request.headers.get("content-type") || "";
   const hasBody = !["GET", "HEAD"].includes(request.method);
   let body: BodyInit | undefined;
 
