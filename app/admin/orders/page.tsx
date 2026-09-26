@@ -635,42 +635,42 @@ export default function OrdersPage() {
                 {stats.totalOrders}
               </p>
             </div>
-            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-amber-100 bg-amber-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+            <button
+              type="button"
+              onClick={() => { setPage(1); setFilterOrderStatus(filterOrderStatus === "processing" ? "" : "processing"); }}
+              className={`relative min-w-0 w-full overflow-hidden rounded-[1.4rem] border bg-amber-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)] text-left transition hover:brightness-95 ${filterOrderStatus === "processing" ? "border-amber-400 ring-2 ring-amber-300" : "border-amber-100"}`}
+            >
               <div className="absolute inset-x-0 top-0 h-1 bg-amber-300" />
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-amber-700">
-                Processing
-              </p>
-              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">
-                {stats.processing}
-              </p>
-            </div>
-            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-emerald-100 bg-emerald-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-amber-700">Processing</p>
+              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">{stats.processing}</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPage(1); setFilterOrderStatus(filterOrderStatus === "delivered" ? "" : "delivered"); }}
+              className={`relative min-w-0 w-full overflow-hidden rounded-[1.4rem] border bg-emerald-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)] text-left transition hover:brightness-95 ${filterOrderStatus === "delivered" ? "border-emerald-400 ring-2 ring-emerald-300" : "border-emerald-100"}`}
+            >
               <div className="absolute inset-x-0 top-0 h-1 bg-emerald-300" />
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-emerald-700">
-                Delivered
-              </p>
-              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">
-                {stats.delivered}
-              </p>
-            </div>
-            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-rose-100 bg-rose-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-emerald-700">Delivered</p>
+              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">{stats.delivered}</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPage(1); setFilterOrderStatus(filterOrderStatus === "cancelled" ? "" : "cancelled"); }}
+              className={`relative min-w-0 w-full overflow-hidden rounded-[1.4rem] border bg-rose-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)] text-left transition hover:brightness-95 ${filterOrderStatus === "cancelled" ? "border-rose-400 ring-2 ring-rose-300" : "border-rose-100"}`}
+            >
               <div className="absolute inset-x-0 top-0 h-1 bg-rose-300" />
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-rose-700">
-                Cancelled
-              </p>
-              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">
-                {stats.cancelled}
-              </p>
-            </div>
-            <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-cyan-100 bg-cyan-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-rose-700">Cancelled</p>
+              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">{stats.cancelled}</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPage(1); setFilterOrderStatus(filterOrderStatus === "in-transit" ? "" : "in-transit"); }}
+              className={`relative min-w-0 w-full overflow-hidden rounded-[1.4rem] border bg-cyan-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)] text-left transition hover:brightness-95 ${filterOrderStatus === "in-transit" ? "border-cyan-400 ring-2 ring-cyan-300" : "border-cyan-100"}`}
+            >
               <div className="absolute inset-x-0 top-0 h-1 bg-cyan-300" />
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-cyan-700">
-                Transit
-              </p>
-              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">
-                {stats.inTransit}
-              </p>
-            </div>
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-cyan-700">Transit</p>
+              <p className="mt-3 text-2xl font-bold leading-none tracking-tight text-slate-900">{stats.inTransit}</p>
+            </button>
             <div className="relative min-w-0 overflow-hidden rounded-[1.4rem] border border-slate-100 bg-slate-50 px-4 py-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)] sm:col-span-2 xl:col-span-5">
               <div className="absolute inset-x-0 top-0 h-1 bg-slate-300" />
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-500">
