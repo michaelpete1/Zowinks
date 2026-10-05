@@ -206,7 +206,7 @@ export default function AdminOrderDetailPage() {
           href="/admin/orders"
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
         >
-          ← Back to Dashboard
+          ← Back to Orders
         </Link>
       </div>
 

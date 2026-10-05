@@ -27,6 +27,9 @@ const portalLinks = [
 export default function PortalPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-12">
+      <Link href="/" className="mb-6 inline-flex items-center gap-1 text-sm text-[#f3c74d] hover:underline">
+        ← Back to Home
+      </Link>
       <section className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-7 shadow-[0_20px_60px_rgba(0,0,0,0.22)] md:p-10">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#f3c74d]">
           Customer portal

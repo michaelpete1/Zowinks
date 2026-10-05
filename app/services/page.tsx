@@ -40,6 +40,9 @@ export default function ServicesPage() {
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
+        <Link href="/" className="mb-6 inline-flex items-center gap-1 text-sm text-[#f3c74d] hover:underline">
+          ← Back to Home
+        </Link>
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
           <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-6 px-6 py-8 md:px-10 md:py-10">

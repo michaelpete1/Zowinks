@@ -118,6 +118,9 @@ export default function PortalQuoteRequestPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-12 md:px-8 md:py-16">
       <div className="mb-8">
+        <Link href="/portal" className="mb-4 inline-flex items-center gap-1 text-sm text-[#f3c74d] hover:underline">
+          ← Back to Portal
+        </Link>
         <h1 className="text-3xl font-bold text-white md:text-4xl">Request a Quote</h1>
         <p className="mt-2 text-slate-300">Get a personalised quote for your custom order</p>
       </div>

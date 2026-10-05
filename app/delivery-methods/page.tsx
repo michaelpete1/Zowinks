@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import { zowkinsApi } from "../../lib/zowkins-api";
 
@@ -32,6 +33,9 @@ export default async function DeliveryMethodsPage() {
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
+        <Link href="/" className="mb-6 inline-flex items-center gap-1 text-sm text-[#f3c74d] hover:underline">
+          ← Back to Home
+        </Link>
         <section className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.22)] md:p-10">
           <p className="text-xs uppercase tracking-[0.35em] text-white/55">
             Delivery methods

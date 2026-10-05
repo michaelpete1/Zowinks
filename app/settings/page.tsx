@@ -27,6 +27,9 @@ export default async function AppSettingsPage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-16">
+        <Link href="/" className="mb-6 inline-flex items-center gap-1 text-sm text-[#f3c74d] hover:underline">
+          ← Back to Home
+        </Link>
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.2)] md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#f3c74d]">

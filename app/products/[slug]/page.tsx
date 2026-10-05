@@ -227,6 +227,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10 lg:py-12">
+        <Link href="/products" className="mb-6 inline-flex items-center gap-1 text-sm text-[#f3c74d] hover:underline">
+          ← Back to Products
+        </Link>
         <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] xl:gap-8">
           <section className="min-w-0 space-y-6 lg:pt-2">
             <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_20px_60px_rgba(0,0,0,0.22)]">

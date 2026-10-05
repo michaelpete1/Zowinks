@@ -65,7 +65,9 @@ export default function PortalOrdersPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-12 space-y-6">
-
+      <Link href="/portal" className="inline-flex items-center gap-1 text-sm text-[#f3c74d] hover:underline">
+        ← Back to Portal
+      </Link>
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>

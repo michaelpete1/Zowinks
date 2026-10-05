@@ -75,7 +75,7 @@ export default function PortalQuoteDetailsPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-12 md:px-8 md:py-16">
       <div className="mb-8">
-        <Link href="/portal" className="mb-4 inline-block text-sm text-[#f3c74d] hover:underline">← Back to Portal</Link>
+        <Link href="/portal/quotes/request" className="mb-4 inline-block text-sm text-[#f3c74d] hover:underline">← Back to Quotes</Link>
         <h1 className="text-3xl font-bold text-white md:text-4xl">Quote Details</h1>
         <p className="mt-1 text-slate-300">#{quote.orderNumber}</p>
       </div>

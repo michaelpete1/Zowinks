@@ -187,6 +187,7 @@ export default function OrdersPage() {
   const [query, setQuery] = useState("");
   const [filterOrderStatus, setFilterOrderStatus] = useState("");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState("");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [pageSize, setPageSize] = useState(ORDERS_PAGE_SIZE);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -219,8 +220,10 @@ export default function OrdersPage() {
 
   const apiReady = Boolean(apiConnection.accessToken.trim());
 
-  const loadOrders = async () => {
+  const loadOrders = async (overridePage?: number) => {
     if (!apiReady) return;
+
+    const activePage = overridePage ?? page;
 
     setLoading(true);
     setError("");
@@ -236,16 +239,16 @@ export default function OrdersPage() {
         zowkinsApi.listAdminOrders(apiConnection.accessToken.trim(), {
           orderStatus: filterOrderStatus || undefined,
           paymentStatus: filterPaymentStatus || undefined,
-          sortBy: "createdAt:desc",
+          sortBy: `createdAt:${sortOrder}`,
           limit: pageSize,
-          page,
+          page: activePage,
         }),
         zowkinsApi.listAdminOrders(apiConnection.accessToken.trim(), {
           orderStatus: filterOrderStatus || undefined,
           paymentStatus: filterPaymentStatus || undefined,
-          sortBy: "createdAt:desc",
+          sortBy: `createdAt:${sortOrder}`,
           limit: 1,
-          page: page + 1,
+          page: activePage + 1,
         }),
         zowkinsApi.getAdminOrderStats(apiConnection.accessToken.trim()),
         zowkinsApi.listAdminProducts(apiConnection.accessToken.trim()),
@@ -299,7 +302,18 @@ export default function OrdersPage() {
     if (!ready || !apiReady) return;
     void loadOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiReady, ready, filterOrderStatus, filterPaymentStatus, page, pageSize]);
+  }, [apiReady, ready, filterOrderStatus, filterPaymentStatus, sortOrder, page, pageSize]);
+
+  // Auto-poll every 30s — new client orders appear on page 1 without manual refresh
+  useEffect(() => {
+    if (!ready || !apiReady) return;
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      if (page === 1) void loadOrders(1);
+    }, 30_000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, apiReady, page, filterOrderStatus, filterPaymentStatus, pageSize]);
 
   useEffect(() => {
     if (!selectedOrder) return;
@@ -330,28 +344,35 @@ export default function OrdersPage() {
 
   const filteredOrders = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return orders;
-    return orders.filter((order) => {
-      const customerFirstName =
-        typeof order.customer === "object" ? order.customer.firstName : "";
-      const customerLastName =
-        typeof order.customer === "object" ? order.customer.lastName : "";
-      const customerEmail =
-        typeof order.customer === "object" ? order.customer.email : "";
-
-      return [
-        order.id,
-        order.orderNumber,
-        customerFirstName,
-        customerLastName,
-        customerEmail,
-        order.orderStatus,
-        order.paymentStatus,
-        getOrderMethod(order),
-        getOrderAddress(order),
-      ].some((value) => value.toLowerCase().includes(needle));
-    });
-  }, [orders, query]);
+    const filtered = !needle
+      ? orders
+      : orders.filter((order) => {
+          const customerFirstName =
+            typeof order.customer === "object" ? order.customer.firstName : "";
+          const customerLastName =
+            typeof order.customer === "object" ? order.customer.lastName : "";
+          const customerEmail =
+            typeof order.customer === "object" ? order.customer.email : "";
+          return [
+            order.id,
+            order.orderNumber,
+            customerFirstName,
+            customerLastName,
+            customerEmail,
+            order.orderStatus,
+            order.paymentStatus,
+            getOrderMethod(order),
+            getOrderAddress(order),
+          ].some((value) => value.toLowerCase().includes(needle));
+        });
+    // Always sort by createdAt matching the selected sort order
+    return [...filtered].sort(
+      (a, b) =>
+        sortOrder === "desc"
+          ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+  }, [orders, query, sortOrder]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const saveConnection = (event: FormEvent<HTMLFormElement>) => {
@@ -368,8 +389,9 @@ export default function OrdersPage() {
 
   const refresh = async () => {
     setRefreshing(true);
+    setPage(1);
     try {
-      await loadOrders();
+      await loadOrders(1);
     } finally {
       setRefreshing(false);
     }
@@ -747,6 +769,20 @@ export default function OrdersPage() {
                 ))}
               </select>
             </label>
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              <span>Sort by date</span>
+              <select
+                value={sortOrder}
+                onChange={(event) => {
+                  setPage(1);
+                  setSortOrder(event.target.value as "desc" | "asc");
+                }}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white sm:w-auto"
+              >
+                <option value="desc">Newest first</option>
+                <option value="asc">Oldest first</option>
+              </select>
+            </label>
             <button
               type="button"
               onClick={() => void refresh()}
@@ -830,7 +866,7 @@ export default function OrdersPage() {
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                   <span className="text-xs text-slate-500">
-                    Updated {new Date(order.updatedAt).toLocaleString()}
+                    Placed {new Date(order.createdAt).toLocaleString()}
                   </span>
                   <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <button

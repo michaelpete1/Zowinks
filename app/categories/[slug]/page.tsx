@@ -74,6 +74,9 @@ export default async function CategoryPage({
     <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
+        <Link href="/categories" className="mb-6 inline-flex items-center gap-1 text-sm text-[#f3c74d] hover:underline">
+          ← Back to Categories
+        </Link>
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_20px_60px_rgba(0,0,0,0.22)] lg:grid lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-6 px-6 py-10 md:px-10 md:py-14 lg:px-12 lg:py-16">
             <p className="text-xs uppercase tracking-[0.35em] text-white/55">
