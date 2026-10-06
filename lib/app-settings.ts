@@ -107,7 +107,7 @@ export async function getAppSettings() {
       headers: {
         Accept: "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
 
     if (!response.ok) {

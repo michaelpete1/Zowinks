@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "Browse available delivery methods and estimated shipping times.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 function money(value: number) {
   return value.toLocaleString("en-NG", {

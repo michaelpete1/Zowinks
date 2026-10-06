@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: "Explore HP and Lenovo desktops for office and business deployments.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type DesktopSubcategory = CategorySubcategory & {
   image?: string | Record<string, unknown> | null;

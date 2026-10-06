@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     "Request a bulk quote for laptops, desktops, accessories, and bulk IT orders from Zowkins Enterprise.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function FullQuoteBillPage() {
   const { app } = await getAppSettings();

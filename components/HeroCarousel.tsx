@@ -6,7 +6,6 @@ import useEmblaCarousel from "embla-carousel-react";
 import { type EmblaOptionsType } from "embla-carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { DEFAULT_HERO_IMAGES } from "../lib/hero-images";
-import { zowkinsApi } from "../lib/zowkins-api";
 import { resolveImageSource } from "../lib/media";
 import FallbackImage from "./FallbackImage";
 
@@ -84,18 +83,31 @@ export default function HeroCarousel({ initialHeroImages }: HeroCarouselProps) {
   );
   const [isMounted, setIsMounted] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
-    Autoplay({ delay: 5000 }),
+    Autoplay({
+      delay: 7000,
+      stopOnInteraction: true,
+      stopOnMouseEnter: true,
+      stopOnFocusIn: true,
+    }),
   ]);
 
   useEffect(() => {
     setIsMounted(true);
 
+    if ((initialHeroImages?.length ?? 0) > 0) {
+      return;
+    }
+
     const fetchHero = async () => {
       try {
+        const { zowkinsApi } = await import("../lib/zowkins-api");
         const response = await zowkinsApi.getApp();
         const app = (
           response as {
-            app?: { heroImages?: HeroImageSource[]; images?: HeroImageSource[] };
+            app?: {
+              heroImages?: HeroImageSource[];
+              images?: HeroImageSource[];
+            };
           }
         ).app;
         const normalized = normalizeHeroImages(app?.heroImages || app?.images);
@@ -107,8 +119,8 @@ export default function HeroCarousel({ initialHeroImages }: HeroCarouselProps) {
       }
     };
 
-    fetchHero();
-  }, []);
+    void fetchHero();
+  }, [initialHeroImages]);
 
   const heroSlides = useMemo(() => {
     return heroTemplates.map((slide, index) => {
@@ -208,13 +220,13 @@ export default function HeroCarousel({ initialHeroImages }: HeroCarouselProps) {
                 <div className="flex flex-wrap gap-3">
                   <Link
                     href={slide.cta1Href}
-                    className="rounded-lg bg-slate-900/80 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(11,29,59,0.22)] transition hover:bg-slate-800 backdrop-blur-sm sm:px-6"
+                    className="rounded-lg bg-slate-900/80 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(11,29,59,0.22)] transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-slate-800 active:scale-[0.98] backdrop-blur-sm sm:px-6"
                   >
                     {slide.cta1}
                   </Link>
                   <Link
                     href={slide.cta2Href}
-                    className="rounded-lg bg-yellow-400/90 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-yellow-400/20 transition hover:bg-yellow-300 backdrop-blur-sm sm:px-6"
+                    className="rounded-lg bg-yellow-400/90 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-yellow-400/20 transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-yellow-300 active:scale-[0.98] backdrop-blur-sm sm:px-6"
                   >
                     {slide.cta2}
                   </Link>
@@ -231,10 +243,10 @@ export default function HeroCarousel({ initialHeroImages }: HeroCarouselProps) {
             key={index}
             type="button"
             onClick={() => scrollTo(index)}
-            className={`h-3 w-3 rounded-full border transition focus:outline-none focus:ring-2 focus:ring-yellow-400 sm:h-3.5 sm:w-3.5 ${
+            className={`h-3 w-3 rounded-full border transition duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-yellow-400 sm:h-3.5 sm:w-3.5 ${
               selectedIndex === index
                 ? "border-yellow-400 bg-yellow-400 shadow-[0_0_18px_rgba(250,204,21,0.55)]"
-                : "border-white/25 bg-white/30 hover:bg-white/50"
+                : "border-white/25 bg-white/30 hover:bg-white/50 active:scale-95"
             }`}
             aria-label={`Go to slide ${index + 1}`}
             aria-current={selectedIndex === index ? "true" : "false"}

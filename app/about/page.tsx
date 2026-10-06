@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     "Learn about Zowkins Enterprise LTD and our business IT procurement approach.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const metrics = [
   { label: "Authorized supply", value: "Genuine stock" },

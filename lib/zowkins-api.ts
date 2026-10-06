@@ -952,9 +952,11 @@ async function readApiError(response: Response) {
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const defaultCache = typeof window === "undefined" ? "force-cache" : "no-store";
+
   let response = await fetch(getApiRequestUrl(path), {
     ...init,
-    cache: init?.cache ?? "no-store",
+    cache: init?.cache ?? defaultCache,
     credentials: "include",
     headers: makeHeaders(init?.headers),
   });
@@ -974,7 +976,7 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
       headers.set("Authorization", `Bearer ${refreshedToken}`);
       response = await fetch(getApiRequestUrl(path), {
         ...init,
-        cache: init?.cache ?? "no-store",
+        cache: init?.cache ?? (typeof window === "undefined" ? "force-cache" : "no-store"),
         credentials: "include",
         headers: makeHeaders(headers),
       });

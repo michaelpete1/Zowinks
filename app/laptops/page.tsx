@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description: "Compare HP, Dell, Lenovo, Asus, and Apple laptops for business and creative work.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type LaptopSubcategory = CategorySubcategory & {
   image?: string | Record<string, unknown> | null;

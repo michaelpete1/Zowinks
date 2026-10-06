@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Application information and contact details.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 function statusTone(status: string) {
   switch (status) {

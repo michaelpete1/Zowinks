@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "../../../components/NewNavbar";
 import AddToCartButton from "../../../components/AddToCartButton";
-import ProductImageGallery from "../../../components/ProductImageGallery";
 import {
   ApiError,
   zowkinsApi,
   type ProductDetails,
 } from "../../../lib/zowkins-api";
 import { resolveImageSource } from "../../../lib/media";
+
+const ProductImageGallery = dynamic(() => import("../../../components/ProductImageGallery"), {
+  ssr: false,
+  loading: () => <div className="aspect-square w-full animate-pulse rounded-[2rem] bg-white/5" />,
+});
 
 type ProductPageProps = {
   params: {
@@ -103,7 +108,7 @@ function isWarrantyKey(key: string): boolean {
   );
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,

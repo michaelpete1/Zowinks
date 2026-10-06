@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "Browse docks, keyboards, mice, printers, and other business accessories.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type ProductRelation = string | { name?: string | null } | null | undefined;
 

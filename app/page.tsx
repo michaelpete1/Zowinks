@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     "Business laptops, desktops, accessories, and trusted supplier brands for modern teams.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const organizationJsonLd = {
   "@context": "https://schema.org",

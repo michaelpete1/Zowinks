@@ -24,6 +24,16 @@ export default function Navbar() {
       const token = localStorage.getItem("portalToken");
       if (!token) return;
 
+      // Read user from localStorage immediately — no API call needed to show the navbar
+      try {
+        const cached = localStorage.getItem("portalUser");
+        if (cached) {
+          setUser({ token, user: JSON.parse(cached) });
+          return; // already have fresh enough data, skip the API call
+        }
+      } catch {}
+
+      // Only hit the API if there's no cached user at all
       try {
         const profile = await zowkinsApi.getPortalMe(token);
         const activeToken = localStorage.getItem("portalToken") || token;

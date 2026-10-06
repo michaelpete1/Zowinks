@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import AddToCartButton from "../../components/AddToCartButton";
 import FallbackImage from "../../components/FallbackImage";
-import FeaturedProductsCarousel from "../../components/FeaturedProductsCarousel";
 import { fetchAllProducts } from "../../lib/catalog";
 import { compactProductTitle, formatDisplayName } from "../../lib/display-name";
 import { zowkinsApi } from "../../lib/zowkins-api";
+
+const FeaturedProductsCarousel = dynamic(() => import("../../components/FeaturedProductsCarousel"), {
+  ssr: false,
+  loading: () => <div className="h-64 w-full animate-pulse rounded-[2rem] bg-white/5" />,
+});
 import { resolveImageSource } from "../../lib/media";
 
 export const metadata: Metadata = {
@@ -16,7 +21,7 @@ export const metadata: Metadata = {
     "Browse business laptops, desktops, accessories, and product collections from Zowkins Enterprise.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const CATEGORY_CARDS = [
   {
