@@ -229,19 +229,20 @@ export default async function Home() {
 
       <section className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8">
         <div className="grid gap-3 md:grid-cols-3">
-          {trustStrip.map((item) => (
+          {trustStrip.map((item, index) => (
             <div
               key={item.title}
-              className="flex items-start gap-4 rounded-[1.35rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] p-4 shadow-[0_12px_28px_rgba(0,0,0,0.22)]"
+              className="flex items-start gap-4 rounded-[1.35rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] p-4 shadow-[0_12px_28px_rgba(0,0,0,0.22)] animate-fade-in-up"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.22)]">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.22)] animate-scale-in">
                 {getTrustIcon(item.icon)}
               </span>
               <div>
-                <h3 className="font-display text-base font-bold text-white">
+                <h3 className="font-display text-base font-bold text-white animate-fade-in-right delay-100 animate-text-reveal-char">
                   {item.title}
                 </h3>
-                <p className="mt-1 text-sm leading-6 text-slate-300">
+                <p className="mt-1 text-sm leading-6 text-slate-300 animate-fade-in-right delay-200 animate-text-reveal-word">
                   {item.body}
                 </p>
               </div>
@@ -255,39 +256,40 @@ export default async function Home() {
       <section className="bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)]">
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-16">
           <div className="text-center text-white">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/75">
+            <p className="text-xs uppercase tracking-[0.35em] text-white/75 animate-fade-in-up animate-text-reveal-word" style={{ animationDelay: '200ms' }}>
               Why Choose Zowkins?
             </p>
-            <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">
+            <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl animate-fade-in-up delay-100 animate-text-reveal-char" style={{ animationDelay: '300ms' }}>
               Procurement made simple
             </h2>
           </div>
           <div className="mt-8 grid gap-4 md:mt-10 md:grid-cols-3 md:gap-6">
-            {valueProps.map((card) => {
+            {valueProps.map((card, index) => {
               const tone = getValueTone(card.title);
 
               return (
                 <div
                   key={card.title}
-                  className="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] p-6 text-center shadow-[0_12px_30px_rgba(0,0,0,0.28)] ring-1 ring-white/5 animate-[rise_0.7s_ease-out]"
+                  className="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] p-6 text-center shadow-[0_12px_30px_rgba(0,0,0,0.28)] ring-1 ring-white/5 animate-stagger-in"
+                  style={{ animationDelay: `${index * 120}ms` }}
                 >
                   <div
-                    className={`mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl ${tone.badge}`}
+                    className={`mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl ${tone.badge} animate-scale-in delay-100`}
                   >
                     <span className="scale-105">
                       {getValueIcon(card.title)}
                     </span>
                   </div>
-                  <h3 className="font-display text-lg font-bold text-white">
+                  <h3 className="font-display text-lg font-bold text-white animate-fade-in-up delay-200">
                     {card.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                  <p className="mt-2 text-sm leading-6 text-slate-300 animate-fade-in-up delay-300">
                     {card.body}
                   </p>
                   {card.title === "Trusted Supplier" ? (
                     <Link
                       href="/suppliers"
-                      className={`mt-4 inline-flex items-center gap-2 text-sm font-semibold transition ${tone.link}`}
+                      className={`mt-4 inline-flex items-center gap-2 text-sm font-semibold transition ${tone.link} animate-fade-in-up delay-400`}
                     >
                       See suppliers <span aria-hidden="true">&rarr;</span>
                     </Link>
@@ -303,12 +305,12 @@ export default async function Home() {
 
       <section className="bg-[linear-gradient(180deg,#050b16_0%,#07142a_100%)] text-white">
         <div className="mx-auto max-w-6xl px-4 py-8 md:px-8 md:py-12">
-          <div className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] px-5 py-6 shadow-[0_12px_30px_rgba(0,0,0,0.22)] md:px-6 md:py-8">
+          <div className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] px-5 py-6 shadow-[0_12px_30px_rgba(0,0,0,0.22)] md:px-6 md:py-8 animate-fade-in-up animate-border-glow">
             <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70 animate-fade-in-up animate-text-reveal-word" style={{ animationDelay: '200ms' }}>
                 Get in Touch
               </p>
-              <h3 className="mt-2 font-display text-2xl font-bold text-white md:text-3xl">
+              <h3 className="mt-2 font-display text-2xl font-bold text-white md:text-3xl animate-fade-in-up delay-100 animate-text-reveal-char" style={{ animationDelay: '300ms' }}>
                 Reach us directly
               </h3>
             </div>
@@ -316,9 +318,9 @@ export default async function Home() {
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <a
                 href="tel:07036359024"
-                className="group flex items-center gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08]"
+                className="group flex items-center gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08] animate-stagger-in delay-200 hover:animate-pulse-glow"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#0b1d3b_0%,#12386a_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)] animate-scale-in">
                   <svg
                     viewBox="0 0 24 24"
                     className="h-5 w-5"
@@ -332,10 +334,10 @@ export default async function Home() {
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55 sm:tracking-[0.28em]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55 sm:tracking-[0.28em] animate-fade-in-right delay-100">
                     Phone
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-white md:text-base">
+                  <p className="mt-1 text-sm font-semibold text-white md:text-base animate-fade-in-right delay-200">
                     07036359024
                   </p>
                 </div>
@@ -343,9 +345,9 @@ export default async function Home() {
 
               <a
                 href="mailto:contact@zowkins.com"
-                className="group flex items-center gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08]"
+                className="group flex items-center gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08] animate-stagger-in delay-300 hover:animate-pulse-glow"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#12386a_0%,#5ab214_100%)] text-white shadow-[0_10px_24px_rgba(18,56,106,0.28)]">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#12386a_0%,#5ab214_100%)] text-white shadow-[0_10px_24px_rgba(18,56,106,0.28)] animate-scale-in delay-100">
                   <svg
                     viewBox="0 0 24 24"
                     className="h-5 w-5"
@@ -360,10 +362,10 @@ export default async function Home() {
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55 sm:tracking-[0.28em]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55 sm:tracking-[0.28em] animate-fade-in-right delay-100">
                     Email
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-white md:text-base">
+                  <p className="mt-1 text-sm font-semibold text-white md:text-base animate-fade-in-right delay-200">
                     contact@zowkins.com
                   </p>
                 </div>
@@ -373,9 +375,9 @@ export default async function Home() {
                 href={officeMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-start gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08]"
+                className="group flex items-start gap-4 rounded-[1.35rem] border border-white/10 bg-white/5 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/[0.08] animate-stagger-in delay-400 hover:animate-pulse-glow"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)]">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(180deg,#0b1d3b_0%,#f3c74d_100%)] text-white shadow-[0_10px_24px_rgba(11,29,59,0.28)] animate-scale-in delay-100">
                   <svg
                     viewBox="0 0 24 24"
                     className="h-5 w-5"
@@ -390,10 +392,10 @@ export default async function Home() {
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55 sm:tracking-[0.28em]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55 sm:tracking-[0.28em] animate-fade-in-right delay-100">
                     Address
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-white md:text-base">
+                  <p className="mt-1 text-sm font-semibold text-white md:text-base animate-fade-in-right delay-200">
                     No 7 Maputo Street, Wuse Zone 3, Abuja, FCT
                   </p>
                 </div>

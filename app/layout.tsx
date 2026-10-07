@@ -3,13 +3,18 @@ import Footer from "../components/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://zowkins.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://zowkins.com",
+  ),
   title: {
     default: "Zowkins Enterprise",
     template: "%s | Zowkins Enterprise",
   },
   description:
     "Business laptops, desktops, accessories, and IT procurement solutions for modern teams.",
+  verification: {
+    google: "8agw80EvOvtr_C3PnzZ0OYiO1jsYU7vjnIue9H_HR2I",
+  },
   openGraph: {
     title: "Zowkins Enterprise",
     description:

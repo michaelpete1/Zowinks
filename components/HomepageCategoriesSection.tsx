@@ -11,9 +11,28 @@ export default function HomepageCategoriesSection() {
   const [categories, setCategories] = useState<CategoryListItem[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: "50px" }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -79,22 +98,25 @@ export default function HomepageCategoriesSection() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8 md:px-8 md:py-16">
+    <section
+      ref={sectionRef}
+      className="mx-auto max-w-6xl px-4 py-8 md:px-8 md:py-16"
+    >
       <div className="text-center">
-        <p className="text-xs uppercase tracking-[0.35em] text-white/55">
+        <p className={`text-xs uppercase tracking-[0.35em] text-white/55 ${isVisible ? "animate-fade-in-up animate-text-reveal-word" : "opacity-0"}`}>
           Categories
         </p>
-        <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
+        <h2 className={`mt-2 font-display text-3xl font-bold text-white md:text-4xl ${isVisible ? "animate-fade-in-up delay-100 animate-text-reveal-char" : "opacity-0"}`}>
           Browse by category
         </h2>
       </div>
 
       {errorMessage ? (
-        <div className="mx-auto mt-8 rounded-[1.5rem] border border-amber-200/20 bg-amber-950/30 p-8 text-center text-sm text-amber-100">
+        <div className="mx-auto mt-8 rounded-[1.5rem] border border-amber-200/20 bg-amber-950/30 p-8 text-center text-sm text-amber-100 animate-fade-in-up">
           {errorMessage}
         </div>
       ) : isLoading ? (
-        <div className="mx-auto mt-8 rounded-[1.5rem] border border-white/10 bg-white/5 p-8 text-center text-sm text-slate-300">
+        <div className="mx-auto mt-8 rounded-[1.5rem] border border-white/10 bg-white/5 p-8 text-center text-sm text-slate-300 animate-pulse">
           Loading categories…
         </div>
       ) : categories.length > 0 ? (
@@ -105,11 +127,12 @@ export default function HomepageCategoriesSection() {
               onScroll={updateScrollState}
               className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 md:gap-6"
             >
-            {categories.map((card) => (
+            {categories.map((card, index) => (
               <Link
                 key={card.id}
                 href={`/categories/${card.slug}`}
-                className="group w-[12.75rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)] sm:w-[16.5rem] md:w-[20rem]"
+                className={`group w-[12.75rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)] sm:w-[16.5rem] md:w-[20rem] animate-stagger-in ${isVisible ? "" : "opacity-0"}`}
+                style={{ animationDelay: `${index * 80}ms` }}
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 sm:aspect-[4/3]">
                   <FallbackImage
@@ -121,13 +144,13 @@ export default function HomepageCategoriesSection() {
                   />
                 </div>
                 <div className="p-4 text-center sm:p-5">
-                  <h3 className="font-display text-base font-bold text-white sm:text-lg">
+                  <h3 className="font-display text-base font-bold text-white sm:text-lg animate-fade-in-up delay-100">
                     {formatDisplayName(card.name, card.name)}
                   </h3>
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-300 sm:text-sm sm:leading-6">
+                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-300 sm:text-sm sm:leading-6 animate-fade-in-up delay-200">
                     {card.description}
                   </p>
-                  <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-[#f3c74d] sm:mt-4 sm:text-sm">
+                  <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-[#f3c74d] sm:mt-4 sm:text-sm animate-fade-in-up delay-300">
                     View More <span aria-hidden="true">&rarr;</span>
                   </span>
                 </div>
@@ -165,7 +188,7 @@ export default function HomepageCategoriesSection() {
           </div>
         </div>
       ) : (
-        <div className="mx-auto mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300">
+        <div className="mx-auto mt-8 rounded-[1.5rem] border border-dashed border-white/15 bg-[#0a1020] p-8 text-center text-sm text-slate-300 animate-fade-in-up">
           No categories available yet. Categories will appear here as soon as
           they are published.
         </div>

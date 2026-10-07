@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
@@ -19,6 +19,8 @@ export default function FeaturedProductsCarousel({
 }: FeaturedProductsCarouselProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: true,
@@ -35,6 +37,23 @@ export default function FeaturedProductsCarousel({
       }),
     ],
   );
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: "50px" }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
@@ -62,15 +81,16 @@ export default function FeaturedProductsCarousel({
   }, [emblaApi]);
 
   return (
-    <div className="relative mx-auto mt-6 md:mt-8">
+    <div ref={sectionRef} className="relative mx-auto mt-6 md:mt-8">
       <div className="embla overflow-hidden" ref={emblaRef}>
         <div className="embla__container flex -ml-3 lg:-ml-6">
-          {featured.map((item) => (
+          {featured.map((item, index) => (
             <div
               key={item.id}
-              className="flex-[0_0_80%] pl-3 sm:flex-[0_0_70%] md:flex-[0_0_48%] lg:flex-[0_0_33.333%] lg:pl-6"
+              className={`flex-[0_0_80%] pl-3 sm:flex-[0_0_70%] md:flex-[0_0_48%] lg:flex-[0_0_33.333%] lg:pl-6 animate-stagger-in ${isVisible ? "" : "opacity-0"}`}
+              style={{ animationDelay: `${index * 100}ms` }}
             >
-              <article className="group h-full overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)]">
+              <article className="group h-full overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)] animate-border-glow">
                 <Link href={item.href} className="block">
                   <div className="relative aspect-[16/10] overflow-hidden bg-[#0b1220] sm:aspect-[4/3]">
                     <FallbackImage
@@ -88,21 +108,21 @@ export default function FeaturedProductsCarousel({
                 </Link>
                 <div className="space-y-2.5 p-4 text-center sm:space-y-3 sm:p-5">
                   <Link href={item.href} className="block">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#f3c74d] sm:text-[11px] sm:tracking-[0.24em]">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#f3c74d] sm:text-[11px] sm:tracking-[0.24em] animate-fade-in-up delay-100">
                       {formatDisplayName(item.category, item.category)}
                     </p>
-                    <h3 className="mt-1.5 font-display text-base font-bold text-white sm:mt-2 sm:text-lg">
+                    <h3 className="mt-1.5 font-display text-base font-bold text-white sm:mt-2 sm:text-lg animate-fade-in-up delay-200">
                       {compactProductTitle(item.title)}
                     </h3>
                   </Link>
                   <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-white animate-fade-in-up delay-300">
                       {item.price}
                     </span>
                     <div className="flex flex-wrap justify-end gap-2">
                       <Link
                         href={item.href}
-                        className="rounded-full border border-white/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10 sm:py-1 sm:text-[10px] sm:tracking-[0.2em]"
+                        className="rounded-full border border-white/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition hover:border-[#f3c74d]/45 hover:bg-white/10 sm:py-1 sm:text-[10px] sm:tracking-[0.2em] animate-fade-in-up delay-400"
                       >
                         View details
                       </Link>
@@ -115,7 +135,7 @@ export default function FeaturedProductsCarousel({
                           spec: formatDisplayName(item.category, item.category),
                           image: item.image,
                         }}
-                        className="rounded-full bg-[#f3c74d] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#050b16] transition hover:bg-[#e4b935] sm:py-1 sm:text-[10px] sm:tracking-[0.2em]"
+                        className="rounded-full bg-[#f3c74d] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#050b16] transition hover:bg-[#e4b935] sm:py-1 sm:text-[10px] sm:tracking-[0.2em] animate-fade-in-up delay-400 animate-pulse-glow"
                       >
                         Order Now
                       </AddToCartButton>
@@ -131,7 +151,7 @@ export default function FeaturedProductsCarousel({
       <button
         type="button"
         onClick={scrollPrev}
-        className="absolute left-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#0a1020]/90 text-white shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition hover:bg-[#10182c] md:flex"
+        className="absolute left-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#0a1020]/90 text-white shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition hover:bg-[#10182c] md:flex animate-fade-in-left"
         aria-label="Previous products"
       >
         <span className="text-lg leading-none">&larr;</span>
@@ -139,14 +159,14 @@ export default function FeaturedProductsCarousel({
       <button
         type="button"
         onClick={scrollNext}
-        className="absolute right-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#0a1020]/90 text-white shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition hover:bg-[#10182c] md:flex"
+        className="absolute right-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#0a1020]/90 text-white shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition hover:bg-[#10182c] md:flex animate-fade-in-right"
         aria-label="Next products"
       >
         <span className="text-lg leading-none">&rarr;</span>
       </button>
 
       {scrollSnaps.length > 1 ? (
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:mt-6">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:mt-6 animate-fade-in-up delay-500">
           {scrollSnaps.map((_, index) => (
             <button
               key={index}

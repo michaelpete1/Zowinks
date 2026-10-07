@@ -203,21 +203,21 @@ export default function HeroCarousel({ initialHeroImages }: HeroCarouselProps) {
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/45" />
             </div>
             <div className="relative z-10 flex h-full items-center px-4 py-16 sm:py-20 md:px-8 md:py-24 lg:px-12 xl:px-16">
-              <div className="max-w-2xl space-y-5 rounded-[2rem] border border-white/12 bg-[#050b16]/52 px-5 py-6 shadow-[0_22px_70px_rgba(0,0,0,0.3)] backdrop-blur-md animate-[fadeIn_0.9s_ease-out] sm:space-y-6 sm:px-7 sm:py-7 md:px-8 md:py-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#f3c74d] drop-shadow-[0_2px_4px_rgba(0,0,0,0.55)] md:text-sm">
+              <div className="max-w-2xl space-y-5 rounded-[2rem] border border-white/12 bg-[#050b16]/52 px-5 py-6 shadow-[0_22px_70px_rgba(0,0,0,0.3)] backdrop-blur-md animate-fade-in-up sm:space-y-6 sm:px-7 sm:py-7 md:px-8 md:py-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#f3c74d] drop-shadow-[0_2px_4px_rgba(0,0,0,0.55)] md:text-sm animate-fade-in-up delay-100 animate-text-reveal-word">
                   {slide.eyebrow}
                 </p>
-                <h1 className="font-display text-3xl font-bold leading-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.7)] sm:text-4xl md:text-5xl lg:text-6xl">
+                <h1 className="font-display text-3xl font-bold leading-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.7)] sm:text-4xl md:text-5xl lg:text-6xl animate-fade-in-up delay-200 animate-text-reveal-char">
                   {slide.title}
-                  <span className="block">{slide.subtitle}</span>
+                  <span className="block animate-fade-in-up delay-300 animate-text-reveal-word">{slide.subtitle}</span>
                 </h1>
-                <p className="max-w-xl text-sm leading-6 text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-base sm:leading-7 md:text-lg">
+                <p className="max-w-xl text-sm leading-6 text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-base sm:leading-7 md:text-lg animate-fade-in-up delay-400">
                   Premium IT procurement for business teams.
                 </p>
-                <p className="text-xs text-white/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)] sm:text-sm">
+                <p className="text-xs text-white/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)] sm:text-sm animate-fade-in-up delay-500">
                   Rated 4.9/5 for service.
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-3 animate-fade-in-up delay-600">
                   <Link
                     href={slide.cta1Href}
                     className="rounded-lg bg-slate-900/80 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_28px_rgba(11,29,59,0.22)] transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-slate-800 active:scale-[0.98] backdrop-blur-sm sm:px-6"
