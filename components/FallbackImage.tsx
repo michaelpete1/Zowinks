@@ -20,7 +20,7 @@ export default function FallbackImage({
   fallbackSrc = "/desktop.jpg",
   className,
   style,
-  loading = "eager",
+  loading = "lazy",
   priority = false,
   fetchPriority,
 }: FallbackImageProps) {

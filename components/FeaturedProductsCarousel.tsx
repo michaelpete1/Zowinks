@@ -21,21 +21,26 @@ export default function FeaturedProductsCarousel({
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const hasMultiple = featured.length > 1;
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
-      loop: true,
-      align: "start",
+      loop: hasMultiple,
+      align: "center",
+      containScroll: "trimSnaps",
+      slidesToScroll: 1,
     },
-    [
-      Autoplay({
-        delay: 3500,
-        jump: false,
-        playOnInit: true,
-        stopOnInteraction: false,
-        stopOnMouseEnter: true,
-        stopOnFocusIn: true,
-      }),
-    ],
+    hasMultiple
+      ? [
+          Autoplay({
+            delay: 3500,
+            jump: false,
+            playOnInit: true,
+            stopOnInteraction: false,
+            stopOnMouseEnter: true,
+            stopOnFocusIn: true,
+          }),
+        ]
+      : [],
   );
 
   useEffect(() => {
@@ -46,7 +51,7 @@ export default function FeaturedProductsCarousel({
           observer.disconnect();
         }
       },
-      { threshold: 0.1, rootMargin: "50px" }
+      { threshold: 0.1, rootMargin: "50px" },
     );
 
     if (sectionRef.current) {
@@ -83,11 +88,11 @@ export default function FeaturedProductsCarousel({
   return (
     <div ref={sectionRef} className="relative mx-auto mt-6 md:mt-8">
       <div className="embla overflow-hidden" ref={emblaRef}>
-        <div className="embla__container flex -ml-3 lg:-ml-6">
+        <div className="embla__container flex gap-3 lg:gap-6">
           {featured.map((item, index) => (
             <div
               key={item.id}
-              className={`flex-[0_0_80%] pl-3 sm:flex-[0_0_70%] md:flex-[0_0_48%] lg:flex-[0_0_33.333%] lg:pl-6 animate-stagger-in ${isVisible ? "" : "opacity-0"}`}
+              className={`flex-[0_0_80%] sm:flex-[0_0_70%] md:flex-[0_0_48%] lg:flex-[0_0_33.333%] animate-stagger-in ${isVisible ? "" : "opacity-0"}`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <article className="group h-full overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#0a1020] shadow-[0_14px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.34)] animate-border-glow">
@@ -153,6 +158,7 @@ export default function FeaturedProductsCarousel({
         onClick={scrollPrev}
         className="absolute left-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#0a1020]/90 text-white shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition hover:bg-[#10182c] md:flex animate-fade-in-left"
         aria-label="Previous products"
+        style={{ display: hasMultiple ? "flex" : "none" }}
       >
         <span className="text-lg leading-none">&larr;</span>
       </button>
@@ -161,6 +167,7 @@ export default function FeaturedProductsCarousel({
         onClick={scrollNext}
         className="absolute right-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#0a1020]/90 text-white shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition hover:bg-[#10182c] md:flex animate-fade-in-right"
         aria-label="Next products"
+        style={{ display: hasMultiple ? "flex" : "none" }}
       >
         <span className="text-lg leading-none">&rarr;</span>
       </button>

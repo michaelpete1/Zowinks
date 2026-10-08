@@ -1242,6 +1242,7 @@ export default function Cart() {
                                 )}
                                 alt={item.title}
                                 fill
+                                loading="lazy"
                                 className="object-cover"
                               />
                             </div>

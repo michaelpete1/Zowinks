@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
+import RotaryLinesBackground from "../../components/RotaryLinesBackground";
 import {
   zowkinsApi,
   type CategoryListItem,
@@ -88,7 +89,11 @@ export default async function Laptops() {
   });
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+      <div className="absolute inset-0 z-0">
+        <RotaryLinesBackground count={10} speed={0.7} opacity={0.05} />
+      </div>
+      <div className="relative z-10">
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
@@ -150,6 +155,7 @@ export default async function Laptops() {
                       src={brand.image}
                       alt={brand.name}
                       fill
+                      loading="lazy"
                       className="object-cover transition duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,20,39,0.06)_0%,rgba(9,20,39,0.35)_100%)]" />
@@ -186,6 +192,7 @@ export default async function Laptops() {
           )}
         </section>
       </main>
+      </div>
     </div>
   );
 }

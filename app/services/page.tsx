@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import InfoStrip from "../../components/InfoStrip";
+import RotaryLinesBackground from "../../components/RotaryLinesBackground";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -36,7 +37,11 @@ const process = [
 
 export default function ServicesPage() {
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+      <div className="absolute inset-0 z-0">
+        <RotaryLinesBackground count={10} speed={0.7} opacity={0.05} />
+      </div>
+      <div className="relative z-10">
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
@@ -107,6 +112,7 @@ export default function ServicesPage() {
                   src="/keyboard.jpg"
                   alt="Keyboard accessories"
                   fill
+                  loading="lazy"
                   className="object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,36,70,0.05)_0%,rgba(11,36,70,0.18)_50%,rgba(11,36,70,0.86)_100%)]" />
@@ -174,6 +180,7 @@ export default function ServicesPage() {
           </div>
         </section>
       </main>
+      </div>
     </div>
   );
 }

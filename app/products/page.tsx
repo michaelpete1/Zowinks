@@ -5,6 +5,7 @@ import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import AddToCartButton from "../../components/AddToCartButton";
 import FallbackImage from "../../components/FallbackImage";
+import RotaryLinesBackground from "../../components/RotaryLinesBackground";
 import { fetchAllProducts } from "../../lib/catalog";
 import { compactProductTitle, formatDisplayName } from "../../lib/display-name";
 import { zowkinsApi } from "../../lib/zowkins-api";
@@ -219,7 +220,11 @@ export default async function ProductsPage({
   const whatsappHref = "https://wa.me/message/6U6S7AJM4GECJ1";
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+      <div className="absolute inset-0 z-0">
+        <RotaryLinesBackground count={10} speed={0.7} opacity={0.05} />
+      </div>
+      <div className="relative z-10">
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
@@ -568,6 +573,7 @@ export default async function ProductsPage({
                         alt={brand.label}
                         width={56}
                         height={56}
+                        loading="lazy"
                         className="h-full w-full object-contain"
                       />
                     </div>
@@ -659,6 +665,7 @@ export default async function ProductsPage({
         </span>
         <span>Chat to Order</span>
       </Link>
+      </div>
     </div>
   );
 }

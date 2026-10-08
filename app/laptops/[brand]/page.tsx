@@ -134,6 +134,7 @@ export default async function BrandPage({ params }: Props) {
                       src={resolveImageSource(product.image)}
                       alt={product.name}
                       fill
+                      loading="lazy"
                       sizes="(max-width: 1024px) 50vw, 33vw"
                       className="object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
                     />

@@ -129,13 +129,13 @@ export default async function DesktopBrandPage({ params }: Props) {
                   className="group overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_40px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(0,0,0,0.24)]"
                 >
                   <div className="relative h-64 overflow-hidden bg-slate-900/50">
-                    <Image
-                      src={resolveImageSource(product.image)}
-                      alt={product.name}
-                      fill
-                      className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
+<Image
+                    src={resolveImageSource(product.image)}
+                    alt={product.name}
+                    fill
+                    loading="lazy"
+                    className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
+                  />
                   </div>
                   <div className="space-y-4 p-6 md:p-7">
                     <div>

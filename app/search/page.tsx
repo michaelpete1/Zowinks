@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "../../components/NewNavbar";
 import { searchCatalog } from "../../lib/catalog";
 import type { CatalogItem } from "../../lib/catalog";
@@ -97,9 +98,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0a1020] shadow-[0_18px_40px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(0,0,0,0.24)]"
                 >
                   <div className="relative h-52 w-full overflow-hidden bg-slate-900/50">
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.title}
+                      fill
+                      loading="lazy"
                       className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050b16]/60 to-transparent" />

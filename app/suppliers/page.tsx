@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Navbar from "../../components/NewNavbar";
 import Carousel from "../../components/Carousel";
+import RotaryLinesBackground from "../../components/RotaryLinesBackground";
 
 export const metadata: Metadata = {
   title: "Trusted Suppliers",
@@ -21,7 +22,11 @@ const suppliers = [
 
 export default function SuppliersPage() {
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+      <div className="absolute inset-0 z-0">
+        <RotaryLinesBackground count={10} speed={0.7} opacity={0.05} />
+      </div>
+      <div className="relative z-10">
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
@@ -75,6 +80,7 @@ export default function SuppliersPage() {
           </div>
         </section>
       </main>
+      </div>
     </div>
   );
 }

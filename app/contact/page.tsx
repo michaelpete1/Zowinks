@@ -267,6 +267,7 @@ export default function ContactPage() {
                 src="/heroimage2.jpg"
                 alt="Zowkins products"
                 fill
+                loading="lazy"
                 className="object-cover object-center"
               />
               <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(5,11,22,0.7)_0%,rgba(7,20,42,0.5)_100%)]" />

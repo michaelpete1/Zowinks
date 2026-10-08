@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import FallbackImage from "../../components/FallbackImage";
+import RotaryLinesBackground from "../../components/RotaryLinesBackground";
 import { zowkinsApi, type CategoryListItem } from "../../lib/zowkins-api";
 import { resolveImageSource } from "../../lib/media";
 import { formatDisplayName } from "../../lib/display-name";
@@ -24,7 +25,11 @@ export default async function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
+      <div className="absolute inset-0 z-0">
+        <RotaryLinesBackground count={10} speed={0.7} opacity={0.05} />
+      </div>
+      <div className="relative z-10">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
         <section className="rounded-[2rem] border border-white/10 bg-[#0a1020] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:p-6 md:p-10">
@@ -80,6 +85,7 @@ export default async function CategoriesPage() {
           ))}
         </section>
       </main>
+      </div>
     </div>
   );
 }
