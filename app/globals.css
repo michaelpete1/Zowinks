@@ -393,4 +393,186 @@ h6 {
 .delay-1100 { animation-delay: 1100ms; }
 .delay-1200 { animation-delay: 1200ms; }
 
+/* Navbar animations */
+@keyframes navSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes navSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes navLinkHover {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes navPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(243, 199, 77, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(243, 199, 77, 0);
+  }
+}
+
+@keyframes navLogoFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes navUnderlineExpand {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes navBadgePop {
+  0% {
+    transform: scale(0);
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes navShimmerTop {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-nav-slide-down {
+  animation: navSlideDown 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-nav-slide-up {
+  animation: navSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-menu-slide-in {
+  animation: menuSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-menu-fade-in {
+  animation: menuFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-nav-link-hover {
+  animation: navLinkHover 2.5s ease-in-out infinite;
+}
+
+.animate-nav-pulse-glow {
+  animation: navPulseGlow 2.5s ease-in-out infinite;
+}
+
+.animate-nav-logo-float {
+  animation: navLogoFloat 4s ease-in-out infinite;
+}
+
+.animate-nav-underline-expand {
+  animation: navUnderlineExpand 0.4s ease-out both;
+}
+
+.animate-nav-badge-pop {
+  animation: navBadgePop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-nav-shimmer-top {
+  background-size: 200% 100%;
+  animation: navShimmerTop 3s linear infinite;
+}
+
+/* Navbar link hover underline */
+.nav-link-underline {
+  position: relative;
+}
+
+.nav-link-underline::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  height: 2px;
+  width: 0;
+  background: linear-gradient(90deg, #f3c74d, #fff);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 2px;
+}
+
+.nav-link-underline:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+/* Navbar top shimmer bar */
+.nav-shimmer-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #f3c74d, transparent);
+  opacity: 0.6;
+  animation: navShimmerTop 4s linear infinite;
+}
+
 

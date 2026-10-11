@@ -96,7 +96,7 @@ export default function Navbar() {
     : "sticky top-0 z-[9999] border-b border-[#f3c74d]/15 bg-[linear-gradient(180deg,rgba(7,12,24,0.98),rgba(6,14,30,0.95))] text-slate-100 shadow-sm backdrop-blur-xl";
 
   const navLinkClassName =
-    "text-sm font-semibold tracking-[0.01em] text-slate-300 transition hover:text-white";
+    "nav-link-underline text-sm font-semibold tracking-[0.01em] text-slate-300 transition hover:text-white";
 
   const mobileSurfaceClassName = isHome
     ? "bg-[linear-gradient(180deg,#07142a_0%,#050b16_100%)]"
@@ -104,21 +104,24 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={shellClassName}>
+      <header className={`relative ${shellClassName}`}>
+        <div className="nav-shimmer-bar" />
         <nav className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-3 sm:px-4 md:px-8 md:py-3">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-2xl bg-white/8 px-2.5 py-1.5 ring-1 ring-white/10 backdrop-blur-sm"
+            className="inline-flex items-center gap-2 rounded-2xl bg-white/8 px-2.5 py-1.5 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-white/12 hover:ring-[#f3c74d]/40"
             aria-label="Zowkins home"
           >
-            <Image
-              src="/zowinks-removebg-preview.png"
-              alt="Zowkins logo"
-              width={118}
-              height={64}
-              className="h-8 w-auto drop-shadow-[0_4px_10px_rgba(0,0,0,0.14)] sm:h-9"
-              priority={isHome}
-            />
+            <div className="animate-nav-logo-float">
+              <Image
+                src="/zowinks-removebg-preview.png"
+                alt="Zowkins logo"
+                width={118}
+                height={64}
+                className="h-8 w-auto drop-shadow-[0_4px_10px_rgba(0,0,0,0.14)] sm:h-9"
+                priority={isHome}
+              />
+            </div>
           </Link>
 
           <div className="hidden items-center justify-center gap-6 lg:flex">
@@ -137,14 +140,14 @@ export default function Navbar() {
           <div className="hidden items-center gap-3 lg:flex animate-nav-slide-down" style={{ animationDelay: '360ms' }}>
             {user ? (
               <Link href="/portal" className="inline-flex items-center gap-2">
-                <div className="mr-2 rounded-full bg-white/5 px-3 py-2 text-sm font-medium text-slate-100">
+                <div className="mr-2 rounded-full bg-white/5 px-3 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/10 hover:ring-1 hover:ring-white/10">
                   Hi, {user.user?.firstName || user.user?.email || "Member"}
                 </div>
               </Link>
             ) : (
               <Link
                 href="/portal/auth/login"
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10 hover:scale-[1.04] hover:shadow-[0_6px_18px_rgba(0,0,0,0.2)]"
               >
                 Sign in
               </Link>
@@ -152,12 +155,12 @@ export default function Navbar() {
 
             <Link
               href="/cart"
-              className="relative rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:border-[#f3c74d]/45 hover:bg-white/10"
+              className="relative rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:border-[#f3c74d]/45 hover:bg-white/10 hover:animate-nav-pulse-glow"
               aria-label="View cart"
               title="View cart"
             >
               <svg
-                className="h-5 w-5"
+                className="h-5 w-5 transition-transform hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -170,25 +173,26 @@ export default function Navbar() {
                 />
               </svg>
               {items.length > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#f3c74d] text-[10px] font-bold text-[#050b16]">
+                <span className="animate-nav-badge-pop absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#f3c74d] text-[10px] font-bold text-[#050b16]">
                   {items.length}
                 </span>
               )}
             </Link>
             <Link
               href="/full-quote-bill"
-              className="rounded-full bg-[#f3c74d] px-5 py-2 text-sm font-semibold text-[#050b16] shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e4b935]"
+              className="group relative overflow-hidden rounded-full bg-[#f3c74d] px-5 py-2 text-sm font-semibold text-[#050b16] shadow-lg shadow-[#f3c74d]/20 transition hover:bg-[#e4b935] hover:scale-[1.03]"
             >
-              Request Bulk Quote
+              <span className="relative z-10">Request Bulk Quote</span>
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
             </Link>
           </div>
 
           <button
             type="button"
-            className={`ml-auto grid h-10 w-10 place-items-center rounded-full border bg-[#050b16]/95 shadow-[0_8px_20px_rgba(0,0,0,0.18)] lg:hidden ${
+            className={`ml-auto grid h-10 w-10 place-items-center rounded-full border bg-[#050b16]/95 shadow-[0_8px_20px_rgba(0,0,0,0.18)] transition lg:hidden ${
               isHome
-                ? "border-[#f3c74d]/25 bg-white/8 text-white"
-                : "border-[#f3c74d]/25 bg-white/8 text-white"
+                ? "border-[#f3c74d]/25 bg-white/8 text-white hover:bg-white/15"
+                : "border-[#f3c74d]/25 bg-white/8 text-white hover:bg-white/15"
             }`}
             onClick={() => setOpen((value) => !value)}
             aria-label="Toggle menu"
@@ -196,7 +200,7 @@ export default function Navbar() {
           >
             <svg
               viewBox="0 0 24 24"
-              className="h-5 w-5"
+              className="h-5 w-5 transition-transform duration-300"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.6"
@@ -258,12 +262,13 @@ export default function Navbar() {
               </button>
             </div>
 
-            <div className={`space-y-5 px-4 py-5 ${mobileSurfaceClassName}`}>
+            <div className="space-y-5 px-4 py-5 ${mobileSurfaceClassName}">
               <form
                 onSubmit={submitSearch}
-                className="flex items-center gap-2 rounded-[1.4rem] border border-[#d4a11d]/25 bg-white px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.12)] transition focus-within:border-[#f3c74d] focus-within:shadow-[0_16px_36px_rgba(243,199,77,0.16)]"
+                className="group flex items-center gap-2 rounded-[1.4rem] border border-[#d4a11d]/25 bg-white px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.12)] transition focus-within:border-[#f3c74d] focus-within:shadow-[0_16px_36px_rgba(243,199,77,0.16)] animate-menu-fade-in"
+                style={{ animationDelay: '0ms' }}
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f3c74d]/15 text-[#050b16]">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f3c74d]/15 text-[#050b16] transition-transform group-focus-within:scale-110">
                   <svg
                     viewBox="0 0 24 24"
                     className="h-5 w-5"
@@ -289,24 +294,25 @@ export default function Navbar() {
                 </button>
               </form>
 
-              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 animate-fade-in" style={{ animationDelay: '80ms' }}>
+              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 animate-menu-fade-in" style={{ animationDelay: '80ms' }}>
                 {links.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="rounded-2xl border border-white/5 bg-white/5 px-4 py-4 text-center font-semibold text-slate-100 transition duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:shadow-[0_10px_24px_rgba(0,0,0,0.14)]"
+                    className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/5 px-4 py-4 text-center font-semibold text-slate-100 transition duration-200 hover:-translate-y-0.5 hover:border-[#f3c74d]/40 hover:bg-white/10 hover:shadow-[0_10px_24px_rgba(0,0,0,0.14)]"
                     onClick={() => setOpen(false)}
                   >
-                    {link.label}
+                    <span className="relative z-10">{link.label}</span>
+                    <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-[#f3c74d]/10 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
                   </Link>
                 ))}
               </div>
 
-              <div className="space-y-3 border-t border-white/10 pt-4 animate-fade-in" style={{ animationDelay: '160ms' }}>
+              <div className="space-y-3 border-t border-white/10 pt-4 animate-menu-fade-in" style={{ animationDelay: '160ms' }}>
                 {user ? (
                   <Link
                     href="/portal"
-                    className="block rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-white/10"
+                    className="block rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:shadow-[0_8px_20px_rgba(0,0,0,0.16)]"
                     onClick={() => setOpen(false)}
                   >
                     Hi, {user.user?.firstName || user.user?.email || "Member"}
@@ -314,7 +320,7 @@ export default function Navbar() {
                 ) : (
                   <Link
                     href="/portal/auth/login"
-                    className="block rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-white/10"
+                    className="block rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:shadow-[0_8px_20px_rgba(0,0,0,0.16)]"
                     onClick={() => setOpen(false)}
                   >
                     Sign in
@@ -323,11 +329,11 @@ export default function Navbar() {
 
                 <Link
                   href="/cart"
-                  className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:border-[#f3c74d]/45 hover:bg-white/10"
+                  className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-full border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:border-[#f3c74d]/45 hover:bg-white/10 hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
                   onClick={() => setOpen(false)}
                 >
                   <svg
-                    className="h-5 w-5"
+                    className="h-5 w-5 transition-transform group-hover:scale-110"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -339,14 +345,16 @@ export default function Navbar() {
                       d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                     />
                   </svg>
-                  Cart {items.length > 0 && `(${items.length})`}
+                  <span className="relative z-10">Cart {items.length > 0 && `(${items.length})`}</span>
+                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-[#f3c74d]/10 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
                 </Link>
                 <Link
                   href="/full-quote-bill"
-                  className="block rounded-full bg-[#f3c74d] px-4 py-3 text-center text-sm font-semibold text-[#050b16] transition duration-200 hover:-translate-y-0.5 hover:bg-[#e4b935]"
+                  className="group relative block overflow-hidden rounded-full bg-[#f3c74d] px-4 py-3 text-center text-sm font-semibold text-[#050b16] transition duration-200 hover:-translate-y-0.5 hover:bg-[#e4b935] hover:shadow-[0_10px_24px_rgba(243,199,77,0.25)]"
                   onClick={() => setOpen(false)}
                 >
-                  Request Bulk Quote
+                  <span className="relative z-10">Request Bulk Quote</span>
+                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
                 </Link>
               </div>
             </div>
