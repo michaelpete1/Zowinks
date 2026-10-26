@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+/.open-next/
 /out/
 
 # production
@@ -27,6 +28,7 @@
 # tools
 .kombai/
 .refact/
+/.wrangler/
 
 # debug
 npm-debug.log*
