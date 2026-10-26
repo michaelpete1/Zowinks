@@ -10,7 +10,7 @@ const sections = [
   },
   {
     title: "2. Who we are",
-    body: "Zowkins Enterprise LTD is an IT hardware procurement company based at No 7 Maputo Street, Wuse Zone 3, Abuja, FCT, Nigeria. We supply laptops, desktops, accessories, networking equipment, and related IT products to individuals and businesses.",
+    body: "Zowkins Enterprise LTD is an IT hardware procurement company based in Abuja, Nigeria. We supply laptops, desktops, accessories, networking equipment, and related IT products to individuals and businesses.",
   },
   {
     title: "3. Products and pricing",
@@ -130,7 +130,7 @@ export default function TermsPage() {
             <div className="mt-6 space-y-3 text-sm text-white/90">
               <p>Email: contact@zowkins.com</p>
               <p>Phone: 07036359024</p>
-              <p>Address: No 7 Maputo Street, Wuse Zone 3, Abuja, FCT, Nigeria</p>
+              <p>Address: Abuja</p>
               <p>Hours: Monday – Friday, 9:00 – 17:00</p>
             </div>
             <Link

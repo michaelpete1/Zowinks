@@ -12,22 +12,21 @@ interface Props {
 }
 
 export default function EnhancedBackground({
-  particles = 48,
-  lines = 10,
+  particles = 16,
+  lines = 5,
 }: Props) {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      {/* subtle vignette + gradient handled by page background; layer canvases */}
       <div className="absolute inset-0 mix-blend-screen opacity-60">
         <AnimatedBackground
           count={particles}
-          linkDistance={120}
+          linkDistance={90}
           className="opacity-85"
         />
       </div>
 
       <div className="absolute inset-0">
-        <RotaryLinesBackground count={lines} speed={0.55} opacity={0.09} />
+        <RotaryLinesBackground count={lines} speed={0.45} opacity={0.08} />
       </div>
 
       {/* soft animated overlay to add depth */}

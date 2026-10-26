@@ -26,7 +26,7 @@ const organizationJsonLd = {
 };
 
 const officeMapsUrl =
-  "https://www.google.com/maps/search/?api=1&query=No.%20158%2C%20Adetokunbo%20Ademola%20Cres%2C%20Kamdi%20Arena%2C%20Wuse%2C%20Abuja%2C%20FCT%2C%20Nigeria";
+  "https://www.google.com/maps/search/?api=1&query=Abuja";
 
 const valueProps = [
   {
@@ -411,7 +411,7 @@ export default async function Home() {
                       Address
                     </p>
                     <p className="mt-1 text-sm font-semibold text-white md:text-base animate-fade-in-right delay-200">
-                      No 7 Maputo Street, Wuse Zone 3, Abuja, FCT
+                      Abuja
                     </p>
                   </div>
                 </a>

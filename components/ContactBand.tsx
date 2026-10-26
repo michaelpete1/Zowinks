@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 const hiddenPaths = ["/admin"];
 
 const officeMapsUrl =
-  "https://www.google.com/maps/search/?api=1&query=No%207%20Maputo%20Street%2C%20Wuse%20Zone%203%2C%20Abuja%2C%20FCT";
+  "https://www.google.com/maps/search/?api=1&query=Abuja";
 
 const contacts = [
   {
@@ -46,7 +46,7 @@ const contacts = [
   },
   {
     label: "Address",
-    value: "No 7 Maputo Street, Wuse Zone 3, Abuja, FCT",
+    value: "Abuja",
     href: officeMapsUrl,
     icon: (
       <svg

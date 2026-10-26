@@ -16,10 +16,10 @@ interface Props {
 }
 
 export default function RotaryLinesBackground({
-  count = 8,
-  speed = 1,
+  count = 5,
+  speed = 0.6,
   color = "#f3c74d",
-  opacity = 0.15,
+  opacity = 0.11,
   className = "",
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -27,6 +27,12 @@ export default function RotaryLinesBackground({
   const startTimeRef = useRef<number>(performance.now());
 
   useEffect(() => {
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");

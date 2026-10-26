@@ -17,8 +17,7 @@ const infoCards = [
       </svg>
     ),
     label: "Address",
-    value: "No 7 Maputo Street",
-    sub: "Wuse Zone 3, Abuja, FCT, Nigeria",
+    value: "Abuja",
     color: "#f3c74d",
   },
   {

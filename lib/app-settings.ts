@@ -43,7 +43,7 @@ export type AppSettingsResponse = {
 
 const fallback: App = {
   name: "Zowkins Enterprise",
-  address: "Wuse Zone 3, No 7 Maputo Street, Abuja, FCT, Nigeria",
+  address: "Abuja",
   phoneNumber: "07036359024",
   whatsAppNumber: "08064667917",
   email: "contact@zowkins.com",
@@ -63,9 +63,14 @@ const fallback: App = {
 
 
 function normalizeApp(input: Partial<App> | null | undefined): App {
+  const address = input?.address?.toLowerCase().includes("maputo")
+    ? fallback.address
+    : input?.address ?? fallback.address;
+
   return {
     ...fallback,
     ...(input ?? {}),
+    address,
     status: {
       ...fallback.status,
       ...(input?.status ?? {}),

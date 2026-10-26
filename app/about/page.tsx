@@ -126,8 +126,7 @@ export default async function About() {
                       Delivery
                     </p>
                     <p className="mt-1 text-sm font-semibold">
-                      {app.address.split(",")[2]?.trim() ??
-                        "Local and regional reach"}
+                      {app.address}
                     </p>
                   </div>
                 </div>

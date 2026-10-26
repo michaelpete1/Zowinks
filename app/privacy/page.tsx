@@ -6,7 +6,7 @@ const lastUpdated = "July 2025";
 const sections = [
   {
     title: "1. Who we are",
-    body: "Zowkins Enterprise LTD is the data controller responsible for your personal information. We are an IT hardware procurement company located at No 7 Maputo Street, Wuse Zone 3, Abuja, FCT, Nigeria. Contact: contact@zowkins.com.",
+    body: "Zowkins Enterprise LTD is the data controller responsible for your personal information. We are an IT hardware procurement company located in Abuja, Nigeria. Contact: contact@zowkins.com.",
   },
   {
     title: "2. What information we collect",
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
           <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(15,23,42,0.06)] md:p-8">
             <h2 className="font-display text-2xl font-bold text-slate-900">Data controller</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
-              The data controller responsible for your personal information is Zowkins Enterprise LTD, No 7 Maputo Street, Wuse Zone 3, Abuja, FCT, Nigeria. For all data-related requests, contact us at contact@zowkins.com.
+              The data controller responsible for your personal information is Zowkins Enterprise LTD, Abuja, Nigeria. For all data-related requests, contact us at contact@zowkins.com.
             </p>
             <h2 className="mt-6 font-display text-2xl font-bold text-slate-900">Complaints</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
@@ -135,7 +135,7 @@ export default function PrivacyPage() {
             <div className="mt-6 space-y-3 text-sm text-white/90">
               <p>Email: contact@zowkins.com</p>
               <p>Phone: 07036359024</p>
-              <p>Address: No 7 Maputo Street, Wuse Zone 3, Abuja, FCT, Nigeria</p>
+              <p>Address: Abuja</p>
               <p>Hours: Monday – Friday, 9:00 – 17:00</p>
             </div>
             <Link

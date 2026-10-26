@@ -21,8 +21,8 @@ interface Props {
 }
 
 export default function AnimatedBackground({
-  count = 60,
-  linkDistance = 140,
+  count = 24,
+  linkDistance = 110,
   className = "",
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -30,6 +30,12 @@ export default function AnimatedBackground({
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");

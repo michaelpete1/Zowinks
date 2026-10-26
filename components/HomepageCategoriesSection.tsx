@@ -86,13 +86,15 @@ export default function HomepageCategoriesSection() {
   }, []);
 
   useEffect(() => {
+    if (!isVisible) return;
+
     let alive = true;
 
     async function loadCategories() {
       try {
         const response = await zowkinsApi.listCategories({
           page: 1,
-          limit: 12,
+          limit: 8,
         });
         if (!alive) return;
 
@@ -115,7 +117,7 @@ export default function HomepageCategoriesSection() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [isVisible]);
 
   const updateScrollState = () => {
     const el = carouselRef.current;
