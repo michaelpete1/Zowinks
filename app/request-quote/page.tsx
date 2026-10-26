@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
+import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { getAppSettings } from "../../lib/app-settings";
-
-const QuoteRequestForm = dynamic(() => import("../../components/QuoteRequestForm"), {
-  ssr: false,
-  loading: () => <div className="h-96 w-full animate-pulse rounded-[2rem] bg-white/5" />,
-});
 
 export const metadata: Metadata = {
   title: "Request a Quote",
