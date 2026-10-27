@@ -145,6 +145,7 @@ export default async function About() {
                         src={slide.src}
                         alt={slide.alt}
                         fill
+                        sizes="(min-width: 1280px) 1088px, (min-width: 768px) calc(100vw - 4rem), calc(100vw - 2rem)"
                         className="object-cover"
                         priority={index === 0}
                       />
@@ -175,6 +176,7 @@ export default async function About() {
                     src={aboutGallery[0].src}
                     alt={aboutGallery[0].alt}
                     fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
                     className="object-cover"
                     priority
                   />
@@ -203,6 +205,7 @@ export default async function About() {
                         src={slide.src}
                         alt={slide.alt}
                         fill
+                        sizes="(min-width: 1280px) 520px, (min-width: 640px) 50vw, 100vw"
                         loading="lazy"
                         className="object-cover"
                       />

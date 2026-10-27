@@ -93,6 +93,7 @@ export default function ServicesPage() {
                   src="/desktop 2.jpg"
                   alt="Desktop setup"
                   fill
+                  sizes="(min-width: 1280px) 500px, (min-width: 1024px) 45vw, calc(100vw - 2rem)"
                   priority
                   className="object-cover object-center"
                 />
@@ -112,6 +113,7 @@ export default function ServicesPage() {
                   src="/keyboard.jpg"
                   alt="Keyboard accessories"
                   fill
+                  sizes="(min-width: 1280px) 500px, (min-width: 1024px) 45vw, calc(100vw - 2rem)"
                   loading="lazy"
                   className="object-cover object-center"
                 />
@@ -184,5 +186,4 @@ export default function ServicesPage() {
     </div>
   );
 }
-
 

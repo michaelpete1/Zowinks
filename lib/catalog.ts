@@ -67,43 +67,70 @@ const emptyProductsResponse: CategoryProductsResponse = {
 };
 
 async function fetchProductsByCategoryCrawl(limit = 6): Promise<CatalogItem[]> {
-  const categoriesResponse = await zowkinsApi.listCategories({
+  const pageSize = 50;
+  const firstCategoryPage = await zowkinsApi.listCategories({
     page: 1,
-    limit: 12,
+    limit: pageSize,
   });
-
-  const categories: CategoryListItem[] = Array.isArray(
-    categoriesResponse?.categories,
-  )
-    ? categoriesResponse.categories
-    : [];
+  const categoryPages = await Promise.all(
+    Array.from(
+      { length: Math.max(0, firstCategoryPage.meta.totalPages - 1) },
+      (_, index) =>
+        zowkinsApi.listCategories({ page: index + 2, limit: pageSize }),
+    ),
+  );
+  const categories: CategoryListItem[] = [
+    ...(Array.isArray(firstCategoryPage?.categories)
+      ? firstCategoryPage.categories
+      : []),
+    ...categoryPages.flatMap((response) =>
+      Array.isArray(response?.categories) ? response.categories : [],
+    ),
+  ];
 
   if (categories.length === 0) return [];
 
   const results = await Promise.all(
-    categories.map((cat) =>
-      zowkinsApi
-        .listCategoryProducts(cat.slug, { page: 1, limit: 50 })
-        .catch(() => emptyProductsResponse),
-    ),
+    categories.map(async (category) => {
+      try {
+        const firstPage = await zowkinsApi.listCategoryProducts(category.slug, {
+          page: 1,
+          limit: pageSize,
+        });
+        const otherPages = await Promise.all(
+          Array.from(
+            { length: Math.max(0, firstPage.meta.totalPages - 1) },
+            (_, index) =>
+              zowkinsApi.listCategoryProducts(category.slug, {
+                page: index + 2,
+                limit: pageSize,
+              }),
+          ),
+        );
+        return [
+          ...(firstPage.products ?? []),
+          ...otherPages.flatMap((response) => response.products ?? []),
+        ];
+      } catch (error) {
+        console.error(
+          `Failed to load products for category "${category.slug}":`,
+          error,
+        );
+        return emptyProductsResponse.products;
+      }
+    }),
   );
 
-  const items: CatalogItem[] = [];
-  for (const result of results) {
-    if (!result?.products) continue;
-
-    for (const product of result.products) {
-      if (product && product.visible !== false) {
-        items.push(productToCatalogItem(product));
-      }
-
-      if (items.length >= limit) {
-        return items.slice(0, limit);
-      }
+  const uniqueProducts = new Map<string, ProductDetails>();
+  for (const product of results.flat()) {
+    if (product && product.visible !== false) {
+      uniqueProducts.set(product.id || product.slug, product);
     }
   }
 
-  return items.slice(0, limit);
+  return Array.from(uniqueProducts.values())
+    .map(productToCatalogItem)
+    .slice(0, limit);
 }
 
 

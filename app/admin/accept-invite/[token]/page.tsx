@@ -1,15 +1,19 @@
 import { redirect } from "next/navigation";
 
-export default function AdminAcceptInviteLegacyPage({
+export default async function AdminAcceptInviteLegacyPage({
   params,
   searchParams,
 }: {
-  params: { token: string };
-  searchParams?: Record<string, string | string[] | undefined>;
+  params: Promise<{ token: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const [{ token }, resolvedSearchParams = {}] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   const query = new URLSearchParams();
 
-  for (const [key, value] of Object.entries(searchParams ?? {})) {
+  for (const [key, value] of Object.entries(resolvedSearchParams)) {
     if (Array.isArray(value)) {
       value.forEach((entry) => query.append(key, entry));
     } else if (typeof value === "string") {
@@ -19,6 +23,6 @@ export default function AdminAcceptInviteLegacyPage({
 
   const search = query.toString();
   redirect(
-    `/admin/auth/accept-invite/${encodeURIComponent(params.token)}${search ? `?${search}` : ""}`,
+    `/admin/auth/accept-invite/${encodeURIComponent(token)}${search ? `?${search}` : ""}`,
   );
 }

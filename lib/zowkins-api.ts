@@ -1,6 +1,6 @@
 export const ZOWKINS_API_BASE = process.env.NEXT_PUBLIC_ZOWKINS_API_BASE || "/api/zowkins/v1";
 const SERVER_ZOWKINS_API_BASE =
-  process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api.onrender.com/v1";
+  process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api-prod.netlify.app/v1";
 
 export type ApiImage = {
   url: string;

@@ -12,9 +12,9 @@ import {
 import { resolveImageSource } from "../../../lib/media";
 
 type ProductPageProps = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 function formatPrice(value: number) {
@@ -63,14 +63,41 @@ function coerceSpecs(value: unknown): unknown {
     try {
       const parsed = JSON.parse(trimmed) as unknown;
       if (parsed === 0 || parsed === "0") return null;
+      if (
+        (Array.isArray(parsed) && parsed.length === 0) ||
+        (typeof parsed === "object" &&
+          parsed !== null &&
+          !Array.isArray(parsed) &&
+          Object.keys(parsed).length === 0)
+      ) {
+        return null;
+      }
       return parsed;
     } catch {
       return trimmed;
     }
   }
 
-  if (value === 0) return null;
+  if (
+    value === 0 ||
+    (Array.isArray(value) && value.length === 0) ||
+    (typeof value === "object" &&
+      value !== null &&
+      Object.keys(value).length === 0)
+  ) {
+    return null;
+  }
   return value;
+}
+
+function hasSpecContent(value: unknown): boolean {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.some(hasSpecContent);
+  if (typeof value === "object") {
+    return Object.values(value).some(hasSpecContent);
+  }
+  return true;
 }
 
 function formatSpecValue(value: unknown): string {
@@ -108,8 +135,10 @@ export const revalidate = 60;
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+
   try {
-    const product = await zowkinsApi.getProductBySlug(params.slug);
+    const product = await zowkinsApi.getProductBySlug(slug);
     return {
       title: product.name,
       description: product.description,
@@ -124,11 +153,12 @@ export async function generateMetadata({
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
+  const { slug } = await params;
   let product: ProductDetails;
   let loadError: string | null = null;
 
   try {
-    product = await zowkinsApi.getProductBySlug(params.slug);
+    product = await zowkinsApi.getProductBySlug(slug);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       notFound();
@@ -140,8 +170,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         : "Unable to load product details right now.";
 
     product = {
-      id: params.slug,
-      slug: params.slug,
+      id: slug,
+      slug,
       name: "Product details unavailable",
       description:
         "The product specification data could not be loaded from the backend right now.",
@@ -205,13 +235,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
         })
         .filter((entry): entry is readonly [string, unknown] => Boolean(entry));
       return entries.filter(
-        ([key, value]) => Boolean(key) && value != null && String(value).trim(),
+        ([key, value]) => Boolean(key) && hasSpecContent(value),
       );
     }
 
     if (typeof specs === "object") {
       return Object.entries(specs as Record<string, unknown>).filter(
-        ([key, value]) => Boolean(key) && value != null && String(value).trim(),
+        ([key, value]) => Boolean(key) && hasSpecContent(value),
       );
     }
 
@@ -420,20 +450,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
 
         <section className="mt-6 rounded-[2rem] border border-white/10 bg-[#081224] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] sm:p-5 md:p-6 lg:mt-8">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-                Specifications
+          {nonWarrantySpecs.length ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-white/55">
+                  Specifications
+                </p>
+                <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
+                  Everything in one view
+                </h2>
+              </div>
+              <p className="w-full max-w-xl text-sm leading-6 text-slate-300 sm:w-auto sm:text-right">
+                Dense cards and a multi-column layout keep the full spec sheet
+                readable without forcing a long vertical scroll.
               </p>
-              <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
-                Everything in one view
-              </h2>
             </div>
-            <p className="w-full max-w-xl text-sm leading-6 text-slate-300 sm:w-auto sm:text-right">
-              Dense cards and a multi-column layout keep the full spec sheet
-              readable without forcing a long vertical scroll.
-            </p>
-          </div>
+          ) : null}
 
           {nonWarrantySpecs.length ? (
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -458,9 +490,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 : JSON.stringify(specs, null, 2)}
             </pre>
           ) : (
-            <p className="mt-5 text-sm text-slate-300">
-              No specifications were added for this product yet.
-            </p>
+            <div className="mt-5 rounded-[1.4rem] border border-white/10 bg-white/5 px-5 py-6 text-center">
+              <h3 className="font-semibold text-white">
+                Specifications coming soon
+              </h3>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-300">
+                Detailed specifications aren’t available for this product yet.
+                Contact us if you need help with product details.
+              </p>
+              <Link
+                href="/contact"
+                className="mt-4 inline-flex rounded-full bg-[#f3c74d] px-5 py-2.5 text-sm font-semibold text-[#050b16] transition hover:bg-[#e4b935]"
+              >
+                Contact us
+              </Link>
+            </div>
           )}
         </section>
       </main>

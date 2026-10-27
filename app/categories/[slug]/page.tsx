@@ -8,8 +8,8 @@ import { ApiError, zowkinsApi } from "../../../lib/zowkins-api";
 import { resolveImageSource } from "../../../lib/media";
 
 type PageProps = {
-  params: { slug: string };
-  searchParams?: { page?: string; limit?: string };
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ page?: string; limit?: string }>;
 };
 
 type ProductRelation = string | { name?: string | null } | null | undefined;
@@ -34,8 +34,10 @@ export const revalidate = 60;
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+
   try {
-    const category = await zowkinsApi.getCategoryBySlug(params.slug);
+    const category = await zowkinsApi.getCategoryBySlug(slug);
     return {
       title: category.name,
       description: category.description,
@@ -52,16 +54,20 @@ export default async function CategoryPage({
   params,
   searchParams,
 }: PageProps) {
-  const page = Math.max(1, Number(searchParams?.page ?? "1") || 1);
-  const limit = Math.max(1, Number(searchParams?.limit ?? "9") || 9);
+  const [{ slug }, resolvedSearchParams = {}] = await Promise.all([
+    params,
+    searchParams,
+  ]);
+  const page = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
+  const limit = Math.max(1, Number(resolvedSearchParams.limit ?? "9") || 9);
 
   let category;
   let productsResponse;
 
   try {
     [category, productsResponse] = await Promise.all([
-      zowkinsApi.getCategoryBySlug(params.slug),
-      zowkinsApi.listCategoryProducts(params.slug, { page, limit }),
+      zowkinsApi.getCategoryBySlug(slug),
+      zowkinsApi.listCategoryProducts(slug, { page, limit }),
     ]);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
@@ -228,7 +234,7 @@ export default async function CategoryPage({
             ).map((pageNumber) => (
               <Link
                 key={pageNumber}
-                href={`/categories/${params.slug}?page=${pageNumber}&limit=${limit}`}
+                href={`/categories/${slug}?page=${pageNumber}&limit=${limit}`}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   pageNumber === page
                     ? "bg-[#f3c74d] text-[#050b16]"

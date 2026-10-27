@@ -10,6 +10,14 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "pub-1c2f0b1b2ac2419ab5729cf69556aa4a.r2.dev",
+      },
+      {
+        protocol: "https",
+        hostname: "zowkins-api-prod.netlify.app",
+      },
+      {
+        protocol: "https",
         hostname: "zowkins-api.onrender.com",
       },
     ],

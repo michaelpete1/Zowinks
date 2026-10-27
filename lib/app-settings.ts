@@ -1,7 +1,7 @@
 import { ZOWKINS_API_BASE, ApiError } from "./zowkins-api";
 
 const SERVER_ZOWKINS_API_BASE =
-  process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api.onrender.com/v1";
+  process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api-prod.netlify.app/v1";
 
 export type App = {
   id?: string;
@@ -87,7 +87,10 @@ function normalizeApp(input: Partial<App> | null | undefined): App {
   };
 }
 
-const ALLOWED_API_HOST = new URL("https://zowkins-api.onrender.com").hostname;
+const ALLOWED_API_HOSTS = new Set([
+  "zowkins-api-prod.netlify.app",
+  "zowkins-api.onrender.com",
+]);
 
 function getSafeApiBase(): string {
   const base = ZOWKINS_API_BASE.startsWith("http")
@@ -95,11 +98,15 @@ function getSafeApiBase(): string {
     : SERVER_ZOWKINS_API_BASE;
   try {
     const { hostname } = new URL(base);
-    if (hostname !== ALLOWED_API_HOST && hostname !== "localhost" && hostname !== "127.0.0.1") {
-      return `https://${ALLOWED_API_HOST}/v1`;
+    if (
+      !ALLOWED_API_HOSTS.has(hostname) &&
+      hostname !== "localhost" &&
+      hostname !== "127.0.0.1"
+    ) {
+      return "https://zowkins-api-prod.netlify.app/v1";
     }
   } catch {
-    return `https://${ALLOWED_API_HOST}/v1`;
+    return "https://zowkins-api-prod.netlify.app/v1";
   }
   return base;
 }

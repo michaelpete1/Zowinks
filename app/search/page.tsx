@@ -5,13 +5,14 @@ import { searchCatalog } from "../../lib/catalog";
 import type { CatalogItem } from "../../lib/catalog";
 
 type SearchPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     q?: string;
-  };
+  }>;
 };
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const query = searchParams?.q?.trim() ?? "";
+  const resolvedSearchParams = await searchParams;
+  const query = resolvedSearchParams?.q?.trim() ?? "";
   let results: CatalogItem[] = [];
   try {
     results = await searchCatalog(query);

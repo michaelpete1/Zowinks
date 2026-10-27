@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getSiteUrl } from "../../../../lib/site-url";
 
-const UPSTREAM_BASE = process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api.onrender.com/v1";
+const UPSTREAM_BASE = process.env.ZOWKINS_UPSTREAM_API_BASE || "https://zowkins-api-prod.netlify.app/v1";
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 

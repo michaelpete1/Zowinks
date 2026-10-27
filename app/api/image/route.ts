@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 
 const ALLOWED_HOSTS = new Set([
   "pub-8c6bb3ce4d88417e9f57a8967cf9363d.r2.dev",
+  "zowkins-api-prod.netlify.app",
   "zowkins-api.onrender.com",
   "localhost",
   "127.0.0.1",

@@ -1,10 +1,14 @@
 import { ZOWKINS_API_BASE, ApiImage } from "./zowkins-api";
 
 const API_ORIGIN = (() => {
+  if (!ZOWKINS_API_BASE.startsWith("http")) {
+    return "https://zowkins-api-prod.netlify.app";
+  }
+
   try {
-    return new URL(ZOWKINS_API_BASE, "http://localhost").origin;
+    return new URL(ZOWKINS_API_BASE).origin;
   } catch {
-    return "https://zowkins-api.onrender.com";
+    return "https://zowkins-api-prod.netlify.app";
   }
 })();
 const IMAGE_ORIGIN = "https://pub-8c6bb3ce4d88417e9f57a8967cf9363d.r2.dev";

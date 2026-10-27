@@ -9,12 +9,13 @@ import { formatPrice } from "../../../lib/catalog";
 import { resolveImageSource } from "../../../lib/media";
 
 type Props = {
-  params: { brand: string };
+  params: Promise<{ brand: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { brand } = await params;
   const brandName =
-    params.brand.charAt(0).toUpperCase() + params.brand.slice(1);
+    brand.charAt(0).toUpperCase() + brand.slice(1);
   return {
     title: `${brandName} Laptops`,
     description: `Browse the latest ${brandName} business laptops and workstations.`,
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BrandPage({ params }: Props) {
-  const { brand } = params;
+  const { brand } = await params;
 
   let products: ProductDetails[] = [];
   let category: any = null;

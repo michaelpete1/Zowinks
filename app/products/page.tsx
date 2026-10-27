@@ -131,21 +131,30 @@ const brandFilterHref = (brandSlug: string) =>
 const categoryFilterHref = (categorySlug: string) =>
   `/products?category=${encodeURIComponent(categorySlug)}`;
 
+type ProductsSearchParams = {
+  brand?: string | string[];
+  category?: string | string[];
+};
+
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams?: { brand?: string | string[]; category?: string | string[] };
+  searchParams?: Promise<ProductsSearchParams>;
 }) {
-  const [products, categoriesResponse] = await Promise.all([
-    fetchAllProducts(),
-    zowkinsApi.listCategories({ page: 1, limit: 12 }).catch(() => null),
-  ]);
+  const [products, categoriesResponse, resolvedSearchParams] =
+    await Promise.all([
+      fetchAllProducts(),
+      zowkinsApi.listCategories({ page: 1, limit: 12 }).catch(() => null),
+      searchParams ?? Promise.resolve<ProductsSearchParams>({}),
+    ]);
 
   const categories = categoriesResponse?.categories ?? [];
   const visibleProducts = products.filter(Boolean);
-  const selectedBrand = slugify(getSearchParam(searchParams?.brand) || "");
+  const selectedBrand = slugify(
+    getSearchParam(resolvedSearchParams.brand) || "",
+  );
   const selectedCategory = slugify(
-    getSearchParam(searchParams?.category) || "",
+    getSearchParam(resolvedSearchParams.category) || "",
   );
 
   const liveBrands = Array.from(
@@ -273,6 +282,7 @@ export default async function ProductsPage({
                   src="/heroimage1.jpg"
                   alt="Featured products"
                   fill
+                  sizes="(min-width: 1280px) 560px, (min-width: 1024px) 45vw, calc(100vw - 2rem)"
                   className="object-cover"
                   priority
                 />
