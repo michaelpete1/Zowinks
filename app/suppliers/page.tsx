@@ -9,9 +9,24 @@ export const metadata: Metadata = {
 };
 
 const suppliers = [
-  { title: "HP", img: "/hplogo.jpg", href: "/laptops/hp", category: "Laptops" },
-  { title: "Dell", img: "/delllogo.jpg", href: "/laptops/dell", category: "Laptops" },
-  { title: "Lenovo", img: "/lenovologo.jpg", href: "/laptops/lenovo", category: "Laptops" },
+  {
+    title: "HP",
+    img: "/New%20Badges%20HP%20Amplify%20H2fy25-Membership_Business%20Partner.png",
+    href: "/laptops/hp",
+    category: "Laptops",
+  },
+  {
+    title: "Dell",
+    img: "/DT_AuthorizedPartner_Blue.jpg.jpeg",
+    href: "/laptops/dell",
+    category: "Laptops",
+  },
+  {
+    title: "Lenovo",
+    img: "/Lenovo360_Emblem_Authorized.webp",
+    href: "/laptops/lenovo",
+    category: "Laptops",
+  },
   { title: "Asus", img: "/asuslogo.jpg", href: "/laptops", category: "Laptops" },
   { title: "Logitech", img: "/logitech.jpg", href: "/accessories", category: "Accessories" },
   { title: "Canon", img: "/canonlogo.jpg", href: "/accessories", category: "Accessories" },
