@@ -62,6 +62,26 @@ export function useAdminSession() {
     setReady(true);
   }, []);
 
+  useEffect(() => {
+    const handleTokenRefresh = (event: Event) => {
+      if (!(event instanceof CustomEvent) || typeof event.detail !== "string") {
+        return;
+      }
+
+      setSession((current) => {
+        if (!current) return current;
+
+        const next = { ...current, accessToken: event.detail };
+        writeSession(next);
+        return next;
+      });
+    };
+
+    window.addEventListener("admin-token-refreshed", handleTokenRefresh);
+    return () =>
+      window.removeEventListener("admin-token-refreshed", handleTokenRefresh);
+  }, []);
+
   const persistSession = useCallback((next: AdminSession | null) => {
     setSession(next);
     writeSession(next);
@@ -86,7 +106,7 @@ export function useAdminSession() {
   }, [persistSession]);
 
   const refreshSession = useCallback(async () => {
-    if (!session?.accessToken) return;
+    if (!session?.accessToken) return false;
     
     try {
       const response = await zowkinsApi.refreshAdminTokens();
@@ -94,7 +114,6 @@ export function useAdminSession() {
         persistSession({
           ...session,
           accessToken: response.accessToken,
-          loggedInAt: new Date().toISOString(),
         });
         return true;
       }

@@ -3,6 +3,7 @@ import("@opennextjs/cloudflare").then((m) => m.initOpenNextCloudflareForDev());
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    qualities: [75, 82],
     remotePatterns: [
       {
         protocol: "https",

@@ -37,22 +37,34 @@ export default function PortalOrderDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (orderId) void fetchOrder();
-  }, [orderId]);
+    if (!orderId) return;
 
-  const fetchOrder = async () => {
-    try {
-      const token = localStorage.getItem("portalToken");
-      if (!token) { window.location.replace("/portal/auth/login"); return; }
-      const response = await zowkinsApi.getPortalOrder(token, orderId);
-      if (!response?.order) throw new Error("Order not found");
-      setOrder(response.order);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch order");
-    } finally {
-      setLoading(false);
-    }
-  };
+    let cancelled = false;
+    const loadOrder = async () => {
+      try {
+        const token = localStorage.getItem("portalToken");
+        if (!token) {
+          window.location.replace("/portal/auth/login");
+          return;
+        }
+
+        const response = await zowkinsApi.getPortalOrder(token, orderId);
+        if (!response?.order) throw new Error("Order not found");
+        if (!cancelled) setOrder(response.order);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to fetch order");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void loadOrder();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
 
   if (loading) return (
     <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">

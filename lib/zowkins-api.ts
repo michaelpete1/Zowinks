@@ -244,6 +244,11 @@ export type DeliveryAddress = {
   postalCode: string;
 };
 
+type DeliveryAddressApiRecord = Omit<DeliveryAddress, "id"> & {
+  id?: string | null;
+  _id?: string | null;
+};
+
 export type PortalOrderItem = {
   productId: string;
   productName: string;
@@ -673,6 +678,7 @@ const makeHeaders = (headers?: HeadersInit) => {
 };
 
 let portalTokenRefreshInFlight: Promise<string | null> | null = null;
+let adminTokenRefreshInFlight: Promise<string | null> | null = null;
 
 async function refreshPortalAccessToken(): Promise<string | null> {
   if (typeof window === "undefined") return null;
@@ -701,6 +707,46 @@ async function refreshPortalAccessToken(): Promise<string | null> {
   })();
 
   return portalTokenRefreshInFlight;
+}
+
+async function refreshAdminAccessToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  if (adminTokenRefreshInFlight) return adminTokenRefreshInFlight;
+
+  adminTokenRefreshInFlight = (async () => {
+    try {
+      const response = await fetch(getApiRequestUrl("/admin/auth/refresh-tokens"), {
+        method: "POST",
+        credentials: "include",
+        headers: makeHeaders(),
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        console.warn("Admin access-token refresh failed:", response.status);
+        return null;
+      }
+
+      const payload = (await response.json()) as AdminRefreshResponse;
+      const token = payload?.accessToken;
+      if (!token) {
+        console.error("Admin access-token refresh returned no access token.");
+        return null;
+      }
+
+      window.localStorage.setItem("zowkins-admin-access-token", token);
+      window.dispatchEvent(
+        new CustomEvent("admin-token-refreshed", { detail: token }),
+      );
+      return token;
+    } catch (error) {
+      console.error("Admin access-token refresh request failed:", error);
+      return null;
+    } finally {
+      adminTokenRefreshInFlight = null;
+    }
+  })();
+
+  return adminTokenRefreshInFlight;
 }
 
 const MONGO_OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/;
@@ -951,8 +997,13 @@ async function readApiError(response: Response) {
   return msg || "We could not complete your request. Please try again.";
 }
 
-async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const defaultCache = typeof window === "undefined" ? "force-cache" : "no-store";
+async function apiRequestOnce<T>(path: string, init?: RequestInit): Promise<T> {
+  const defaultCache =
+    typeof window === "undefined"
+      ? init?.next?.revalidate !== undefined
+        ? undefined
+        : "force-cache"
+      : "no-store";
 
   let response = await fetch(getApiRequestUrl(path), {
     ...init,
@@ -962,6 +1013,7 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   const isPortalRefreshRequest = path === "/portal/auth/refresh-tokens";
+  const isAdminRefreshRequest = path === "/admin/auth/refresh-tokens";
   const requestAuthorization = new Headers(init?.headers).get("Authorization");
   if (
     response.status === 401 &&
@@ -977,6 +1029,26 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
       response = await fetch(getApiRequestUrl(path), {
         ...init,
         cache: init?.cache ?? (typeof window === "undefined" ? "force-cache" : "no-store"),
+        credentials: "include",
+        headers: makeHeaders(headers),
+      });
+    }
+  }
+
+  if (
+    response.status === 401 &&
+    path.startsWith("/admin/") &&
+    !isAdminRefreshRequest &&
+    requestAuthorization &&
+    typeof window !== "undefined"
+  ) {
+    const refreshedToken = await refreshAdminAccessToken();
+    if (refreshedToken) {
+      const headers = new Headers(init?.headers);
+      headers.set("Authorization", `Bearer ${refreshedToken}`);
+      response = await fetch(getApiRequestUrl(path), {
+        ...init,
+        cache: init?.cache ?? "no-store",
         credentials: "include",
         headers: makeHeaders(headers),
       });
@@ -1035,6 +1107,60 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   }
 }
 
+const RETRIABLE_NETWORK_CODES = new Set([
+  "UND_ERR_CONNECT_TIMEOUT",
+  "ECONNRESET",
+  "EAI_AGAIN",
+  "ENOTFOUND",
+]);
+
+function isRetriableNetworkError(error: unknown): boolean {
+  let current: unknown = error;
+
+  for (let depth = 0; depth < 5; depth += 1) {
+    if (!current || typeof current !== "object") break;
+
+    const candidate = current as { cause?: unknown; code?: unknown };
+    if (
+      typeof candidate.code === "string" &&
+      RETRIABLE_NETWORK_CODES.has(candidate.code)
+    ) {
+      return true;
+    }
+    current = candidate.cause;
+  }
+
+  return (
+    error instanceof TypeError &&
+    /terminated|fetch failed|socket/i.test(error.message)
+  );
+}
+
+const wait = (milliseconds: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+
+async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const method = (init?.method ?? "GET").toUpperCase();
+  const mayRetry =
+    typeof window === "undefined" &&
+    ["GET", "HEAD", "OPTIONS"].includes(method);
+  const maxAttempts = mayRetry ? 3 : 1;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await apiRequestOnce<T>(path, init);
+    } catch (error) {
+      if (attempt === maxAttempts || !isRetriableNetworkError(error)) {
+        throw error;
+      }
+
+      await wait(600 * attempt);
+    }
+  }
+
+  throw new Error(`Request failed after ${maxAttempts} attempts: ${path}`);
+}
+
 export const zowkinsApi = {
   createAdminAccount(payload: AdminCreateAccountInput) {
     return apiRequest<AdminAuthResponse>("/admin/auth/create-account", {
@@ -1055,8 +1181,11 @@ export const zowkinsApi = {
     });
   },
   refreshAdminTokens() {
-    return apiRequest<AdminRefreshResponse>("/admin/auth/refresh-tokens", {
-      method: "POST",
+    return refreshAdminAccessToken().then((accessToken) => {
+      if (!accessToken) {
+        throw new ApiError("Could not refresh the admin session.", 401);
+      }
+      return { accessToken };
     });
   },
   logoutAdmin() {
@@ -1128,7 +1257,9 @@ export const zowkinsApi = {
     }).then((response) => normalizeProducts(response));
   },
   listProducts() {
-    return apiRequest<unknown>("/products").then((response) => normalizeProducts(response));
+    return apiRequest<unknown>("/products", {
+      next: { revalidate: 30 },
+    }).then((response) => normalizeProducts(response));
   },
   getAdminProductStats(token: string) {
     return apiRequest<AdminProductStatsResponse>("/admin/products/stats", {
@@ -1567,10 +1698,16 @@ export const zowkinsApi = {
     if (typeof query?.limit === "number") params.set("limit", String(query.limit));
     const search = params.toString();
 
-    return apiRequest<CategoryListResponse>(`/categories${search ? `?${search}` : ""}`);
+    return apiRequest<CategoryListResponse>(
+      `/categories${search ? `?${search}` : ""}`,
+      { next: { revalidate: 30 } },
+    );
   },
   getCategoryBySlug(slug: string) {
-    return apiRequest<CategoryDetails>(`/categories/${encodeURIComponent(slug)}`);
+    return apiRequest<CategoryDetails>(
+      `/categories/${encodeURIComponent(slug)}`,
+      { next: { revalidate: 30 } },
+    );
   },
   listCategoryProducts(
     slug: string,
@@ -1586,6 +1723,7 @@ export const zowkinsApi = {
 
     return apiRequest<CategoryProductsResponse>(
       `/categories/${encodeURIComponent(slug)}/products${search ? `?${search}` : ""}`,
+      { next: { revalidate: 30 } },
     ).then((response) => ({
       ...response,
       products: Array.isArray(response.products) ? normalizeProducts(response.products) : [],
@@ -1792,10 +1930,24 @@ export const zowkinsApi = {
     });
   },
   listDeliveryAddresses(token: string, userId: string) {
-    return apiRequest<DeliveryAddress[]>(`/portal/delivery-address/${encodeURIComponent(userId)}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    return apiRequest<DeliveryAddressApiRecord[]>(
+      `/portal/delivery-address/${encodeURIComponent(userId)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
+    ).then((addresses): DeliveryAddress[] => {
+      if (!Array.isArray(addresses)) return [];
+
+      const seenIds = new Set<string>();
+      return addresses.flatMap((address) => {
+        const id = address.id || address._id;
+        if (!id || seenIds.has(id)) return [];
+
+        seenIds.add(id);
+        return [{ ...address, id }];
+      });
     });
   },
   getDeliveryAddress(token: string, userId: string, addressId: string) {

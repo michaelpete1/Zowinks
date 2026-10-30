@@ -7,10 +7,10 @@ export default async function FeaturedProductsSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-16">
       <div className="text-center">
-        <p className="text-xs uppercase tracking-[0.35em] text-white/55 animate-fade-in-up animate-text-reveal-word">
+        <p className="text-xs uppercase tracking-[0.35em] text-white/55 animate-fade-in-up">
           New products
         </p>
-        <h2 className="mt-2 font-display text-2xl font-bold text-white md:text-4xl animate-fade-in-up delay-100 animate-text-reveal-char">
+        <h2 className="mt-2 font-display text-2xl font-bold text-white md:text-4xl animate-fade-in-up delay-100">
           Fresh picks for modern teams
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-300 md:text-base animate-fade-in-up delay-200">

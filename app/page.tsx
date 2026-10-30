@@ -4,7 +4,7 @@ import Navbar from "../components/NewNavbar";
 import HeroCarousel from "../components/HeroCarousel";
 import HomepageCategoriesSection from "../components/HomepageCategoriesSection";
 import FeaturedProductsSection from "../components/FeaturedProductsSection";
-import EnhancedBackground from "../components/EnhancedBackground";
+import AnimatedBackground from "../components/AnimatedBackground";
 import { getAppSettings } from "../lib/app-settings";
 
 export const metadata: Metadata = {
@@ -213,7 +213,8 @@ export default async function Home() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
-      <EnhancedBackground particles={56} lines={12} />
+      {/* Animated particle network — canvas fills the full page */}
+      <AnimatedBackground count={60} linkDistance={145} />
       <div className="relative z-10">
         <script
           type="application/ld+json"
@@ -242,10 +243,10 @@ export default async function Home() {
                   {getTrustIcon(item.icon)}
                 </span>
                 <div>
-                  <h3 className="font-display text-base font-bold text-white animate-fade-in-right delay-100 animate-text-reveal-char">
+                  <h3 className="font-display text-base font-bold text-white animate-fade-in-right delay-100">
                     {item.title}
                   </h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-300 animate-fade-in-right delay-200 animate-text-reveal-word">
+                  <p className="mt-1 text-sm leading-6 text-slate-300 animate-fade-in-right delay-200">
                     {item.body}
                   </p>
                 </div>
@@ -260,13 +261,13 @@ export default async function Home() {
           <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-16">
             <div className="text-center text-white">
               <p
-                className="text-xs uppercase tracking-[0.35em] text-white/75 animate-fade-in-up animate-text-reveal-word"
+                className="text-xs uppercase tracking-[0.35em] text-white/75 animate-fade-in-up"
                 style={{ animationDelay: "200ms" }}
               >
                 Why Choose Zowkins?
               </p>
               <h2
-                className="mt-2 font-display text-3xl font-bold md:text-4xl animate-fade-in-up delay-100 animate-text-reveal-char"
+                className="mt-2 font-display text-3xl font-bold md:text-4xl animate-fade-in-up delay-100"
                 style={{ animationDelay: "300ms" }}
               >
                 Procurement made simple
@@ -317,13 +318,13 @@ export default async function Home() {
             <div className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,32,0.98),rgba(7,12,24,0.98))] px-5 py-6 shadow-[0_12px_30px_rgba(0,0,0,0.22)] md:px-6 md:py-8 animate-fade-in-up animate-border-glow">
               <div className="text-center">
                 <p
-                  className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70 animate-fade-in-up animate-text-reveal-word"
+                  className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70 animate-fade-in-up"
                   style={{ animationDelay: "200ms" }}
                 >
                   Get in Touch
                 </p>
                 <h3
-                  className="mt-2 font-display text-2xl font-bold text-white md:text-3xl animate-fade-in-up delay-100 animate-text-reveal-char"
+                  className="mt-2 font-display text-2xl font-bold text-white md:text-3xl animate-fade-in-up delay-100"
                   style={{ animationDelay: "300ms" }}
                 >
                   Reach us directly

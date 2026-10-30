@@ -167,7 +167,9 @@ export default async function CategoryPage({
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {productsResponse.products.map((product) => (
+            {productsResponse.products
+              .filter((product) => product.visible !== false)
+              .map((product) => (
               <article
                 key={product.id}
                 className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0a1020] shadow-[0_16px_40px_rgba(0,0,0,0.18)]"
@@ -222,7 +224,7 @@ export default async function CategoryPage({
                   </Link>
                 </div>
               </article>
-            ))}
+              ))}
           </div>
         </section>
 

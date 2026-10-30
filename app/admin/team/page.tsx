@@ -76,15 +76,35 @@ function mapMemberToForm(member: AdminTeamMember): EditForm {
   };
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  administrator: "Administrator",
+  operations: "Operations",
+  devOps: "DevOps",
+  storeManager: "Store manager",
+  marketingAndSales: "Marketing & Sales",
+  accountant: "Accountant",
+  driver: "Driver",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  active: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+  pending: "bg-amber-50 text-amber-700 border border-amber-100",
+  inactive: "bg-slate-100 text-slate-600 border border-slate-200",
+  suspended: "bg-rose-50 text-rose-700 border border-rose-100",
+};
+
+function statusClass(status: string) {
+  const key = status.toLowerCase();
+  return STATUS_COLORS[key] ?? "bg-slate-100 text-slate-600 border border-slate-200";
+}
+
 export default function TeamPage() {
   const { session } = useAdminSession();
   const [apiConnection, setApiConnection] = useState<ApiConnection>({
     accessToken: "",
   });
   const [members, setMembers] = useState<AdminTeamMember[]>([]);
-  const [selectedMember, setSelectedMember] = useState<AdminTeamMember | null>(
-    null,
-  );
+  const [selectedMember, setSelectedMember] = useState<AdminTeamMember | null>(null);
   const [editForm, setEditForm] = useState<EditForm | null>(null);
   const [inviteForm, setInviteForm] = useState<InviteForm>(emptyInviteForm);
   const [acceptInviteToken, setAcceptInviteToken] = useState("");
@@ -96,26 +116,19 @@ export default function TeamPage() {
   const [saving, setSaving] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [accepting, setAccepting] = useState(false);
-  const [inviteFieldErrors, setInviteFieldErrors] = useState<
-    Partial<Record<keyof InviteForm, string>>
-  >({});
-  const [editFieldErrors, setEditFieldErrors] = useState<
-    Partial<Record<keyof EditForm, string>>
-  >({});
+  const [inviteFieldErrors, setInviteFieldErrors] = useState<Partial<Record<keyof InviteForm, string>>>({});
+  const [editFieldErrors, setEditFieldErrors] = useState<Partial<Record<keyof EditForm, string>>>({});
   const [ready, setReady] = useState(false);
+  const [activeTab, setActiveTab] = useState<"list" | "invite" | "edit">("list");
 
   useEffect(() => {
     if (!session?.accessToken || typeof window === "undefined") return;
-
     const nextToken = session.accessToken.trim();
     const storedToken = window.localStorage.getItem(ADMIN_API_TOKEN_KEY) ?? "";
-
     setApiConnection({ accessToken: nextToken });
-
     if (nextToken && nextToken !== storedToken) {
       window.localStorage.setItem(ADMIN_API_TOKEN_KEY, nextToken);
     }
-
     setReady(true);
   }, [session?.accessToken]);
 
@@ -123,20 +136,15 @@ export default function TeamPage() {
 
   const memberCount = members.length;
   const pendingCount = useMemo(
-    () =>
-      members.filter((member) =>
-        member.status?.toLowerCase().includes("pending"),
-      ).length,
+    () => members.filter((m) => m.status?.toLowerCase().includes("pending")).length,
     [members],
   );
 
   useEffect(() => {
     if (!ready || !apiReady) return;
-
     let cancelled = false;
     setLoading(true);
     setError("");
-
     zowkinsApi
       .listAdminTeam(apiConnection.accessToken.trim())
       .then((data) => {
@@ -144,26 +152,15 @@ export default function TeamPage() {
         setMembers(data);
         setSelectedMember((current) => {
           if (!current) return data[0] ?? null;
-          return (
-            data.find((member) => member.id === current.id) ?? data[0] ?? null
-          );
+          return data.find((m) => m.id === current.id) ?? data[0] ?? null;
         });
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(
-          err instanceof ApiError
-            ? err.message
-            : "Could not load team members.",
-        );
+        setError(err instanceof ApiError ? err.message : "Could not load team members.");
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [apiReady, apiConnection.accessToken, ready]);
 
   useEffect(() => {
@@ -173,39 +170,24 @@ export default function TeamPage() {
   const saveConnection = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (typeof window === "undefined") return;
-
-    window.localStorage.setItem(
-      ADMIN_API_TOKEN_KEY,
-      apiConnection.accessToken.trim(),
-    );
-    setInviteMessage(
-      "API connection saved. Team data will load automatically.",
-    );
+    window.localStorage.setItem(ADMIN_API_TOKEN_KEY, apiConnection.accessToken.trim());
+    setInviteMessage("API connection saved. Team data will load automatically.");
     setError("");
   };
 
   const refreshTeam = async () => {
     if (!apiReady) return;
-
     setLoading(true);
     setError("");
     try {
-      const data = await zowkinsApi.listAdminTeam(
-        apiConnection.accessToken.trim(),
-      );
+      const data = await zowkinsApi.listAdminTeam(apiConnection.accessToken.trim());
       setMembers(data);
       setSelectedMember((current) => {
         if (!current) return data[0] ?? null;
-        return (
-          data.find((member) => member.id === current.id) ?? data[0] ?? null
-        );
+        return data.find((m) => m.id === current.id) ?? data[0] ?? null;
       });
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Could not refresh team members.",
-      );
+      setError(err instanceof ApiError ? err.message : "Could not refresh team members.");
     } finally {
       setLoading(false);
     }
@@ -213,18 +195,14 @@ export default function TeamPage() {
 
   const validateInviteForm = () => {
     const newErrors: Partial<Record<keyof InviteForm, string>> = {};
-    if (!inviteForm.firstName.trim())
-      newErrors.firstName = "First name is required";
-    if (!inviteForm.lastName.trim())
-      newErrors.lastName = "Last name is required";
+    if (!inviteForm.firstName.trim()) newErrors.firstName = "First name is required";
+    if (!inviteForm.lastName.trim()) newErrors.lastName = "Last name is required";
     if (!inviteForm.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(inviteForm.email)) {
       newErrors.email = "Invalid email format";
     }
-    if (!inviteForm.phoneNumber.trim())
-      newErrors.phoneNumber = "Phone number is required";
-
+    if (!inviteForm.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
     setInviteFieldErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -232,675 +210,321 @@ export default function TeamPage() {
   const handleInviteSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setInviteFieldErrors({});
-
-    if (!apiReady) {
-      setError("Add a valid admin access token before inviting members.");
-      return;
-    }
-
-    if (!validateInviteForm()) {
-      setError("Please fix the errors in the invitation form.");
-      return;
-    }
-
-    const allowedRoles = ADMIN_ROLE_OPTIONS.map((option) => option.value);
-    if (!allowedRoles.includes(inviteForm.role)) {
-      setError("Please choose a valid admin role before sending the invite.");
-      return;
-    }
-
-    if (!inviteForm.gender.trim()) {
-      setError("Please choose a gender before sending the invite.");
-      return;
-    }
-
+    if (!apiReady) { setError("Add a valid admin access token before inviting members."); return; }
+    if (!validateInviteForm()) { setError("Please fix the errors in the invitation form."); return; }
+    const allowedRoles = ADMIN_ROLE_OPTIONS.map((o) => o.value);
+    if (!allowedRoles.includes(inviteForm.role)) { setError("Please choose a valid admin role before sending the invite."); return; }
+    if (!inviteForm.gender.trim()) { setError("Please choose a gender before sending the invite."); return; }
     setInviting(true);
     setError("");
     setInviteMessage("");
-
     try {
       const siteUrl = getSiteUrl();
-      await zowkinsApi.inviteAdminTeamMember(apiConnection.accessToken.trim(), {
-        ...inviteForm,
-        redirectUrl: `${siteUrl}/admin/auth/accept-invite`,
-      });
+      await zowkinsApi.inviteAdminTeamMember(apiConnection.accessToken.trim(), { ...inviteForm, redirectUrl: `${siteUrl}/admin/auth/accept-invite` });
       setInviteForm(emptyInviteForm);
       setInviteMessage("Invite sent successfully.");
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Could not send invite.",
-      );
-    } finally {
-      setInviting(false);
-    }
+      setError(err instanceof ApiError ? err.message : "Could not send invite.");
+    } finally { setInviting(false); }
   };
 
   const handleSaveMember = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!apiReady || !selectedMember || !editForm) {
-      setError("Select a team member and connect the API first.");
-      return;
-    }
-
+    if (!apiReady || !selectedMember || !editForm) { setError("Select a team member and connect the API first."); return; }
     setSaving(true);
     setError("");
     setInviteMessage("");
-
     try {
-      const updated = await zowkinsApi.updateAdminTeamMember(
-        apiConnection.accessToken.trim(),
-        selectedMember.id,
-        editForm,
-      );
-      setMembers((current) =>
-        current.map((member) => (member.id === updated.id ? updated : member)),
-      );
+      const updated = await zowkinsApi.updateAdminTeamMember(apiConnection.accessToken.trim(), selectedMember.id, editForm);
+      setMembers((c) => c.map((m) => m.id === updated.id ? updated : m));
       setSelectedMember(updated);
       setInviteMessage("Team member updated successfully.");
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Could not update team member.",
-      );
-    } finally {
-      setSaving(false);
-    }
+      setError(err instanceof ApiError ? err.message : "Could not update team member.");
+    } finally { setSaving(false); }
   };
 
   const handleResend = async (memberId: string) => {
     if (!apiReady) return;
     try {
       const siteUrl = getSiteUrl();
-      await zowkinsApi.resendAdminTeamInvite(
-        apiConnection.accessToken.trim(),
-        memberId,
-        { redirectUrl: `${siteUrl}/admin/auth/accept-invite` },
-      );
+      await zowkinsApi.resendAdminTeamInvite(apiConnection.accessToken.trim(), memberId, { redirectUrl: `${siteUrl}/admin/auth/accept-invite` });
       setInviteMessage("Invitation resent successfully.");
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Could not resend invite.",
-      );
+      setError(err instanceof ApiError ? err.message : "Could not resend invite.");
     }
   };
 
   const handleDelete = async (memberId: string) => {
     if (!apiReady) return;
-    if (
-      typeof window !== "undefined" &&
-      !window.confirm("Remove this team member?")
-    ) {
-      return;
-    }
-
+    if (typeof window !== "undefined" && !window.confirm("Remove this team member?")) return;
     try {
-      await zowkinsApi.deleteAdminTeamMember(
-        apiConnection.accessToken.trim(),
-        memberId,
-      );
-      setMembers((current) =>
-        current.filter((member) => member.id !== memberId),
-      );
-      setSelectedMember((current) =>
-        current?.id === memberId ? null : current,
-      );
+      await zowkinsApi.deleteAdminTeamMember(apiConnection.accessToken.trim(), memberId);
+      setMembers((c) => c.filter((m) => m.id !== memberId));
+      setSelectedMember((c) => c?.id === memberId ? null : c);
       setInviteMessage("Team member removed successfully.");
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Could not remove team member.",
-      );
+      setError(err instanceof ApiError ? err.message : "Could not remove team member.");
     }
   };
 
   const handleAcceptInvite = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!acceptInviteToken.trim() || !acceptPassword.trim()) {
-      setError("Enter both the invite token and a password.");
-      return;
-    }
-
+    if (!acceptInviteToken.trim() || !acceptPassword.trim()) { setError("Enter both the invite token and a password."); return; }
     setAccepting(true);
     setError("");
     setAcceptMessage("");
-
     try {
-      await zowkinsApi.acceptAdminTeamInvite(acceptInviteToken.trim(), {
-        password: acceptPassword,
-      });
+      await zowkinsApi.acceptAdminTeamInvite(acceptInviteToken.trim(), { password: acceptPassword });
       setAcceptInviteToken("");
       setAcceptPassword("");
       setAcceptMessage("Invitation accepted successfully.");
       await refreshTeam();
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Could not accept invite.",
-      );
-    } finally {
-      setAccepting(false);
-    }
+      setError(err instanceof ApiError ? err.message : "Could not accept invite.");
+    } finally { setAccepting(false); }
   };
+
+  const inputClass = (fieldName: keyof InviteForm | keyof EditForm, errors: Record<string, string>) =>
+    `w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${errors[fieldName] ? "border-rose-500 focus:border-rose-600" : "border-slate-200 focus:border-[#0a2a78]"}`;
+
+  const selectClass = `rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white`;
 
   return (
     <AdminShell title="Team" subtitle="Admin team management and invitations.">
-      <div className="mb-4">
-        <Link href="/admin" className="inline-flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-slate-900">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <Link href="/admin" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:border-slate-300">
           ← Back to Dashboard
         </Link>
+        <button type="button" onClick={(e) => saveConnection(e as any)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:border-slate-300">
+          Save connection
+        </button>
       </div>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-                Team access
-              </p>
-              <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
-                Manage admin members
-              </h2>
-            </div>
-            <AdminBadge label={apiReady ? "Visible" : "Hidden"} />
-          </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-[1.2rem] bg-slate-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Members
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {memberCount}
-              </p>
-            </div>
-            <div className="rounded-[1.2rem] bg-amber-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
-                Pending
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {pendingCount}
-              </p>
-            </div>
-            <div className="rounded-[1.2rem] bg-emerald-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
-                Session
-              </p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">
-                {session?.name ?? "Admin"}
-              </p>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.55fr)]">
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
+          <div className="border-b border-slate-100 bg-slate-50 px-5 py-4 sm:px-6 lg:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Team access</p>
+                <h2 className="mt-1 font-display text-xl font-bold text-slate-900 lg:text-2xl">Manage admin members</h2>
+              </div>
+              <AdminBadge label={apiReady ? "Connected" : "Not connected"} />
             </div>
           </div>
 
-          {error ? (
-            <p className="mt-5 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {error}
-            </p>
-          ) : null}
-          {inviteMessage ? (
-            <p className="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              {inviteMessage}
-            </p>
-          ) : null}
-
-          <div className="mt-6 space-y-4">
-            {loading ? (
-              <p className="text-sm text-slate-500">Loading team members...</p>
+          <div className="p-5 sm:p-6 lg:p-8">
+            {error ? (
+              <div className="mb-5 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
             ) : null}
-            {members.map((member) => (
-              <article
-                key={member.id}
-                className={`rounded-[1.4rem] border p-4 md:p-5 ${selectedMember?.id === member.id ? "border-[#0a2a78] bg-[#f6f9ff]" : "border-slate-100 bg-slate-50"}`}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-slate-200">
-                      <Image
-                        src={resolveImageSource(member.avatar, "/desktop.jpg")}
-                        alt={`${member.firstName} ${member.lastName}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900">
-                        {member.firstName} {member.lastName}
-                      </h3>
-                      <p className="text-sm text-slate-600">{member.email}</p>
-                    </div>
-                  </div>
-                  <AdminBadge label={member.status || "Pending"} />
-                </div>
+            {inviteMessage ? (
+              <div className="mb-5 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{inviteMessage}</div>
+            ) : null}
 
-                <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
-                  <span>
-                    Role:{" "}
-                    <strong className="text-slate-900">{member.role}</strong>
-                  </span>
-                  <span>
-                    Phone:{" "}
-                    <strong className="text-slate-900">
-                      {member.phoneNumber || "N/A"}
-                    </strong>
-                  </span>
-                  <span>
-                    Gender:{" "}
-                    <strong className="text-slate-900">
-                      {member.gender || "N/A"}
-                    </strong>
-                  </span>
-                </div>
+            <div className="mb-6 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Members</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{memberCount}</p>
+              </div>
+              <div className="rounded-xl bg-amber-50 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700">Pending</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{pendingCount}</p>
+              </div>
+              <div className="rounded-xl bg-emerald-50 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">Session</p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">{session?.name ?? "Admin"}</p>
+              </div>
+            </div>
 
-                <div className="mt-4 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+            <div className="mb-6 flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Team members</span>
+              <button type="button" onClick={refreshTeam} disabled={loading} className="ml-auto rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                {loading ? "Loading..." : "Refresh"}
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {loading ? (
+                <div className="rounded-xl border border-slate-100 bg-slate-50 h-32 flex items-center justify-center text-sm text-slate-500">Loading team members...</div>
+              ) : members.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 h-48 flex flex-col items-center justify-center text-sm text-slate-500">
+                  No team members yet. Invite your first admin.
+                </div>
+              ) : (
+                members.map((member) => (
                   <button
+                    key={member.id}
                     type="button"
                     onClick={() => setSelectedMember(member)}
-                    className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 sm:w-auto"
+                    className={`group flex items-center justify-between gap-4 rounded-xl border p-4 transition ${selectedMember?.id === member.id ? "border-[#0a2a78] bg-[#f6f9ff]" : "border-slate-100 bg-white hover:bg-slate-50 hover:border-slate-200"}`}
                   >
-                    Edit
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-slate-200">
+                        <Image src={resolveImageSource(member.avatar, "/desktop.jpg")} alt={`${member.firstName} ${member.lastName}`} fill className="object-cover" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">{member.firstName} {member.lastName}</p>
+                        <p className="text-xs text-slate-500">{member.email}</p>
+                      </div>
+                    </div>
+                    <AdminBadge label={member.status || "Pending"} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleResend(member.id)}
-                    className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 sm:w-auto"
-                  >
-                    Resend invite
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(member.id)}
-                    className="w-full rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 sm:w-auto"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </article>
-            ))}
+                ))
+              )}
+            </div>
           </div>
         </section>
 
         <div className="space-y-6">
-          <section className="rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.10)] md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">
-              Quick actions
-            </p>
-            <h2 className="mt-2 font-display text-2xl font-bold">
-              Team operations
-            </h2>
-            <div className="mt-5 space-y-3 text-sm leading-7 text-slate-200">
-              <p>Invite new admins with role and contact details.</p>
-              <p>
-                Edit an existing member, resend an invitation, or remove access.
-              </p>
-              <p>
-                Accept a team invite with the invitation token and a new
-                password.
-              </p>
-            </div>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link
-                href="/admin/settings"
-                className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 sm:w-auto"
-              >
-                Profile settings
-              </Link>
-              <button
-                onClick={refreshTeam}
-                className="w-full rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15 sm:w-auto"
-              >
-                Refresh team
-              </button>
-            </div>
-          </section>
+          {activeTab === "list" ? (
+            <>
+              <section className="overflow-hidden rounded-[2rem] bg-[linear-gradient(180deg,#0a2a78_0%,#12386a_100%)] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.10)] sm:p-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">Team operations</p>
+                <h2 className="mt-2 font-display text-xl font-bold sm:text-2xl">Quick actions</h2>
+                <div className="mt-5 space-y-3 text-sm leading-7 text-slate-200">
+                  <p>Invite new admins with role and contact details.</p>
+                  <p>Edit an existing member, resend an invitation, or remove access.</p>
+                  <p>Accept a team invite with the invitation token and a new password.</p>
+                </div>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <button type="button" onClick={() => setActiveTab("invite")} className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50">
+                    Invite new member
+                  </button>
+                  <button type="button" onClick={refreshTeam} className="rounded-xl bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">
+                    Refresh team
+                  </button>
+                </div>
+              </section>
 
-          <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-              API connection
-            </p>
-            <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
-              Admin session
-            </h2>
-            <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-              <p>
-                Team data loads automatically from your signed-in admin session.
-              </p>
-              <p className="mt-2 font-semibold text-slate-900">
-                Status: {apiReady ? "Connected" : "Not connected"}
-              </p>
-            </div>
-          </section>
+              <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">API connection</p>
+                <h2 className="mt-2 font-display text-xl font-bold text-slate-900 sm:text-2xl">Admin session</h2>
+                <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                  <p>Team data loads automatically from your signed-in admin session.</p>
+                  <p className="mt-2 font-semibold text-slate-900">Status: {apiReady ? "Connected" : "Not connected"}</p>
+                </div>
+              </section>
 
-          <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-              Invite member
-            </p>
-            <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
-              Invite a new admin team member
-            </h2>
-            <form
-              onSubmit={handleInviteSubmit}
-              className="mt-6 grid gap-4 md:grid-cols-2"
-            >
-              <div className="grid gap-2">
-                <input
-                  value={inviteForm.firstName}
-                  onChange={(event) => {
-                    setInviteForm((current) => ({
-                      ...current,
-                      firstName: event.target.value,
-                    }));
-                    if (inviteFieldErrors.firstName)
-                      setInviteFieldErrors((prev) => ({
-                        ...prev,
-                        firstName: undefined,
-                      }));
-                  }}
-                  placeholder="First name"
-                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
-                    inviteFieldErrors.firstName
-                      ? "border-rose-500 focus:border-rose-600"
-                      : "border-slate-200 focus:border-[#0a2a78]"
-                  }`}
-                />
-                {inviteFieldErrors.firstName && (
-                  <p className="px-1 text-xs font-medium text-rose-600">
-                    {inviteFieldErrors.firstName}
-                  </p>
-                )}
+              <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Accept invite</p>
+                <h2 className="mt-2 font-display text-xl font-bold text-slate-900 sm:text-2xl">Join an invitation</h2>
+                <form onSubmit={handleAcceptInvite} className="mt-5 space-y-3">
+                  <input value={acceptInviteToken} onChange={(e) => setAcceptInviteToken(e.target.value)} placeholder="Invitation token" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white" />
+                  <input value={acceptPassword} onChange={(e) => setAcceptPassword(e.target.value)} type="password" placeholder="New password" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white" />
+                  <button type="submit" disabled={accepting} className="w-full rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">{accepting ? "Accepting..." : "Accept invite"}</button>
+                </form>
+                {acceptMessage ? <p className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{acceptMessage}</p> : null}
+              </section>
+            </>
+          ) : activeTab === "invite" ? (
+            <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:p-6 lg:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4 mb-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Invite member</p>
+                  <h2 className="mt-1 font-display text-xl font-bold text-slate-900 sm:text-2xl">Invite a new admin team member</h2>
+                </div>
+                <button type="button" onClick={() => setActiveTab("list")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Back</button>
               </div>
-              <div className="grid gap-2">
-                <input
-                  value={inviteForm.lastName}
-                  onChange={(event) => {
-                    setInviteForm((current) => ({
-                      ...current,
-                      lastName: event.target.value,
-                    }));
-                    if (inviteFieldErrors.lastName)
-                      setInviteFieldErrors((prev) => ({
-                        ...prev,
-                        lastName: undefined,
-                      }));
-                  }}
-                  placeholder="Last name"
-                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
-                    inviteFieldErrors.lastName
-                      ? "border-rose-500 focus:border-rose-600"
-                      : "border-slate-200 focus:border-[#0a2a78]"
-                  }`}
-                />
-                {inviteFieldErrors.lastName && (
-                  <p className="px-1 text-xs font-medium text-rose-600">
-                    {inviteFieldErrors.lastName}
-                  </p>
-                )}
-              </div>
-              <div className="grid gap-2 md:col-span-2">
-                <input
-                  value={inviteForm.email}
-                  onChange={(event) => {
-                    setInviteForm((current) => ({
-                      ...current,
-                      email: event.target.value,
-                    }));
-                    if (inviteFieldErrors.email)
-                      setInviteFieldErrors((prev) => ({
-                        ...prev,
-                        email: undefined,
-                      }));
-                  }}
-                  placeholder="Email"
-                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
-                    inviteFieldErrors.email
-                      ? "border-rose-500 focus:border-rose-600"
-                      : "border-slate-200 focus:border-[#0a2a78]"
-                  }`}
-                />
-                {inviteFieldErrors.email && (
-                  <p className="px-1 text-xs font-medium text-rose-600">
-                    {inviteFieldErrors.email}
-                  </p>
-                )}
-              </div>
-              <label className="sr-only" htmlFor="invite-role">
-                Role
-              </label>
-              <select
-                id="invite-role"
-                value={inviteForm.role}
-                onChange={(event) =>
-                  setInviteForm((current) => ({
-                    ...current,
-                    role: event.target.value,
-                  }))
-                }
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              >
-                {ADMIN_ROLE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <label className="sr-only" htmlFor="invite-gender">
-                Gender
-              </label>
-              <select
-                id="invite-gender"
-                value={inviteForm.gender}
-                onChange={(event) =>
-                  setInviteForm((current) => ({
-                    ...current,
-                    gender: event.target.value,
-                  }))
-                }
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              >
-                {GENDER_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <div className="grid gap-2">
-                <input
-                  value={inviteForm.phoneNumber}
-                  onChange={(event) => {
-                    setInviteForm((current) => ({
-                      ...current,
-                      phoneNumber: event.target.value,
-                    }));
-                    if (inviteFieldErrors.phoneNumber)
-                      setInviteFieldErrors((prev) => ({
-                        ...prev,
-                        phoneNumber: undefined,
-                      }));
-                  }}
-                  placeholder="Phone number"
-                  className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm outline-none transition focus:bg-white ${
-                    inviteFieldErrors.phoneNumber
-                      ? "border-rose-500 focus:border-rose-600"
-                      : "border-slate-200 focus:border-[#0a2a78]"
-                  }`}
-                />
-                {inviteFieldErrors.phoneNumber && (
-                  <p className="px-1 text-xs font-medium text-rose-600">
-                    {inviteFieldErrors.phoneNumber}
-                  </p>
-                )}
-              </div>
-              <input
-                value={inviteForm.dateOfBirth}
-                onChange={(event) =>
-                  setInviteForm((current) => ({
-                    ...current,
-                    dateOfBirth: event.target.value,
-                  }))
-                }
-                type="date"
-                placeholder="Date of birth"
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
-              <button
-                type="submit"
-                disabled={inviting || !apiReady}
-                className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
-              >
-                {inviting ? "Sending..." : "Send invite"}
-              </button>
-            </form>
-          </section>
-
-          <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-              Edit member
-            </p>
-            <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
-              Update a selected admin
-            </h2>
-            {selectedMember && editForm ? (
-              <form
-                onSubmit={handleSaveMember}
-                className="mt-6 grid gap-4 md:grid-cols-2"
-              >
-                <input
-                  value={editForm.firstName}
-                  onChange={(event) =>
-                    setEditForm((current) =>
-                      current
-                        ? { ...current, firstName: event.target.value }
-                        : current,
-                    )
-                  }
-                  placeholder="First name"
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                />
-                <input
-                  value={editForm.lastName}
-                  onChange={(event) =>
-                    setEditForm((current) =>
-                      current
-                        ? { ...current, lastName: event.target.value }
-                        : current,
-                    )
-                  }
-                  placeholder="Last name"
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                />
-                <input
-                  value={editForm.email}
-                  onChange={(event) =>
-                    setEditForm((current) =>
-                      current
-                        ? { ...current, email: event.target.value }
-                        : current,
-                    )
-                  }
-                  placeholder="Email"
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white md:col-span-2"
-                />
-                <label className="sr-only" htmlFor="edit-role">
-                  Role
-                </label>
-                <select
-                  id="edit-role"
-                  value={editForm.role}
-                  onChange={(event) =>
-                    setEditForm((current) =>
-                      current
-                        ? { ...current, role: event.target.value }
-                        : current,
-                    )
-                  }
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                >
-                  {ADMIN_ROLE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  value={editForm.status}
-                  onChange={(event) =>
-                    setEditForm((current) =>
-                      current
-                        ? { ...current, status: event.target.value }
-                        : current,
-                    )
-                  }
-                  placeholder="Status"
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                />
-                <input
-                  value={editForm.gender}
-                  onChange={(event) =>
-                    setEditForm((current) =>
-                      current
-                        ? { ...current, gender: event.target.value }
-                        : current,
-                    )
-                  }
-                  placeholder="Gender"
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                />
-                <input
-                  value={editForm.phoneNumber}
-                  onChange={(event) =>
-                    setEditForm((current) =>
-                      current
-                        ? { ...current, phoneNumber: event.target.value }
-                        : current,
-                    )
-                  }
-                  placeholder="Phone number"
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-                />
-                <button
-                  type="submit"
-                  disabled={saving || !apiReady}
-                  className="rounded-2xl bg-[#0a2a78] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
-                >
-                  {saving ? "Saving..." : "Save changes"}
-                </button>
+              <form onSubmit={handleInviteSubmit} className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <label className="text-xs font-semibold text-slate-700">First name</label>
+                    <input value={inviteForm.firstName} onChange={(e) => { setInviteForm((c) => ({ ...c, firstName: e.target.value })); if (inviteFieldErrors.firstName) setInviteFieldErrors((p) => ({ ...p, firstName: undefined })); }} placeholder="First name" className={inputClass("firstName", inviteFieldErrors)} />
+                    {inviteFieldErrors.firstName && <p className="px-1 text-xs font-medium text-rose-600">{inviteFieldErrors.firstName}</p>}
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-xs font-semibold text-slate-700">Last name</label>
+                    <input value={inviteForm.lastName} onChange={(e) => { setInviteForm((c) => ({ ...c, lastName: e.target.value })); if (inviteFieldErrors.lastName) setInviteFieldErrors((p) => ({ ...p, lastName: undefined })); }} placeholder="Last name" className={inputClass("lastName", inviteFieldErrors)} />
+                    {inviteFieldErrors.lastName && <p className="px-1 text-xs font-medium text-rose-600">{inviteFieldErrors.lastName}</p>}
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold text-slate-700">Email</label>
+                  <input value={inviteForm.email} onChange={(e) => { setInviteForm((c) => ({ ...c, email: e.target.value })); if (inviteFieldErrors.email) setInviteFieldErrors((p) => ({ ...p, email: undefined })); }} placeholder="Email" className={inputClass("email", inviteFieldErrors)} />
+                  {inviteFieldErrors.email && <p className="px-1 text-xs font-medium text-rose-600">{inviteFieldErrors.email}</p>}
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <label className="text-xs font-semibold text-slate-700">Role</label>
+                    <select value={inviteForm.role} onChange={(e) => setInviteForm((c) => ({ ...c, role: e.target.value }))} className={selectClass}>
+                      {ADMIN_ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-xs font-semibold text-slate-700">Gender</label>
+                    <select value={inviteForm.gender} onChange={(e) => setInviteForm((c) => ({ ...c, gender: e.target.value }))} className={selectClass}>
+                      {GENDER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold text-slate-700">Phone number</label>
+                  <input value={inviteForm.phoneNumber} onChange={(e) => { setInviteForm((c) => ({ ...c, phoneNumber: e.target.value })); if (inviteFieldErrors.phoneNumber) setInviteFieldErrors((p) => ({ ...p, phoneNumber: undefined })); }} placeholder="Phone number" className={inputClass("phoneNumber", inviteFieldErrors)} />
+                  {inviteFieldErrors.phoneNumber && <p className="px-1 text-xs font-medium text-rose-600">{inviteFieldErrors.phoneNumber}</p>}
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold text-slate-700">Date of birth</label>
+                  <input value={inviteForm.dateOfBirth} onChange={(e) => setInviteForm((c) => ({ ...c, dateOfBirth: e.target.value }))} type="date" placeholder="Date of birth" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white" />
+                </div>
+                <button type="submit" disabled={inviting || !apiReady} className="rounded-xl bg-[#0a2a78] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60">{inviting ? "Sending..." : "Send invite"}</button>
               </form>
-            ) : (
-              <p className="mt-4 text-sm text-slate-600">
-                Select a team member from the list to edit their details.
-              </p>
-            )}
-          </section>
-
-          <section className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)] md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-              Accept invite
-            </p>
-            <h2 className="mt-2 font-display text-2xl font-bold text-slate-900">
-              Join an invitation
-            </h2>
-            <form onSubmit={handleAcceptInvite} className="mt-6 space-y-4">
-              <input
-                value={acceptInviteToken}
-                onChange={(event) => setAcceptInviteToken(event.target.value)}
-                placeholder="Invitation token"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
-              <input
-                value={acceptPassword}
-                onChange={(event) => setAcceptPassword(event.target.value)}
-                type="password"
-                placeholder="Password"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#0a2a78] focus:bg-white"
-              />
-              <button
-                type="submit"
-                disabled={accepting}
-                className="w-full rounded-2xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {accepting ? "Accepting..." : "Accept invite"}
-              </button>
-            </form>
-            {acceptMessage ? (
-              <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {acceptMessage}
-              </p>
-            ) : null}
-          </section>
+            </section>
+          ) : (
+            <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:p-6 lg:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4 mb-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Edit member</p>
+                  <h2 className="mt-1 font-display text-xl font-bold text-slate-900 sm:text-2xl">Update {selectedMember ? selectedMember.firstName + " " + selectedMember.lastName : "member"}</h2>
+                </div>
+                <button type="button" onClick={() => setActiveTab("list")} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Back</button>
+              </div>
+              {selectedMember && editForm ? (
+                <form onSubmit={handleSaveMember} className="space-y-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <label className="text-xs font-semibold text-slate-700">First name</label>
+                      <input value={editForm.firstName} onChange={(e) => setEditForm((c) => c ? { ...c, firstName: e.target.value } : c)} placeholder="First name" className={inputClass("firstName", editFieldErrors)} />
+                    </div>
+                    <div className="grid gap-2">
+                      <label className="text-xs font-semibold text-slate-700">Last name</label>
+                      <input value={editForm.lastName} onChange={(e) => setEditForm((c) => c ? { ...c, lastName: e.target.value } : c)} placeholder="Last name" className={inputClass("lastName", editFieldErrors)} />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-xs font-semibold text-slate-700">Email</label>
+                    <input value={editForm.email} onChange={(e) => setEditForm((c) => c ? { ...c, email: e.target.value } : c)} placeholder="Email" className={inputClass("email", editFieldErrors)} />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <label className="text-xs font-semibold text-slate-700">Role</label>
+                      <select value={editForm.role} onChange={(e) => setEditForm((c) => c ? { ...c, role: e.target.value } : c)} className={selectClass}>
+                        {ADMIN_ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+                    <div className="grid gap-2">
+                      <label className="text-xs font-semibold text-slate-700">Status</label>
+                      <input value={editForm.status} onChange={(e) => setEditForm((c) => c ? { ...c, status: e.target.value } : c)} placeholder="Status" className={inputClass("status", editFieldErrors)} />
+                    </div>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <label className="text-xs font-semibold text-slate-700">Gender</label>
+                      <input value={editForm.gender} onChange={(e) => setEditForm((c) => c ? { ...c, gender: e.target.value } : c)} placeholder="Gender" className={inputClass("gender", editFieldErrors)} />
+                    </div>
+                    <div className="grid gap-2">
+                      <label className="text-xs font-semibold text-slate-700">Phone number</label>
+                      <input value={editForm.phoneNumber} onChange={(e) => setEditForm((c) => c ? { ...c, phoneNumber: e.target.value } : c)} placeholder="Phone number" className={inputClass("phoneNumber", editFieldErrors)} />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={saving || !apiReady} className="rounded-xl bg-[#0a2a78] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#12386a] disabled:cursor-not-allowed disabled:opacity-60">{saving ? "Saving..." : "Save changes"}</button>
+                  <button type="button" onClick={() => handleResend(selectedMember.id)} disabled={saving} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Resend invite</button>
+                  <button type="button" onClick={() => handleDelete(selectedMember.id)} disabled={saving} className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">Remove member</button>
+                </form>
+              ) : (
+                <p className="mt-4 text-sm text-slate-600">Select a team member from the list to edit their details.</p>
+              )}
+            </section>
+          )}
         </div>
       </div>
     </AdminShell>

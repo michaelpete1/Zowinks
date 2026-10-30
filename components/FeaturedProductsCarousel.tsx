@@ -102,8 +102,8 @@ export default function FeaturedProductsCarousel({
                       src={resolveImageSource(item.image, "/desktop.jpg")}
                       alt={item.title}
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      loading="lazy"
-                      fetchPriority="low"
+                      loading={index < 3 ? "eager" : "lazy"}
+                      fetchPriority={index === 0 ? "high" : index < 3 ? "auto" : "low"}
                     />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,22,0.02)_0%,rgba(5,11,22,0.58)_100%)] opacity-0 transition duration-300 group-hover:opacity-100" />
                     <div className="absolute bottom-4 left-4 rounded-full bg-black/45 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white opacity-0 transition duration-300 group-hover:opacity-100">

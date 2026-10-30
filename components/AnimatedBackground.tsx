@@ -12,30 +12,22 @@ interface Particle {
 }
 
 interface Props {
-  /** Number of particles — default 60 */
   count?: number;
-  /** Max connection distance in px — default 140 */
   linkDistance?: number;
-  /** className applied to the canvas wrapper */
   className?: string;
 }
 
 export default function AnimatedBackground({
-  count = 24,
-  linkDistance = 110,
+  count = 55,
+  linkDistance = 140,
   className = "",
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouse = useRef({ x: -9999, y: -9999 });
   const rafRef = useRef<number>(0);
+  const particlesRef = useRef<Particle[]>([]);
 
   useEffect(() => {
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (prefersReducedMotion) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -43,7 +35,6 @@ export default function AnimatedBackground({
 
     let W = 0;
     let H = 0;
-    let particles: Particle[] = [];
 
     const resize = () => {
       const parent = canvas.parentElement;
@@ -54,39 +45,36 @@ export default function AnimatedBackground({
     const spawn = (): Particle => ({
       x: Math.random() * W,
       y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35,
-      radius: Math.random() * 1.5 + 0.8,
-      opacity: Math.random() * 0.5 + 0.3,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      radius: Math.random() * 1.4 + 0.6,
+      opacity: Math.random() * 0.45 + 0.2,
     });
 
     const init = () => {
       resize();
-      particles = Array.from({ length: count }, spawn);
+      particlesRef.current = Array.from({ length: count }, spawn);
     };
 
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
+      const particles = particlesRef.current;
 
-      // Move particles
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
-
-        // Wrap around edges
         if (p.x < 0) p.x = W;
         if (p.x > W) p.x = 0;
         if (p.y < 0) p.y = H;
         if (p.y > H) p.y = 0;
 
-        // Draw dot
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(243,199,77,${p.opacity * 0.7})`;
+        ctx.fillStyle = `rgba(243,199,77,${p.opacity * 0.75})`;
         ctx.fill();
       }
 
-      // Draw connecting lines between nearby particles
+      // Particle-to-particle lines
       for (let i = 0; i < particles.length; i++) {
         const a = particles[i];
         for (let j = i + 1; j < particles.length; j++) {
@@ -95,30 +83,30 @@ export default function AnimatedBackground({
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < linkDistance) {
-            const alpha = (1 - dist / linkDistance) * 0.18;
+            const alpha = (1 - dist / linkDistance) * 0.16;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.strokeStyle = `rgba(243,199,77,${alpha})`;
-            ctx.lineWidth = 0.7;
+            ctx.lineWidth = 0.6;
             ctx.stroke();
           }
         }
 
-        // Also connect to mouse pointer
+        // Mouse proximity lines
         const mx = mouse.current.x;
         const my = mouse.current.y;
         const dx = a.x - mx;
         const dy = a.y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const mouseRange = linkDistance * 1.8;
+        const mouseRange = linkDistance * 1.7;
         if (dist < mouseRange) {
-          const alpha = (1 - dist / mouseRange) * 0.35;
+          const alpha = (1 - dist / mouseRange) * 0.32;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(mx, my);
           ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
-          ctx.lineWidth = 0.8;
+          ctx.lineWidth = 0.7;
           ctx.stroke();
         }
       }
@@ -130,7 +118,6 @@ export default function AnimatedBackground({
       const rect = canvas.getBoundingClientRect();
       mouse.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
-
     const onMouseLeave = () => {
       mouse.current = { x: -9999, y: -9999 };
     };
@@ -138,7 +125,7 @@ export default function AnimatedBackground({
     const ro = new ResizeObserver(resize);
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
-    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("mouseleave", onMouseLeave);
 
     init();
@@ -155,8 +142,8 @@ export default function AnimatedBackground({
   return (
     <canvas
       ref={canvasRef}
-      className={`pointer-events-none absolute inset-0 h-full w-full ${className}`}
       aria-hidden="true"
+      className={`pointer-events-none absolute inset-0 h-full w-full ${className}`}
     />
   );
 }

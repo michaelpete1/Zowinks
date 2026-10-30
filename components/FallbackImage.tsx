@@ -1,7 +1,8 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import NextImage from "next/image";
 
 type FallbackImageProps = {
   src: string;
@@ -12,6 +13,10 @@ type FallbackImageProps = {
   loading?: "eager" | "lazy";
   priority?: boolean;
   fetchPriority?: "high" | "low" | "auto";
+  sizes?: string;
+  fill?: boolean;
+  width?: number;
+  height?: number;
 };
 
 export default function FallbackImage({
@@ -23,78 +28,75 @@ export default function FallbackImage({
   loading = "lazy",
   priority = false,
   fetchPriority,
+  sizes = "(max-width: 640px) 80vw, (max-width: 1024px) 48vw, 33vw",
+  fill,
+  width,
+  height,
 }: FallbackImageProps) {
-  const [currentSrc, setCurrentSrc] = useState(src || fallbackSrc);
-  const [retryCount, setRetryCount] = useState(0);
+  const requestedSrc = src || fallbackSrc;
+  const [currentSrc, setCurrentSrc] = useState(requestedSrc);
   const [isLoaded, setIsLoaded] = useState(false);
-  const MAX_RETRIES = 1;
+  const [retried, setRetried] = useState(false);
 
-  useEffect(() => {
-    const nextSrc = src || fallbackSrc;
-    setCurrentSrc(nextSrc);
-    setRetryCount(0);
+  // Reset if the src prop changes
+  const [lastRequestedSrc, setLastRequestedSrc] = useState(requestedSrc);
+  if (lastRequestedSrc !== requestedSrc) {
+    setLastRequestedSrc(requestedSrc);
+    setCurrentSrc(requestedSrc);
     setIsLoaded(false);
-
-    if (nextSrc === fallbackSrc) {
-      setIsLoaded(true);
-      return;
-    }
-
-    const preloader = new Image();
-    preloader.src = nextSrc;
-
-    if (preloader.complete) {
-      setIsLoaded(true);
-      return;
-    }
-
-    const handlePreload = () => setIsLoaded(true);
-    preloader.addEventListener("load", handlePreload, { once: true });
-    preloader.addEventListener(
-      "error",
-      () => {
-        setCurrentSrc(fallbackSrc);
-        setIsLoaded(true);
-      },
-      { once: true },
-    );
-
-    return () => {
-      preloader.removeEventListener("load", handlePreload);
-    };
-  }, [src, fallbackSrc]);
-
-  const handleLoad = () => {
-    setIsLoaded(true);
-  };
+    setRetried(false);
+  }
 
   const handleError = () => {
-    if (currentSrc !== fallbackSrc && retryCount < MAX_RETRIES) {
-      setRetryCount((prev) => prev + 1);
-      setIsLoaded(false);
-      return;
-    }
-
-    if (currentSrc !== fallbackSrc) {
+    if (!retried && currentSrc !== fallbackSrc) {
+      setRetried(true);
       setCurrentSrc(fallbackSrc);
-      setIsLoaded(true);
     }
   };
 
+  const handleLoad = () => setIsLoaded(true);
+
+  const isEager = priority || loading === "eager";
+
+  const imageStyle: CSSProperties = {
+    ...style,
+    opacity: isLoaded ? 1 : 0,
+    transition: "opacity 200ms ease-out",
+  };
+
+  // Use fill mode when className contains inset / absolute positioning patterns
+  const useFill = fill ?? className?.includes("inset-0");
+
+  if (useFill) {
+    return (
+      <NextImage
+        key={currentSrc}
+        src={currentSrc}
+        alt={alt}
+        fill
+        sizes={sizes}
+        className={className}
+        style={imageStyle}
+        priority={isEager}
+        quality={82}
+        onLoad={handleLoad}
+        onError={handleError}
+      />
+    );
+  }
+
   return (
-    <img
-      key={`${currentSrc}-${retryCount}`}
+    <NextImage
+      key={currentSrc}
       src={currentSrc}
       alt={alt}
+      width={width ?? 800}
+      height={height ?? 600}
+      sizes={sizes}
       className={className}
-      style={{
-        ...style,
-        opacity: isLoaded || currentSrc === fallbackSrc ? 1 : 0,
-        transition: "opacity 180ms ease-out",
-      }}
-      loading={priority ? "eager" : loading}
-      fetchPriority={fetchPriority ?? (priority ? "high" : undefined)}
-      decoding="async"
+      style={imageStyle}
+      priority={isEager}
+      quality={82}
       onLoad={handleLoad}
       onError={handleError}
     />

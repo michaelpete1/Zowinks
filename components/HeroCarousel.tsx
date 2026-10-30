@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
 import { type EmblaOptionsType } from "embla-carousel";
@@ -65,6 +71,10 @@ const options: EmblaOptionsType = {
   align: "start",
 };
 
+const subscribeToMount = () => () => {};
+const getMountedSnapshot = () => true;
+const getServerMountedSnapshot = () => false;
+
 interface HeroCarouselProps {
   initialHeroImages?: HeroImageSource[];
 }
@@ -81,7 +91,11 @@ export default function HeroCarousel({ initialHeroImages }: HeroCarouselProps) {
   const [heroImages, setHeroImages] = useState<HeroImageSource[]>(() =>
     normalizeHeroImages(initialHeroImages),
   );
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useSyncExternalStore(
+    subscribeToMount,
+    getMountedSnapshot,
+    getServerMountedSnapshot,
+  );
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
     Autoplay({
       delay: 7000,
@@ -92,8 +106,6 @@ export default function HeroCarousel({ initialHeroImages }: HeroCarouselProps) {
   ]);
 
   useEffect(() => {
-    setIsMounted(true);
-
     if ((initialHeroImages?.length ?? 0) > 0) {
       return;
     }
