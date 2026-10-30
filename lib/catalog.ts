@@ -115,6 +115,15 @@ async function fetchCategories(): Promise<CategoryListItem[]> {
   ];
 }
 
+export async function fetchAllCategories(): Promise<CategoryListItem[]> {
+  try {
+    return await fetchCategories();
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return [];
+  }
+}
+
 function toCatalogItems(products: ProductDetails[], limit: number): CatalogItem[] {
   const uniqueProducts = new Map<string, ProductDetails>();
   for (const product of products) {

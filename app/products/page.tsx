@@ -4,11 +4,12 @@ import Link from "next/link";
 import Navbar from "../../components/NewNavbar";
 import AddToCartButton from "../../components/AddToCartButton";
 import FallbackImage from "../../components/FallbackImage";
+import BrandMark from "../../components/BrandMark";
 import FeaturedProductsCarousel from "../../components/FeaturedProductsCarousel";
 import RotaryLinesBackground from "../../components/RotaryLinesBackground";
-import { fetchAllProducts } from "../../lib/catalog";
+import { fetchAllCategories, fetchAllProducts } from "../../lib/catalog";
+import { PRODUCT_BRANDS } from "../../lib/brands";
 import { compactProductTitle, formatDisplayName } from "../../lib/display-name";
-import { zowkinsApi } from "../../lib/zowkins-api";
 import { resolveImageSource } from "../../lib/media";
 
 export const metadata: Metadata = {
@@ -66,13 +67,6 @@ const TRUST_FEATURES = [
   "Bulk Orders Accepted",
 ];
 
-const BRAND_IMAGE_MAP: Record<string, string> = {
-  hp: "/hplogo.jpg",
-  dell: "/delllogo.jpg",
-  lenovo: "/lenovologo.jpg",
-  asus: "/asuslogo.jpg",
-  apple: "/applelogo.jpg",
-};
 
 const slugify = (value: string) =>
   value
@@ -85,10 +79,6 @@ const slugify = (value: string) =>
 const getSearchParam = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value;
 
-const matchesText = (value: string, needle: string) =>
-  slugify(value).includes(needle) ||
-  value.toLowerCase().includes(needle.replace(/-/g, " "));
-
 const matchesBrand = (
   product: {
     title: string;
@@ -99,37 +89,82 @@ const matchesBrand = (
   },
   brandSlug: string,
 ) => {
-  const fields = `${product.title} ${product.brand} ${product.subcategory} ${product.category} ${product.description}`;
-  const normalizedBrand = slugify(product.subcategory || product.brand || "");
-  return (
-    normalizedBrand === brandSlug ||
-    matchesText(fields, brandSlug) ||
-    fields.toLowerCase().includes(brandSlug.toLowerCase())
-  );
+  const knownBrand = PRODUCT_BRANDS.find((brand) => brand.slug === brandSlug);
+  const productTerms = `-${slugify(
+    `${product.title} ${product.brand} ${product.subcategory}`,
+  )}-`;
+
+  if (knownBrand) {
+    return knownBrand.searchTerms.some((term) =>
+      productTerms.includes(`-${slugify(term)}-`),
+    );
+  }
+
+  return productTerms.includes(`-${brandSlug}-`);
 };
 
 const matchesCategory = (
-  product: {
-    title: string;
-    brand: string;
-    category: string;
-    description: string;
-  },
+  product: { category: string },
   categorySlug: string,
+  categoryName?: string,
 ) => {
-  const fields = `${product.title} ${product.brand} ${product.category} ${product.description}`;
+  const productCategory = slugify(product.category);
+  return [categorySlug, categoryName]
+    .filter((value): value is string => Boolean(value))
+    .some((value) => productCategory === slugify(value));
+};
+
+const resolveCategorySlug = (
+  categoryLabel: string,
+  categories: Array<{ name: string; slug: string }>,
+) => {
+  const normalizedLabel = slugify(categoryLabel);
   return (
-    slugify(product.category) === categorySlug ||
-    matchesText(fields, categorySlug) ||
-    fields.toLowerCase().includes(categorySlug.toLowerCase())
+    categories.find(
+      (category) =>
+        slugify(category.name) === normalizedLabel ||
+        slugify(category.slug) === normalizedLabel,
+    )?.slug ?? normalizedLabel
   );
 };
 
-const brandFilterHref = (brandSlug: string) =>
-  `/products?brand=${encodeURIComponent(brandSlug)}`;
+type ProductFilterPatch = {
+  brand?: string | null;
+  category?: string | null;
+};
 
-const categoryFilterHref = (categorySlug: string) =>
-  `/products?category=${encodeURIComponent(categorySlug)}`;
+const buildProductsHref = (
+  selectedBrand: string,
+  selectedCategory: string,
+  patch: ProductFilterPatch,
+) => {
+  const nextBrand = Object.prototype.hasOwnProperty.call(patch, "brand")
+    ? patch.brand
+    : selectedBrand;
+  const nextCategory = Object.prototype.hasOwnProperty.call(patch, "category")
+    ? patch.category
+    : selectedCategory;
+  const params = new URLSearchParams();
+
+  if (nextBrand) params.set("brand", nextBrand);
+  if (nextCategory) params.set("category", nextCategory);
+
+  const query = params.toString();
+  return query ? `/products?${query}` : "/products";
+};
+
+const brandFilterHref = (
+  brandSlug: string,
+  selectedBrand: string,
+  selectedCategory: string,
+) => buildProductsHref(selectedBrand, selectedCategory, { brand: brandSlug });
+
+const categoryFilterHref = (
+  categorySlug: string,
+  selectedBrand: string,
+  selectedCategory: string,
+) =>
+  buildProductsHref(selectedBrand, selectedCategory, { category: categorySlug });
 
 type ProductsSearchParams = {
   brand?: string | string[];
@@ -141,14 +176,11 @@ export default async function ProductsPage({
 }: {
   searchParams?: Promise<ProductsSearchParams>;
 }) {
-  const [products, categoriesResponse, resolvedSearchParams] =
-    await Promise.all([
-      fetchAllProducts(),
-      zowkinsApi.listCategories({ page: 1, limit: 12 }).catch(() => null),
-      searchParams ?? Promise.resolve<ProductsSearchParams>({}),
-    ]);
-
-  const categories = categoriesResponse?.categories ?? [];
+  const [products, categories, resolvedSearchParams] = await Promise.all([
+    fetchAllProducts(),
+    fetchAllCategories(),
+    searchParams ?? Promise.resolve<ProductsSearchParams>({}),
+  ]);
   const visibleProducts = products.filter(Boolean);
   const selectedBrand = slugify(
     getSearchParam(resolvedSearchParams.brand) || "",
@@ -157,67 +189,80 @@ export default async function ProductsPage({
     getSearchParam(resolvedSearchParams.category) || "",
   );
 
-  const liveBrands = Array.from(
-    new Map(
-      categories.flatMap((category) =>
-        (category.subcategories ?? []).map(
-          (subcategory: { name: string; slug: string }) => {
-            const label = String(subcategory.name || "").trim();
-            const slug = String(subcategory.slug || slugify(label));
-            const categorySlug = String(category.slug || "");
-            const categoryName = formatDisplayName(
-              String(category.name || "Category"),
-              "Category",
-            );
-            return [
-              slug,
-              {
-                label: formatDisplayName(label, label),
-                slug,
-                categorySlug,
-                categoryName,
-                image:
-                  BRAND_IMAGE_MAP[slug] ||
-                  BRAND_IMAGE_MAP[slugify(label)] ||
-                  "/desktop.jpg",
-              },
-            ] as const;
-          },
+
+  const selectedCategoryData = categories.find(
+    (category) =>
+      slugify(category.slug) === selectedCategory ||
+      slugify(category.name) === selectedCategory,
+  );
+  const productsMatchingBrand = selectedBrand
+    ? visibleProducts.filter((product) => matchesBrand(product, selectedBrand))
+    : visibleProducts;
+  const productsMatchingCategory = selectedCategory
+    ? visibleProducts.filter((product) =>
+        matchesCategory(
+          product,
+          selectedCategory,
+          selectedCategoryData?.name,
         ),
-      ),
-    ).values(),
-  ).filter((brand) => brand.label && brand.slug);
+      )
+    : visibleProducts;
+  const displayProducts = selectedBrand || selectedCategory
+    ? productsMatchingBrand.filter((product) =>
+        !selectedCategory ||
+        matchesCategory(
+          product,
+          selectedCategory,
+          selectedCategoryData?.name,
+        ),
+      )
+    : visibleProducts;
 
-  const displayProducts =
-    selectedBrand || selectedCategory
-      ? visibleProducts.filter((product) => {
-          const brandMatch = selectedBrand
-            ? matchesBrand(product, selectedBrand)
-            : true;
-          const categoryMatch = selectedCategory
-            ? matchesCategory(product, selectedCategory)
-            : true;
-          return brandMatch && categoryMatch;
-        })
-      : visibleProducts;
+  const selectedBrandProduct = selectedBrand
+    ? visibleProducts.find((product) => matchesBrand(product, selectedBrand))
+    : undefined;
+  const knownBrandSlugs = new Set(PRODUCT_BRANDS.map((brand) => brand.slug));
+  const brandOptions = [
+    ...PRODUCT_BRANDS,
+    ...(selectedBrand && !knownBrandSlugs.has(selectedBrand)
+      ? [
+          {
+            label: formatDisplayName(
+              selectedBrandProduct?.brand || selectedBrand.replace(/-/g, " "),
+              selectedBrand,
+            ),
+            slug: selectedBrand,
+            searchTerms: [selectedBrand.replace(/-/g, " ")],
+            logo: null,
+          },
+        ]
+      : []),
+  ];
 
-  const brandCounts = liveBrands
+  const brandCounts = brandOptions
     .map((brand) => ({
       ...brand,
-      count: visibleProducts.filter((product) =>
+      count: productsMatchingCategory.filter((product) =>
         matchesBrand(product, brand.slug),
       ).length,
     }))
+    .filter((brand) => brand.count > 0 || brand.slug === selectedBrand)
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 
   const categoryCounts = categories
     .map((category) => ({
       label: formatDisplayName(category.name, category.name),
       slug: category.slug,
-      count: visibleProducts.filter((product) =>
-        matchesCategory(product, category.slug),
+      count: productsMatchingBrand.filter((product) =>
+        matchesCategory(product, category.slug, category.name),
       ).length,
     }))
+    .filter(
+      (category) =>
+        category.count > 0 ||
+        slugify(category.slug) === selectedCategory ||
+        slugify(category.label) === selectedCategory,
+    )
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 
   const topProducts = displayProducts.slice(0, 3);
@@ -328,102 +373,148 @@ export default async function ProductsPage({
               <p className="text-slate-300">
                 No featured products available for the current filter.
               </p>
-              <Link
-                href="/products"
-                className="mt-4 inline-block text-sm font-semibold text-[#f3c74d] hover:underline"
-              >
-                Clear filters
-              </Link>
             </div>
           )}
         </section>
 
-        <section className="mt-12">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                Product filters
-              </p>
-              <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-                Narrow the catalog by brand or category
-              </h2>
-            </div>
-            {selectedBrand || selectedCategory ? (
-              <Link
-                href="/products"
-                className="text-sm font-semibold text-[#f3c74d] hover:underline"
-              >
-                Clear filters
-              </Link>
-            ) : null}
-          </div>
-
-          <div className="mt-6 space-y-6">
-            <div>
-              <p className="mb-3 text-sm font-semibold text-slate-300">
-                Brands
-              </p>
-              <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <Link
-                  href="/products"
-                  className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                    !selectedBrand
-                      ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
-                      : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
-                  }`}
+        <section className="mt-12" aria-labelledby="product-filters-heading">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0a1020] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-5">
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <h2
+                  id="product-filters-heading"
+                  className="font-display text-lg font-bold text-white sm:text-xl"
                 >
-                  All
-                </Link>
-                {brandCounts.map((brand) => (
-                  <Link
-                    key={brand.slug}
-                    href={brandFilterHref(brand.slug)}
-                    className={`inline-flex shrink-0 items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                      selectedBrand === brand.slug
-                        ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
-                        : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
-                    }`}
-                  >
-                    <span>{brand.label}</span>
-                    <span className="text-[11px] opacity-75">
-                      {brand.count}
-                    </span>
-                  </Link>
-                ))}
+                  Filter products
+                </h2>
+                <p className="text-sm tabular-nums text-slate-400" aria-live="polite">
+                  {displayProducts.length} product{displayProducts.length === 1 ? "" : "s"}
+                </p>
               </div>
-            </div>
-
-            <div>
-              <p className="mb-3 text-sm font-semibold text-slate-300">
-                Categories
-              </p>
-              <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {selectedBrand || selectedCategory ? (
                 <Link
                   href="/products"
-                  className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                    !selectedCategory
-                      ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
-                      : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
-                  }`}
+                  className="min-h-11 rounded-lg px-3 py-2 text-sm font-semibold text-[#f3c74d] transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c74d]"
                 >
-                  All
+                  Clear all
                 </Link>
-                {categoryCounts.map((category) => (
+              ) : null}
+            </div>
+
+            <div className="divide-y divide-white/10 px-4 sm:px-5">
+              <div
+                role="group"
+                aria-labelledby="category-filter-label"
+                className="grid gap-3 py-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-start"
+              >
+                <h3
+                  id="category-filter-label"
+                  className="pt-2 text-sm font-semibold text-slate-300"
+                >
+                  Categories
+                </h3>
+                <div className="flex flex-wrap gap-2">
                   <Link
-                    key={category.slug}
-                    href={categoryFilterHref(category.slug)}
-                    className={`inline-flex shrink-0 items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                      selectedCategory === category.slug
+                    href={buildProductsHref(selectedBrand, selectedCategory, {
+                      category: null,
+                    })}
+                    aria-current={!selectedCategory ? "page" : undefined}
+                    aria-label={`All categories, ${productsMatchingBrand.length} ${productsMatchingBrand.length === 1 ? "product" : "products"}`}
+                    className={`inline-flex min-h-11 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c74d] ${
+                      !selectedCategory
                         ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
-                        : "border-white/10 bg-white/5 text-white hover:border-[#f3c74d]/45 hover:bg-white/10"
+                        : "border-white/10 bg-[#111b2a] text-slate-100 hover:border-white/20 hover:bg-white/10"
                     }`}
                   >
-                    <span>{category.label}</span>
-                    <span className="text-[11px] opacity-75">
-                      {category.count}
+                    <span>All categories</span>
+                    <span className="tabular-nums" aria-hidden="true">
+                      {productsMatchingBrand.length}
                     </span>
                   </Link>
-                ))}
+                  {categoryCounts.map((category) => {
+                    const isSelected =
+                      selectedCategory === slugify(category.slug) ||
+                      selectedCategory === slugify(category.label);
+                    return (
+                      <Link
+                        key={category.slug}
+                        href={buildProductsHref(selectedBrand, selectedCategory, {
+                          category: category.slug,
+                        })}
+                        aria-current={isSelected ? "page" : undefined}
+                        aria-label={`${category.label}, ${category.count} ${category.count === 1 ? "product" : "products"}`}
+                        className={`inline-flex min-h-11 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c74d] ${
+                          isSelected
+                            ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                            : "border-white/10 bg-[#111b2a] text-slate-100 hover:border-white/20 hover:bg-white/10"
+                        }`}
+                      >
+                        <span>{category.label}</span>
+                        <span className="tabular-nums" aria-hidden="true">
+                          {category.count}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div
+                role="group"
+                aria-labelledby="brand-filter-label"
+                className="grid gap-3 py-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-start"
+              >
+                <h3
+                  id="brand-filter-label"
+                  className="pt-2 text-sm font-semibold text-slate-300"
+                >
+                  Brands
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={buildProductsHref(selectedBrand, selectedCategory, {
+                      brand: null,
+                    })}
+                    aria-current={!selectedBrand ? "page" : undefined}
+                    aria-label={`All brands, ${productsMatchingCategory.length} products`}
+                    className={`inline-flex min-h-11 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c74d] ${
+                      !selectedBrand
+                        ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                        : "border-white/10 bg-[#111b2a] text-slate-100 hover:border-white/20 hover:bg-white/10"
+                    }`}
+                  >
+                    <span>All brands</span>
+                    <span className="tabular-nums" aria-hidden="true">
+                      {productsMatchingCategory.length}
+                    </span>
+                  </Link>
+                  {brandCounts.map((brand) => {
+                    const isSelected = selectedBrand === brand.slug;
+                    return (
+                      <Link
+                        key={brand.slug}
+                        href={buildProductsHref(selectedBrand, selectedCategory, {
+                          brand: brand.slug,
+                        })}
+                        aria-current={isSelected ? "page" : undefined}
+                        aria-label={`${brand.label}, ${brand.count} ${brand.count === 1 ? "product" : "products"}`}
+                        className={`inline-flex min-h-11 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c74d] ${
+                          isSelected
+                            ? "border-[#f3c74d] bg-[#f3c74d] text-[#050b16]"
+                            : "border-white/10 bg-[#111b2a] text-slate-100 hover:border-white/20 hover:bg-white/10"
+                        }`}
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          <BrandMark compact label={brand.label} logo={brand.logo} />
+                          <span>{brand.label}</span>
+                        </span>
+                        <span className="tabular-nums" aria-hidden="true">
+                          {brand.count}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -436,7 +527,7 @@ export default async function ProductsPage({
                 Product grid
               </p>
               <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-                Showing {displayProducts.length} products
+                Showing {displayProducts.length} product{displayProducts.length === 1 ? "" : "s"}
               </h2>
             </div>
             <Link
@@ -469,7 +560,11 @@ export default async function ProductsPage({
                   <div className="flex flex-1 flex-col space-y-3 p-4 sm:space-y-4 sm:p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
                       <Link
-                        href={categoryFilterHref(slugify(product.category))}
+                        href={categoryFilterHref(
+                          resolveCategorySlug(product.category, categories),
+                          selectedBrand,
+                          selectedCategory,
+                        )}
                         className="rounded-full bg-white/8 px-2.5 py-1 text-[10px] font-semibold text-slate-100 transition hover:bg-white/14 hover:text-[#f3c74d] sm:px-3 sm:text-xs"
                       >
                         {formatDisplayName(product.category, product.category)}
@@ -477,6 +572,8 @@ export default async function ProductsPage({
                       <Link
                         href={brandFilterHref(
                           slugify(product.subcategory || product.brand),
+                          selectedBrand,
+                          selectedCategory,
                         )}
                         className="text-xs font-semibold text-[#f3c74d] hover:underline sm:text-sm"
                       >
@@ -541,61 +638,10 @@ export default async function ProductsPage({
               <p className="text-slate-300">
                 No products match the current filter.
               </p>
-              <Link
-                href="/products"
-                className="mt-4 inline-block text-sm font-semibold text-[#f3c74d] hover:underline"
-              >
-                Clear filters
-              </Link>
             </div>
           )}
         </section>
 
-        <section className="mt-12">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                Popular brands
-              </p>
-              <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-                Trusted brands customers ask for
-              </h2>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            {brandCounts.map((brand) => {
-              return (
-                <Link
-                  key={brand.slug}
-                  href={brandFilterHref(brand.slug)}
-                  className="group flex h-full overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#0a1020] p-4 shadow-[0_16px_44px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:border-[#f3c74d]/40 hover:shadow-[0_24px_56px_rgba(0,0,0,0.24)] sm:p-5"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white/90 p-2 sm:h-14 sm:w-14">
-                      <Image
-                        src={brand.image}
-                        alt={brand.label}
-                        width={56}
-                        height={56}
-                        loading="lazy"
-                        className="h-full w-full object-contain"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-display text-xl font-bold text-white transition group-hover:text-[#f3c74d] sm:text-2xl">
-                        {brand.label}
-                      </h3>
-                      <p className="text-sm text-slate-300">
-                        {brand.count} products
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
 
         <section className="mt-12">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
