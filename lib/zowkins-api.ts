@@ -7,12 +7,18 @@ export type ApiImage = {
   key: string;
 };
 
+export type ProductRelation =
+  | string
+  | { id?: string; _id?: string; name?: string | null }
+  | null
+  | undefined;
+
 export type ProductDetails = {
   id: string;
   name: string;
   slug: string;
-  category: string | any;
-  subcategory: string | any;
+  category: ProductRelation;
+  subcategory: ProductRelation;
   image: ApiImage | null;
   images?: Array<string | ApiImage | Record<string, unknown>> | null;
   specs?: unknown;
@@ -931,7 +937,7 @@ const getApiRequestUrl = (path: string) => {
 async function readApiError(response: Response) {
   const text = await response.text().catch(() => "");
   let payload = null;
-  try { payload = text ? JSON.parse(text) : null; } catch(e) {}
+  try { payload = text ? JSON.parse(text) : null; } catch {}
   const msg = Array.isArray(payload?.message) ? payload.message.join(", ") : payload?.message;
 
   // Prefer machine-provided message when available for validation/login flows

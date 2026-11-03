@@ -157,7 +157,10 @@ export default async function DesktopBrandPage({ params }: Props) {
                             id: product.id,
                             title: product.name,
                             price: formatPrice(product.price),
-                            spec: product.subcategory || brandName,
+                            spec:
+                              (typeof product.subcategory === "string"
+                                ? product.subcategory
+                                : product.subcategory?.name) || brandName,
                             image: resolveImageSource(product.image),
                             slug: product.slug,
                           }}
