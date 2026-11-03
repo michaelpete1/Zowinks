@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAppSettings } from "../../lib/app-settings";
+import { WHATSAPP_MESSAGE_URL } from "../../lib/whatsapp";
 
 export const metadata: Metadata = {
   title: "App Settings",
@@ -91,7 +92,7 @@ export default async function AppSettingsPage() {
                   </p>
                   <a
                     className="mt-2 block text-sm font-semibold text-white"
-                    href="https://wa.me/message/6U6S7AJM4GECJ1"
+                    href={WHATSAPP_MESSAGE_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -142,7 +143,7 @@ export default async function AppSettingsPage() {
               Email Us
             </a>
             <a
-              href="https://wa.me/message/6U6S7AJM4GECJ1"
+              href={WHATSAPP_MESSAGE_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-sm font-semibold text-white transition hover:border-[#f3c74d]/40 hover:bg-white/10"

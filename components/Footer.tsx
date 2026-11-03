@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { zowkinsApi } from "../lib/zowkins-api";
+import { WHATSAPP_MESSAGE_URL } from "../lib/whatsapp";
 
 const hiddenPaths = ["/admin"];
 
@@ -48,7 +49,7 @@ export default function Footer() {
 
   const socialLinks = [
     {
-      href: "https://wa.me/message/6U6S7AJM4GECJ1",
+      href: WHATSAPP_MESSAGE_URL,
       label: "WhatsApp",
       title: "Chat on WhatsApp",
       icon: (
@@ -175,7 +176,7 @@ export default function Footer() {
               07036359024
             </a>
             <a
-              href="https://wa.me/message/6U6S7AJM4GECJ1"
+              href={WHATSAPP_MESSAGE_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors hover:text-[#5ab214]"

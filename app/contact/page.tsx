@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import NewNavbar from "../../components/NewNavbar";
 import QuoteRequestForm from "../../components/QuoteRequestForm";
-
-const whatsappNumber = "08064667917";
+import { WHATSAPP_MESSAGE_URL } from "../../lib/whatsapp";
 
 const infoCards = [
   {
@@ -60,7 +59,7 @@ const infoCards = [
 const socialLinks = [
   {
     label: "WhatsApp",
-    href: "https://wa.me/message/6U6S7AJM4GECJ1",
+    href: WHATSAPP_MESSAGE_URL,
     color: "#25D366",
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
@@ -143,7 +142,7 @@ export default function ContactPage() {
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <a
-                  href={`https://wa.me/${whatsappNumber}`}
+                  href={WHATSAPP_MESSAGE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1ebe5d] hover:-translate-y-0.5 active:scale-95"
@@ -219,7 +218,6 @@ export default function ContactPage() {
                 description=""
                 submitLabel="Send message"
                 whatsappLabel="Send via WhatsApp"
-                whatsappNumber={whatsappNumber}
               />
             </div>
           </div>

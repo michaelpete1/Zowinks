@@ -11,6 +11,7 @@ import { fetchAllCategories, fetchAllProducts } from "../../lib/catalog";
 import { PRODUCT_BRANDS } from "../../lib/brands";
 import { compactProductTitle, formatDisplayName } from "../../lib/display-name";
 import { resolveImageSource } from "../../lib/media";
+import { WHATSAPP_MESSAGE_URL } from "../../lib/whatsapp";
 
 export const metadata: Metadata = {
   title: "Products",
@@ -266,7 +267,6 @@ export default async function ProductsPage({
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 
   const topProducts = displayProducts.slice(0, 3);
-  const whatsappHref = "https://wa.me/message/6U6S7AJM4GECJ1";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#050b16_0%,#07142a_48%,#0b1d3b_100%)] text-slate-100">
@@ -706,7 +706,7 @@ export default async function ProductsPage({
       </main>
 
       <Link
-        href={whatsappHref}
+        href={WHATSAPP_MESSAGE_URL}
         target="_blank"
         rel="noreferrer"
         className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-full bg-[#25d366] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(37,211,102,0.3)] transition hover:scale-105 hover:bg-[#1fb85a]"

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { zowkinsApi } from "../lib/zowkins-api";
 import { NIGERIA_36_STATES, STATE_TO_CITIES } from "../lib/location-data";
+import { WHATSAPP_MESSAGE_URL } from "../lib/whatsapp";
 
 type QuoteFormState = {
   firstName: string;
@@ -29,10 +30,7 @@ type QuoteRequestFormProps = {
   description?: string;
   submitLabel?: string;
   whatsappLabel?: string;
-  whatsappNumber?: string;
 };
-
-const DEFAULT_WHATSAPP_NUMBER = "08064667917";
 
 function createProductRow() {
   return {
@@ -88,7 +86,6 @@ export default function QuoteRequestForm({
   description = "Tell us what you need and we will reply with pricing, delivery, and availability.",
   submitLabel = "Submit quote request",
   whatsappLabel = "Request via WhatsApp",
-  whatsappNumber = DEFAULT_WHATSAPP_NUMBER,
 }: QuoteRequestFormProps) {
   const [formData, setFormData] = useState<QuoteFormState>(emptyFormState);
   const [fieldErrors, setFieldErrors] = useState<
@@ -169,9 +166,9 @@ export default function QuoteRequestForm({
 
   const openWhatsApp = () => {
     const body = buildQuoteLines(formData).join("\n");
-    const digits = whatsappNumber.replace(/\D/g, "");
-    const whatsappUrl = `https://wa.me/${digits || whatsappNumber}?text=${encodeURIComponent(body)}`;
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    const whatsappUrl = new URL(WHATSAPP_MESSAGE_URL);
+    whatsappUrl.searchParams.set("text", body);
+    window.open(whatsappUrl.toString(), "_blank", "noopener,noreferrer");
   };
 
   const handleApiSubmit = async (event: FormEvent<HTMLFormElement>) => {
